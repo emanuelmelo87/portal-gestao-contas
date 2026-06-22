@@ -1,0 +1,3360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfólio Pequenas Contas — Dashboard Executivo</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:           #F0F2F5;
+      --surface:      #FFFFFF;
+      --border:       #E2E8F0;
+      --text:         #1A202C;
+      --text-muted:   #718096;
+      --header-bg:    #1E3A5F;
+      --header-text:  #FFFFFF;
+      --accent:       #2B6CB0;
+
+      --red:          #C53030;
+      --red-light:    #FED7D7;
+      --red-bg:       #FFF5F5;
+
+      --orange:       #C05621;
+      --orange-light: #FEEBC8;
+      --orange-bg:    #FFFAF0;
+
+      --green:        #276749;
+      --green-light:  #C6F6D5;
+      --green-bg:     #F0FFF4;
+
+      --blue:         #2C5282;
+      --blue-light:   #BEE3F8;
+      --blue-bg:      #EBF8FF;
+
+      --yellow:       #B7791F;
+      --yellow-light: #FEFCBF;
+      --yellow-bg:    #FFFFF0;
+
+      --radius:       8px;
+      --shadow:       0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md:    0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== Header ===== */
+    header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 14px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+    header h1 span { opacity: 0.6; font-weight: 400; font-size: 0.85rem; margin-left: 8px; }
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .sync-info {
+      font-size: 0.78rem;
+      opacity: 0.75;
+      text-align: right;
+      line-height: 1.5;
+    }
+    .btn-refresh {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-refresh:hover { background: rgba(255,255,255,0.25); }
+    .btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+    .date-picker-wrapper {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 6px; padding: 5px 10px;
+    }
+    .date-picker-wrapper label { font-size: .75rem; opacity: 0.8; white-space: nowrap; cursor: pointer; }
+    .date-picker-input {
+      background: transparent; border: none; color: #fff;
+      font-size: .8rem; outline: none; cursor: pointer; width: 130px;
+    }
+    .date-picker-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.8; }
+    .hist-badge {
+      display: none; background: #D69E2E; color: #1A202C;
+      font-size: .68rem; font-weight: 700;
+      padding: 2px 7px; border-radius: 10px; margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ===== Main Layout ===== */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 24px 32px;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* ===== KPI Cards ===== */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      border-top: 4px solid var(--accent);
+      transition: box-shadow 0.15s;
+    }
+    .kpi-card:hover { box-shadow: var(--shadow-md); }
+    .kpi-card.green  { border-top-color: var(--green); }
+    .kpi-card.red    { border-top-color: var(--red); }
+    .kpi-card.yellow { border-top-color: var(--yellow); }
+    .kpi-card.purple { border-top-color: #7C3AED; }
+    .kpi-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+    .kpi-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* ===== Tab Navigation ===== */
+    .tab-nav {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .tab-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ===== Chart Panel ===== */
+    .chart-panel {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+    .view-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .view-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .chart-wrap {
+      position: relative;
+      height: 480px;
+    }
+    .chart-wrap.tall { height: 600px; }
+    .chart-wrap.short { height: 280px; }
+
+    /* ===== NPS Panel ===== */
+    .nps-panel {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 32px;
+      align-items: start;
+    }
+    .nps-score-box {
+      text-align: center;
+      padding: 32px 16px;
+      background: var(--bg);
+      border-radius: var(--radius);
+    }
+    .nps-score-num {
+      font-size: 4rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .nps-score-num.positive { color: var(--green); }
+    .nps-score-num.neutral  { color: var(--yellow); }
+    .nps-score-num.negative { color: var(--red); }
+    .nps-score-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; font-weight: 600; }
+    .nps-cats {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .nps-cat {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nps-cat-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .nps-cat-info { flex: 1; }
+    .nps-cat-name { font-size: 0.82rem; font-weight: 600; }
+    .nps-cat-count { font-size: 0.78rem; color: var(--text-muted); }
+    .nps-bar-wrap { margin-top: 20px; }
+    .nps-bar-label { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+    .nps-bar {
+      height: 28px;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+    }
+    .nps-bar-seg { height: 100%; transition: width 0.4s; }
+    .nps-right { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ===== Risk — redesign ===== */
+    .risk-kpis { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .risk-kpi-card {
+      flex: 1; min-width: 100px;
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      text-align: center;
+      border: 1px solid transparent;
+    }
+    .risk-kpi-num   { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .risk-kpi-label { font-size: 0.78rem; margin-top: 4px; font-weight: 600; }
+
+    /* ===== Colaboradores ===== */
+    .colab-layout { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; margin-top: 8px; }
+    .colab-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    .colab-table th { background: #1E3A5F; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .colab-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
+    .colab-table tbody tr:hover { background: #f7faff; }
+    .colab-vaga-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 600; }
+    @media (max-width: 768px) { .colab-layout { grid-template-columns: 1fr; } }
+    .risk-main { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
+    .risk-col-title {
+      font-size: 0.78rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;
+    }
+    .risk-temas { display: flex; flex-wrap: wrap; gap: 8px; }
+    .risk-tema-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px 4px 5px;
+      border: 1.5px solid; border-radius: 20px;
+      font-size: 0.78rem; font-weight: 600; cursor: default;
+    }
+    .risk-tema-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 50%;
+      color: white; font-size: 0.7rem; font-weight: 700;
+    }
+    .risk-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .risk-table thead tr { background: #f1f5f9; }
+    .risk-table th { padding: 7px 12px; text-align: left; font-weight: 600; font-size: 0.75rem; color: var(--text-muted); }
+    .risk-table td { padding: 7px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    .risk-table tbody tr:hover { background: #f8fafc; }
+    .risk-table-mun { font-weight: 600; white-space: nowrap; }
+    .risk-table-motivo { color: var(--text-muted); }
+    .risk-table-cons { color: var(--text-muted); white-space: nowrap; font-size: 0.78rem; }
+    .risk-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; }
+    .risk-badge-Alto  { background: #fee2e2; color: #dc2626; }
+    .risk-badge-Medio { background: #ffedd5; color: #ea580c; }
+    .risk-badge-Baixo { background: #fef3c7; color: #d97706; }
+
+    /* ===== Unavailable ===== */
+    .unavailable {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      color: var(--text-muted);
+      gap: 8px;
+    }
+    .unavailable-icon { font-size: 2rem; }
+    .unavailable-text { font-size: 0.9rem; }
+
+    /* ===== Modal ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 16px;
+      animation: fadeIn 0.15s ease;
+    }
+    .modal-overlay.hidden { display: none; }
+    @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+    .modal-box {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      width: 100%;
+      max-width: 480px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.15s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(12px); opacity: 0 } to { transform: none; opacity: 1 } }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h3 { font-size: .95rem; font-weight: 700; }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .modal-close:hover { background: var(--bg); }
+    .modal-body { overflow-y: auto; padding: 12px 20px 20px; }
+    .modal-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .modal-table thead tr { background: var(--header-bg); color: #fff; }
+    .modal-table thead th { padding: 8px 12px; text-align: left; font-size: .76rem; font-weight: 600; }
+    .modal-table thead th:last-child { text-align: left; }
+    .modal-table tbody tr { border-bottom: 1px solid var(--border); }
+    .modal-table tbody tr:last-child { border-bottom: none; }
+    .modal-table tbody tr:nth-child(even) { background: #F7FAFC; }
+    .modal-table tbody td { padding: 7px 12px; }
+    .modal-table tbody td:last-child { text-align: left; }
+
+    /* ===== Loading Overlay ===== */
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #loading-overlay.hidden { display: none; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+    /* ===== Footer ===== */
+    footer {
+      background: var(--header-bg);
+      color: rgba(255,255,255,0.6);
+      padding: 12px 24px;
+      font-size: 0.75rem;
+      text-align: center;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      main { padding: 16px; }
+      .nps-panel { grid-template-columns: 1fr; }
+      .chart-wrap { height: 360px; }
+      .chart-wrap.tall { height: 500px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-title">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      <h1>Portfólio Pequenas Contas <span>Dashboard Executivo</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
+    </div>
+    <div class="header-meta">
+      <div class="sync-info">
+        <div>Jira: <span id="sync-jira">—</span></div>
+        <div>CND: <span id="sync-cnd">—</span></div>
+        <div>Implantações: <span id="sync-impl">—</span></div>
+      </div>
+      <div class="date-picker-wrapper">
+        <label for="date-picker">📅</label>
+        <input type="date" id="date-picker" class="date-picker-input" onchange="onDateChange(this.value)">
+      </div>
+      <button class="btn-refresh" id="btn-refresh" onclick="refreshToday()">⟳ Atualizar</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Chamados Abertos</div>
+      <div class="kpi-value" id="kpi-chamados">—</div>
+      <div class="kpi-sub" id="kpi-chamados-sub">Carregando…</div>
+    </div>
+    <div class="kpi-card" style="border-top-color:#4338CA;cursor:pointer" onclick="switchTab(6)" title="Ver chamados que dependem de ação do time de atendimento e serviços">
+      <div class="kpi-label">Dependendo do Time</div>
+      <div class="kpi-value" id="kpi-depende" style="color:#4338CA">—</div>
+      <div class="kpi-sub" id="kpi-depende-sub">Carregando…</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">CND Estadual</div>
+      <div class="kpi-value" id="kpi-cnd-est">—</div>
+      <div class="kpi-sub" id="kpi-cnd-est-sub">Carregando…</div>
+    </div>
+    <div class="kpi-card green" id="kpi-cnd-fed-card" style="display:none">
+      <div class="kpi-label">CND Federal</div>
+      <div class="kpi-value" id="kpi-cnd-fed">—</div>
+      <div class="kpi-sub" id="kpi-cnd-fed-sub">Carregando…</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Clientes em Risco</div>
+      <div class="kpi-value" id="kpi-risco">—</div>
+      <div class="kpi-sub" id="kpi-risco-sub">Carregando…</div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-label">NPS do Portfólio</div>
+      <div class="kpi-value" id="kpi-nps">—</div>
+      <div class="kpi-sub" id="kpi-nps-sub">Carregando…</div>
+    </div>
+    <div class="kpi-card purple" style="cursor:pointer" onclick="switchTab(1)" title="Ver detalhe das implantações">
+      <div class="kpi-label">Implantações Pendentes</div>
+      <div class="kpi-value" id="kpi-impl" style="color:#7C3AED">—</div>
+      <div class="kpi-sub" id="kpi-impl-sub">Carregando…</div>
+    </div>
+  </div>
+
+  <!-- Comparativo Semanal -->
+  <div id="weekly-comparison" style="margin:12px 0 20px;background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px 20px;box-shadow:0 1px 4px rgba(0,0,0,0.05)">
+    <div style="text-align:center;color:var(--text-muted);font-size:.8rem">Carregando comparativo semanal…</div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab(6)">🎯 Chamados de Suporte</button>
+    <button class="tab-btn" onclick="switchTab(0)">📊 Chamados de Serviço</button>
+    <button class="tab-btn" onclick="switchTab(1)">🔧 Implantações</button>
+    <button class="tab-btn" onclick="switchTab(2)">⚠️ Risco de Churn</button>
+    <button class="tab-btn" onclick="switchTab(3)">⭐ NPS</button>
+    <button class="tab-btn" onclick="switchTab(4)">🏛️ CND</button>
+    <button class="tab-btn" onclick="switchTab(5)">👥 Colaboradores</button>
+  </div>
+
+  <!-- Chart Panel -->
+  <div class="chart-panel">
+
+    <!-- View: Chamados de Suporte (default) -->
+    <div class="view active" id="view-suporte">
+      <div class="view-title">Chamados de Suporte</div>
+      <div class="view-subtitle">Equipes Suporte e Residente — monitoramento de SLO de Atendimento • Fonte: Jira</div>
+      <div id="suporte-content" style="margin-top:8px"></div>
+    </div>
+
+    <!-- View: Chamados de Serviço (pos 1) -->
+    <div class="view" id="view-0">
+      <div class="view-title">Chamados de Serviço</div>
+      <div class="view-subtitle">Monitoramento de SLO de Atendimento • Fonte: Jira</div>
+      <div id="servico-content" style="margin-top:8px"></div>
+    </div>
+
+    <!-- View: Implantações (pos 2) -->
+    <div class="view" id="view-7">
+      <div class="view-title">Implantações Pendentes e Em Andamento</div>
+      <div class="view-subtitle">Issues de implantação por município e vertical • Fonte: Jira</div>
+      <div id="impl-content" style="margin-top:8px"></div>
+    </div>
+
+    <!-- View: Risco de Churn (pos 2) -->
+    <div class="view" id="view-3">
+      <div class="view-title">Clientes com Risco de Churn</div>
+      <div class="view-subtitle">Municípios com risco de churn (cancelamento de contrato) • Fonte: Google Sheets</div>
+      <div id="risk-container" style="margin-top:16px"></div>
+    </div>
+
+    <!-- View: NPS (Geral + Por Cliente) (pos 3) -->
+    <div class="view" id="view-4">
+      <div class="view-title">NPS do Portfólio</div>
+      <div class="view-subtitle">Net Promoter Score consolidado • Fonte: Google Sheets</div>
+      <div class="nps-panel" id="nps-panel" style="margin-top:16px">
+        <div class="nps-score-box">
+          <div class="nps-score-num" id="nps-score-num">—</div>
+          <div class="nps-score-label">NPS Score</div>
+          <div id="nps-zone-label" style="display:inline-block;margin-top:6px;padding:2px 10px;border-radius:12px;font-size:0.8rem;font-weight:700"></div>
+          <div class="nps-cats" id="nps-cats" style="margin-top:16px"></div>
+        </div>
+        <div class="nps-right">
+          <div class="nps-bar-wrap">
+            <div class="nps-bar-label">Distribuição das respostas</div>
+            <div class="nps-bar" id="nps-bar"></div>
+          </div>
+          <div class="chart-wrap short"><canvas id="chart-4"></canvas></div>
+          <div style="margin-top:12px">
+            <div class="nps-bar-label">Faixas NPS</div>
+            <table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden">
+              <thead>
+                <tr style="background:#f1f5f9">
+                  <th style="padding:5px 10px;text-align:left;font-weight:600">Faixa</th>
+                  <th style="padding:5px 10px;text-align:left;font-weight:600">Zona</th>
+                </tr>
+              </thead>
+              <tbody id="nps-zona-tabela"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:36px;padding-top:28px;border-top:2px solid #E2E8F0">
+        <div class="view-title" style="font-size:1.1rem;margin-bottom:4px">NPS por Cliente</div>
+        <div class="view-subtitle">NPS por município (% Promotores − % Detratores) • Fonte: Google Sheets</div>
+        <div class="chart-wrap tall"><canvas id="chart-5"></canvas></div>
+      </div>
+    </div>
+
+    <!-- View: CND (pos 4) -->
+    <div class="view" id="view-2">
+      <div class="view-title">Situação CND do Portfólio</div>
+      <div class="view-subtitle">Certidões Negativas de Débito • Fonte: TCE-SC Virtual (e-Sfinge SC)</div>
+
+      <!-- Sub-abas Estadual / Federal (Federal oculto aguardando revisão) -->
+      <div style="display:flex;gap:8px;margin:12px 0 16px;border-bottom:2px solid #E2E8F0">
+        <button id="cnd-sub-estadual" class="cnd-sub-btn cnd-sub-active" onclick="switchCNDSubTab('estadual')"
+          style="padding:8px 18px;background:none;border:none;border-bottom:3px solid var(--accent);font-weight:700;font-size:.9rem;color:var(--accent);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
+          🏛️ Estadual (SC)
+        </button>
+        <button id="cnd-sub-federal" class="cnd-sub-btn" onclick="switchCNDSubTab('federal')"
+          style="display:none;padding:8px 18px;background:none;border:none;border-bottom:3px solid transparent;font-weight:700;font-size:.9rem;color:var(--text-muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
+          🇧🇷 Federal
+        </button>
+      </div>
+
+      <!-- Estadual: 3 donuts (certidões quadrimestrais) + tabela -->
+      <div id="cnd-pane-estadual">
+        <div id="cnd-estadual-status" style="margin-bottom:12px"></div>
+        <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start"></div>
+        <div id="cnd-estadual-table" style="margin-top:24px"></div>
+      </div>
+
+      <!-- Federal: donuts por mês + tabela heatmap -->
+      <div id="cnd-pane-federal" style="display:none">
+        <div id="cnd-federal-status" style="margin-bottom:12px"></div>
+        <div id="cnd-federal-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start"></div>
+        <div id="cnd-federal-table" style="margin-top:24px"></div>
+      </div>
+    </div>
+
+    <!-- View: Colaboradores (pos 5) -->
+    <div class="view" id="view-6">
+      <div class="view-title">Colaboradores</div>
+      <div class="view-subtitle">Distribuição e listagem da equipe por vaga • Fonte: Google Sheets</div>
+      <div id="colab-container" style="margin-top:8px"></div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  Portfólio Pequenas Contas — Dashboard Executivo &nbsp;|&nbsp;
+  Fontes: Jira (Betha) · Google Sheets · CND &nbsp;|&nbsp;
+  Gerado em: <span id="footer-date">—</span>
+</footer>
+
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Carregando dados…</div>
+</div>
+
+<!-- Modal: detalhes de implantações -->
+<div class="modal-overlay hidden" id="impl-detail-modal" onclick="closeImplModal(event)">
+  <div class="modal-box" style="max-width:1050px;width:95%">
+    <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center">
+      <h3 id="impl-modal-title" style="margin:0">Implantações</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="exportImplModalCSV()" style="padding:4px 13px;border:1px solid #CBD5E0;border-radius:6px;background:#F7FAFC;font-size:.8rem;color:#2D3748;cursor:pointer;font-weight:600">⬇ Exportar CSV</button>
+        <button class="modal-close" onclick="closeImplModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto" id="impl-modal-content"></div>
+  </div>
+</div>
+
+<!-- Modal: detalhes de chamados -->
+<div class="modal-overlay hidden" id="chamados-detail-modal" onclick="closeChamadosModal(event)">
+  <div class="modal-box" style="max-width:1050px;width:95%">
+    <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center">
+      <h3 id="chamados-modal-title" style="margin:0">Chamados</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="exportChamadosModalCSV()" style="padding:4px 13px;border:1px solid #CBD5E0;border-radius:6px;background:#F7FAFC;font-size:.8rem;color:#2D3748;cursor:pointer;font-weight:600">⬇ Exportar CSV</button>
+        <button class="modal-close" onclick="closeChamadosModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto" id="chamados-modal-content"></div>
+  </div>
+</div>
+
+<!-- Modal: demais municípios -->
+<div class="modal-overlay hidden" id="outro-modal" onclick="closeOutroModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Demais municípios</h3>
+      <button class="modal-close" onclick="closeOutroModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <table class="modal-table">
+        <thead><tr><th>Município</th><th>Chamados</th></tr></thead>
+        <tbody id="outro-modal-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURAÇÃO
+// ============================================================
+const CONFIG = {
+  // URL do Apps Script implantado como Web App (Implantar → Nova implantação → Aplicativo da Web)
+  // Preencher após implantar o codigo.gs
+  APPS_SCRIPT_URL: 'https://script.google.com/a/macros/betha.com.br/s/AKfycbyN0JCa48ZCUASxxQHBWzoJOQh5HkLxpzU8WFM-5UDqLF6cabMhWuD6iLAb-o2nSYd7/exec',
+  CND_URL:         'https://script.google.com/a/macros/betha.com.br/s/AKfycbxdLgsNvNuxCvQVZVyTvTHbtiRyA37J0GMirKt6dFzghUem3QI4qoAMMediR9qVor-H/exec',
+};
+
+// ============================================================
+// ESTADO
+// ============================================================
+const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndFederal: [], cndSubTab: 'estadual', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
+// Abas que possuem versão histórica no servidor
+const HIST_SHEETS = ['Jira_Chamados', 'Jira_Chamados_Suporte', 'Jira_Implantacoes', 'NPS_Calculado', 'CND_Municipios', 'CND_Federal', 'CND_Estadual', 'Risco de Exclusão', 'Colaboradores'];
+
+// Municípios do portfólio (69 — Campos Novos excluído: só consórcio)
+const PORTFOLIO_MUNICIPIOS = [
+  'Abdon Batista','Agrolândia','Anchieta','Angelina','Anita Garibaldi',
+  'Balneário Arroio do Silva','Balneário Barra do Sul','Balneário Camboriú','Balneário Piçarras',
+  'Bandeirante','Barra Bonita','Barra Velha','Bela Vista do Toldo','Belmonte','Benedito Novo',
+  'Brunópolis','Caçador','Calmon','Campo Alegre','Capão Alto','Chapecó','Concórdia',
+  'Dona Emma','Ermo','Erval Velho','Frei Rogério','Imbuia','Ipira','Ipuaçu','Iraceminha','Itá',
+  'Itajaí','Jupiá','Lacerdópolis','Lajeado Grande','Leoberto Leal','Lindóia do Sul','Luiz Alves',
+  'Luzerna','Mafra','Massaranduba','Meleiro','Modelo','Morro da Fumaça','Morro Grande','Penha',
+  'Peritiba','Pescaria Brava','Pomerode','Praia Grande','Rio do Sul','Rio Fortuna','Rio Rufino',
+  'Saltinho','Santa Terezinha','São Bernardino','São Bonifácio','São Cristovão do Sul',
+  'São João do Oeste','São José do Cedro','São Martinho','São Miguel da Boa Vista',
+  'São Pedro de Alcântara','Tangará','Tigrinhos','Timbó','Treviso','Treze de Maio','Videira'
+];
+const TOTAL_MUNICIPIOS_CND = PORTFOLIO_MUNICIPIOS.length; // 69
+
+// Normaliza para comparação (sem acentos, minúsculo)
+function normMun(s) {
+  return (s||'').toString().trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
+}
+const PORTFOLIO_SET = {};
+PORTFOLIO_MUNICIPIOS.forEach(m => { PORTFOLIO_SET[normMun(m)] = m; });
+
+const charts = {};
+let activeTab = 6;
+
+// ============================================================
+// PALETA DE CORES
+// ============================================================
+const COLORS = ['#2B6CB0','#276749','#C05621','#D69E2E','#805AD5','#0987A0','#C53030','#DD6B20','#3182CE','#38A169'];
+const VERTICAL_COLOR = {};
+function getVerticalColor(v) {
+  if (!VERTICAL_COLOR[v]) {
+    const idx = Object.keys(VERTICAL_COLOR).length % COLORS.length;
+    VERTICAL_COLOR[v] = COLORS[idx];
+  }
+  return VERTICAL_COLOR[v];
+}
+
+// ============================================================
+// FETCH — Apps Script (JSONP) e CND (JSONP)
+// ============================================================
+
+// Busca dados de uma aba da planilha via Apps Script web app
+function fetchSheet(sheetName) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_sheetCb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      reject(new Error(`Timeout ao carregar "${sheetName}"`));
+    }, 20000);
+
+    window[cbName] = function(response) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      if (response.status === 'error') {
+        reject(new Error(response.message));
+      } else {
+        resolve(response.data || []);
+      }
+    };
+
+    const today    = new Date().toISOString().slice(0, 10);
+    const useHist  = state.selectedDate && state.selectedDate !== today && HIST_SHEETS.includes(sheetName);
+    const datePart = useHist ? `&date=${state.selectedDate}` : '';
+    const script = document.createElement('script');
+    script.src = `${CONFIG.APPS_SCRIPT_URL}?sheet=${encodeURIComponent(sheetName)}&callback=${cbName}${datePart}`;
+    script.onerror = () => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      reject(new Error(`Erro ao carregar "${sheetName}"`));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+// ─── Comparativo Semanal ─────────────────────────────────────────
+// Variante de fetchSheet com data explícita (não usa state.selectedDate)
+function fetchSheetOnDate(sheetName, dateStr) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_wkCb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const timeout = setTimeout(() => { delete window[cbName]; reject(new Error('timeout')); }, 20000);
+    window[cbName] = (r) => {
+      clearTimeout(timeout); delete window[cbName];
+      r.status === 'error' ? reject(new Error(r.message)) : resolve(r.data || []);
+    };
+    const today   = new Date().toISOString().slice(0, 10);
+    const useHist = dateStr !== today && HIST_SHEETS.includes(sheetName);
+    const datePart = useHist ? `&date=${dateStr}` : '';
+    const s = document.createElement('script');
+    s.src = `${CONFIG.APPS_SCRIPT_URL}?sheet=${encodeURIComponent(sheetName)}&callback=${cbName}${datePart}`;
+    s.onerror = () => { clearTimeout(timeout); delete window[cbName]; reject(new Error('erro')); };
+    document.head.appendChild(s);
+  });
+}
+
+// Retorna a data da segunda-feira da semana (offset 0=esta, -1=anterior)
+function _getMonday(weekOffset) {
+  const d = new Date();
+  const day = d.getDay(); // 0=Dom, 1=Seg…
+  const daysToMon = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + daysToMon + (weekOffset * 7));
+  return d.toISOString().slice(0, 10);
+}
+
+async function fetchWeeklyComparison() {
+  const thisMonday = _getMonday(0);
+  const prevMonday = _getMonday(-1);
+
+  const [srvCur, srvPrv, supCur, supPrv, impCur, impPrv] = await Promise.allSettled([
+    fetchSheetOnDate('Jira_Chamados',         thisMonday),
+    fetchSheetOnDate('Jira_Chamados',         prevMonday),
+    fetchSheetOnDate('Jira_Chamados_Suporte', thisMonday),
+    fetchSheetOnDate('Jira_Chamados_Suporte', prevMonday),
+    fetchSheetOnDate('Jira_Implantacoes',     thisMonday),
+    fetchSheetOnDate('Jira_Implantacoes',     prevMonday),
+  ]);
+
+  const sum = (res, field) => res.status === 'fulfilled'
+    ? res.value.reduce((s, r) => s + (parseInt(r[field]) || 0), 0)
+    : null;
+
+  renderWeeklyComparison({
+    thisMonday, prevMonday,
+    servico:      { curr: sum(srvCur, 'total_chamados'), prev: sum(srvPrv, 'total_chamados') },
+    suporte:      { curr: sum(supCur, 'total_chamados'), prev: sum(supPrv, 'total_chamados') },
+    implantacoes: { curr: sum(impCur, 'total'),          prev: sum(impPrv, 'total') },
+  });
+}
+
+function renderWeeklyComparison(data) {
+  const el = document.getElementById('weekly-comparison');
+  if (!el) return;
+
+  const fmtD = (iso) => { if (!iso) return '—'; const [, m, d] = iso.split('-'); return `${d}/${m}`; };
+
+  // accentColor: cor da borda lateral do card
+  const metricCard = (label, curr, prev, lessIsBetter, accentColor) => {
+    if (curr === null || prev === null) {
+      return `<div style="border-left:3px solid ${accentColor};padding:4px 0 4px 14px">
+        <div style="font-size:.72rem;font-weight:700;color:#718096;margin-bottom:10px">${label}</div>
+        <div style="font-size:1.1rem;font-weight:800;color:#CBD5E0">—</div>
+      </div>`;
+    }
+    const delta = curr - prev;
+    const pct   = prev > 0 ? `${Math.round(Math.abs(delta) / prev * 100)}%` : '';
+    const arrow = delta > 0 ? '↑' : delta < 0 ? '↓' : '→';
+    const good  = lessIsBetter ? delta < 0 : delta > 0;
+    const neutral = delta === 0;
+    const pillBg    = neutral ? '#EDF2F7' : good ? '#C6F6D5' : '#FED7D7';
+    const pillColor = neutral ? '#718096' : good ? '#276749'  : '#C53030';
+    const sign = delta > 0 ? '+' : '';
+    const pillTxt = neutral ? '→ sem variação' : `${arrow} ${sign}${delta}${pct ? ` (${pct})` : ''}`;
+    return `<div style="border-left:3px solid ${accentColor};padding:4px 0 4px 14px">
+      <div style="font-size:.72rem;font-weight:700;color:#718096;margin-bottom:8px">${label}</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px">
+        <span style="font-size:.9rem;color:#A0AEC0;text-decoration:line-through">${prev}</span>
+        <span style="font-size:.78rem;color:#CBD5E0">→</span>
+        <span style="font-size:1.55rem;font-weight:800;color:#1A202C;line-height:1">${curr}</span>
+      </div>
+      <span style="display:inline-block;font-size:.73rem;font-weight:700;color:${pillColor};background:${pillBg};padding:2px 9px;border-radius:20px">${pillTxt}</span>
+    </div>`;
+  };
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:6px">
+      <span style="font-size:.75rem;font-weight:700;color:#4A5568;text-transform:uppercase;letter-spacing:.07em">📊 Comparativo Semanal</span>
+      <span style="font-size:.72rem;color:#718096;background:#F7FAFC;border:1px solid #E2E8F0;padding:3px 10px;border-radius:20px">
+        Seg ${fmtD(data.prevMonday)} → Seg ${fmtD(data.thisMonday)}
+      </span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;border-top:1px solid #EDF2F7;padding-top:14px">
+      ${metricCard('Chamados de Suporte',    data.suporte.curr,      data.suporte.prev,      true,  '#3182CE')}
+      ${metricCard('Chamados de Serviço',    data.servico.curr,      data.servico.prev,      true,  '#DD6B20')}
+      ${metricCard('Implantações Pendentes', data.implantacoes.curr, data.implantacoes.prev, false, '#7C3AED')}
+    </div>`;
+}
+
+// Chamado quando o usuário muda a data no seletor
+function onDateChange(val) {
+  const today = new Date().toISOString().slice(0, 10);
+  state.selectedDate = (val && val !== today) ? val : null;
+  // Badge HISTÓRICO
+  const badge = document.getElementById('hist-badge');
+  if (badge) badge.style.display = state.selectedDate ? 'inline-block' : 'none';
+  // Rótulo do botão Atualizar (só faz sentido para "hoje")
+  const btn = document.getElementById('btn-refresh');
+  if (btn) btn.textContent = state.selectedDate ? '⟳ Carregar' : '⟳ Atualizar';
+  loadAllData();
+}
+
+// CND Estadual (e-Sfinge SC): 3 certidões quadrimestrais por entidade
+function fetchCNDEstadual() {
+  return fetchSheet('CND_Estadual').then(rows => {
+    const normVal = v => {
+      const s = (v || '').toString().toLowerCase();
+      // Formato legado: "Com CND" / "Sem CND"
+      if (s.includes('com')) return 'Com CND';
+      if (s.includes('sem')) return 'Sem CND';
+      // Novo formato TCE-SC: "LRF:negativa|SEF:negativa|OCI:negativa"
+      // Qualquer componente positiva → irregular
+      if (s.includes('positiva')) return 'Sem CND';
+      if (s.includes('negativa')) return 'Com CND';
+      if (s.includes('ausente'))  return 'Ausente';
+      return '';
+    };
+    return rows.filter(r => r.municipio).map(r => ({
+      municipio:    titleCaseMun(r.municipio),
+      entidade:     titleCaseMun(r.entidade || ''),
+      meses_atraso: r.meses_atraso || '',
+      tipo_atraso:  r.tipo_atraso || '',
+      status_fonte: r.status_fonte || '',
+      periodo1:     normVal(r.periodo1),
+      periodo2:     normVal(r.periodo2),
+      periodo3:     normVal(r.periodo3),
+      p1_label:     r.p1_label || 'Período 1',
+      p2_label:     r.p2_label || 'Período 2',
+      p3_label:     r.p3_label || 'Período 3',
+    }));
+  });
+}
+
+// CND Federal (SICONFI): status mensal Enviado/Com problema/Não Enviado por município
+function fetchCNDFederal() {
+  const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  return fetchSheet('CND_Federal').then(rows => {
+    return rows.filter(r => r.municipio).map(r => {
+      const out = { municipio: titleCaseMun(r.municipio), tipo: r.tipo || '', status_fonte: r.status_fonte || '' };
+      MESES.forEach(m => { out[m] = (r[m] || '').toString().trim(); });
+      return out;
+    });
+  });
+}
+
+// ============================================================
+// CARREGAMENTO DE DADOS
+// ============================================================
+
+// Chamado pelo botão "Atualizar": reseta para hoje e carrega
+function refreshToday() {
+  const today = new Date().toISOString().slice(0, 10);
+  const dp = document.getElementById('date-picker');
+  if (dp) { dp.value = today; dp.max = today; }
+  state.selectedDate = null;
+  const badge = document.getElementById('hist-badge');
+  if (badge) badge.style.display = 'none';
+  const btn = document.getElementById('btn-refresh');
+  if (btn) btn.textContent = '⟳ Atualizar';
+  loadAllData();
+}
+
+async function loadAllData() {
+  const btn = document.getElementById('btn-refresh');
+  showLoading(true);
+  if (btn) btn.disabled = true;
+
+  const [jiraRes, riscoRes, npsRes, cndEstRes, cndFedRes, colabRes, implRes, implIssuesRes, chamadosIssuesRes, suporteRes, suporteIssuesRes] = await Promise.allSettled([
+    fetchSheet('Jira_Chamados'),
+    fetchSheet('Risco de Exclusão'),
+    fetchSheet('NPS_Calculado'),
+    fetchCNDEstadual(),
+    fetchCNDFederal(),
+    fetchSheet('Colaboradores'),
+    fetchSheet('Jira_Implantacoes'),
+    fetchSheet('Jira_Implantacoes_Issues'),
+    fetchSheet('Jira_Chamados_Issues'),
+    fetchSheet('Jira_Chamados_Suporte'),
+    fetchSheet('Jira_Chamados_Suporte_Issues'),
+  ]);
+
+  if (jiraRes.status === 'fulfilled')  state.jira  = jiraRes.value;
+  else { console.warn('Jira:', jiraRes.reason?.message); state.jira = []; }
+
+  if (riscoRes.status === 'fulfilled') state.risco = riscoRes.value;
+  else { console.warn('Risco:', riscoRes.reason?.message); state.risco = []; }
+
+  if (npsRes.status === 'fulfilled')   state.nps   = npsRes.value;
+  else { console.warn('NPS:', npsRes.reason?.message); state.nps = []; }
+
+  if (cndEstRes.status === 'fulfilled') state.cndEstadual = cndEstRes.value;
+  else { console.warn('CND Estadual:', cndEstRes.reason?.message); state.cndEstadual = []; }
+
+  if (cndFedRes.status === 'fulfilled') state.cndFederal = cndFedRes.value;
+  else { console.warn('CND Federal:', cndFedRes.reason?.message); state.cndFederal = []; }
+
+  // Compatibilidade com KPIs legados (usa Estadual como referência geral)
+  state.cnd = state.cndEstadual;
+
+  if (colabRes.status === 'fulfilled') state.colaboradores = colabRes.value;
+  else { console.warn('Colaboradores:', colabRes.reason?.message); state.colaboradores = []; }
+
+  if (implRes.status === 'fulfilled')  state.implantacoes = implRes.value;
+  else { console.warn('Implantacoes:', implRes.reason?.message); state.implantacoes = []; }
+
+  if (implIssuesRes.status === 'fulfilled') state.implantacoesIssues = implIssuesRes.value;
+  else { console.warn('ImplantacoesIssues:', implIssuesRes.reason?.message); state.implantacoesIssues = []; }
+
+  if (chamadosIssuesRes.status === 'fulfilled') state.chamadosIssues = chamadosIssuesRes.value;
+  else { console.warn('ChamadosIssues:', chamadosIssuesRes.reason?.message); state.chamadosIssues = []; }
+
+  if (suporteRes.status === 'fulfilled') state.suporte = suporteRes.value;
+  else { console.warn('Suporte:', suporteRes.reason?.message); state.suporte = []; }
+
+  if (suporteIssuesRes.status === 'fulfilled') state.suporteIssues = suporteIssuesRes.value;
+  else { console.warn('SuporteIssues:', suporteIssuesRes.reason?.message); state.suporteIssues = []; }
+
+  // Timestamps
+  const now = new Date().toLocaleString('pt-BR');
+  document.getElementById('footer-date').textContent = now;
+
+  const jiraTS = state.jira.find(r => r.atualizado_em)?.atualizado_em;
+  document.getElementById('sync-jira').textContent = jiraTS
+    ? new Date(jiraTS).toLocaleString('pt-BR') : (state.jira.length ? now : 'Indisponível');
+  document.getElementById('sync-cnd').textContent = (state.cndEstadual.length || state.cndFederal.length) ? now : 'Indisponível';
+  const implTS = state.implantacoes.find(r => r.atualizado_em)?.atualizado_em;
+  document.getElementById('sync-impl').textContent = implTS
+    ? new Date(implTS).toLocaleString('pt-BR') : (state.implantacoes.length ? now : 'Indisponível');
+
+  updateKPIs();
+  renderActiveView();
+  showLoading(false);
+  document.getElementById('btn-refresh').disabled = false;
+
+  // Comparativo semanal roda em paralelo (não bloqueia a dashboard principal)
+  fetchWeeklyComparison().catch(e => console.warn('Comparativo semanal:', e.message));
+}
+
+// ============================================================
+// KPI CARDS
+// ============================================================
+function updateKPIs() {
+  // Total chamados (Serviço + Suporte + Residente)
+  // state.jira  = Jira_Chamados (antes do split: todas as equipes; depois: só Serviço)
+  // state.suporte = Jira_Chamados_Suporte (Suporte+Residente — vazio para datas históricas anteriores ao split)
+  // A soma garante continuidade histórica: datas antigas retornam só jira (total completo); novas retornam jira+suporte
+  const _allChamados = [...state.jira, ...state.suporte];
+  const totalChamados = _allChamados.reduce((s, r) => s + (parseInt(r.total_chamados) || 0), 0);
+  const municipiosJira = [...new Set(_allChamados.map(r => r.municipio).filter(Boolean))];
+  document.getElementById('kpi-chamados').textContent = totalChamados || '—';
+  document.getElementById('kpi-chamados-sub').textContent =
+    _allChamados.length ? `Em ${municipiosJira.length} municípios` : 'Dados indisponíveis';
+
+  // Dependendo de ação do time (Suporte + Serviço) — contagem por chamado
+  const _depSup   = state.suporteIssues.filter(dependeDoTime);
+  const _depSrv   = state.chamadosIssues.filter(dependeDoTime);
+  const _depTotal = _depSup.length + _depSrv.length;
+  const _depSlo   = [..._depSup, ..._depSrv].filter(r => (r.slo_horas || '').startsWith('-')).length;
+  const _temIssues = state.suporteIssues.length || state.chamadosIssues.length;
+  const elDep = document.getElementById('kpi-depende');
+  if (elDep) {
+    elDep.textContent = _temIssues ? _depTotal : '—';
+    document.getElementById('kpi-depende-sub').textContent = _temIssues
+      ? `Suporte ${_depSup.length} · Serviço ${_depSrv.length}` + (_depSlo ? ` · ${_depSlo} c/ SLO estourado` : '')
+      : 'Dados indisponíveis';
+  }
+
+  // CND Estadual — conta por MUNICÍPIO no período atual
+  if (state.cndEstadual.length) {
+    // Detectar período atual (mesma lógica de renderCNDEstadual)
+    const estLabels = [
+      { key: 'periodo1', label: state.cndEstadual[0].p1_label || '' },
+      { key: 'periodo2', label: state.cndEstadual[0].p2_label || '' },
+      { key: 'periodo3', label: state.cndEstadual[0].p3_label || '' },
+    ];
+    const parseSD = (lbl) => { const m = lbl.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/); if (!m) return null; const yy = m[3].length === 2 ? 2000+parseInt(m[3]) : parseInt(m[3]); return new Date(yy, parseInt(m[2])-1, parseInt(m[1])); };
+    let estIdx = 0;
+    estLabels.forEach((p, i) => { const d = parseSD(p.label); if (d && d <= new Date()) estIdx = i; });
+    // Fallback: se o período atual ainda não tem dados (certidões ainda não submetidas),
+    // recua até o período mais recente que tenha dados reais.
+    while (estIdx > 0) {
+      const hasData = state.cndEstadual.some(r => { const v = r[estLabels[estIdx].key]; return v === 'Com CND' || v === 'Sem CND'; });
+      if (hasData) break;
+      estIdx--;
+    }
+    const estKey = estLabels[estIdx].key;
+    const estGrp = {};
+    state.cndEstadual.forEach(r => { if (!estGrp[r.municipio]) estGrp[r.municipio] = []; estGrp[r.municipio].push(r); });
+    const estMuns = Object.values(estGrp);
+    const estCom = estMuns.filter(items => !items.some(r => r[estKey] === 'Sem CND') && items.some(r => r[estKey] === 'Com CND')).length;
+    const estTotalMuns = Object.keys(estGrp).length;
+    document.getElementById('kpi-cnd-est').textContent = estCom;
+    document.getElementById('kpi-cnd-est-sub').textContent = `de ${estTotalMuns} municípios`;
+  } else {
+    document.getElementById('kpi-cnd-est').textContent = '—';
+    document.getElementById('kpi-cnd-est-sub').textContent = 'Dados indisponíveis';
+  }
+
+  // CND Federal — conta por MUNICÍPIO no mês atual
+  if (state.cndFederal.length) {
+    const MESES_K = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const fedMesKey = MESES_K[new Date().getMonth()];
+    const classifyFed = (v) => {
+      const s = (v || '').toString().trim().toLowerCase();
+      if (!s) return 'nd';
+      const isNao = s.includes('não') || s.includes('nao');
+      if (s.includes('enviado') && !isNao) return 'com';
+      if (isNao && s.includes('enviado') && !s.includes('-') && !s.includes('problema') && !s.includes('atraso')) return 'sem';
+      return 'atraso';
+    };
+    const fedGrp = {};
+    state.cndFederal.forEach(r => { if (!fedGrp[r.municipio]) fedGrp[r.municipio] = []; fedGrp[r.municipio].push(r); });
+    const fedMuns = Object.values(fedGrp);
+    const fedCom = fedMuns.filter(items => {
+      const vals = items.map(r => classifyFed(r[fedMesKey]));
+      return vals.every(v => v === 'com' || v === 'nd') && vals.some(v => v === 'com');
+    }).length;
+    const fedTotalMuns = Object.keys(fedGrp).length;
+    document.getElementById('kpi-cnd-fed').textContent = fedCom;
+    document.getElementById('kpi-cnd-fed-sub').textContent = `de ${fedTotalMuns} municípios`;
+  } else {
+    document.getElementById('kpi-cnd-fed').textContent = '—';
+    document.getElementById('kpi-cnd-fed-sub').textContent = 'Dados indisponíveis';
+  }
+
+  // Risco
+  const emRisco = state.risco.filter(r => r.risco === 'Alto' || r.risco === 'Médio').length;
+  document.getElementById('kpi-risco').textContent = state.risco.length ? emRisco : '—';
+  document.getElementById('kpi-risco-sub').textContent =
+    state.risco.length ? `Alto ou Médio risco` : 'Dados indisponíveis';
+
+  // NPS
+  if (state.nps.length) {
+    const { score, total } = calcNPS(state.nps);
+    const zone = npsZone(score);
+    const el = document.getElementById('kpi-nps');
+    el.textContent = score;
+    el.style.color = zone.color;
+    document.getElementById('kpi-nps-sub').textContent = `de ${total} respostas`;
+  } else {
+    document.getElementById('kpi-nps').textContent = '—';
+    document.getElementById('kpi-nps-sub').textContent = 'Dados indisponíveis';
+  }
+
+  // Implantações
+  if (state.implantacoes.length) {
+    const totalImpl    = state.implantacoes.reduce((s, r) => s + (parseInt(r.total)     || 0), 0);
+    const totalAtras   = state.implantacoes.reduce((s, r) => s + (parseInt(r.atrasados) || 0), 0);
+    const munImpl      = new Set(state.implantacoes.map(r => r.municipio).filter(Boolean)).size;
+    const elImpl       = document.getElementById('kpi-impl');
+    elImpl.textContent = totalImpl;
+    elImpl.style.color = totalAtras > 0 ? '#DC2626' : '#7C3AED';
+    document.getElementById('kpi-impl-sub').textContent =
+      `${totalAtras} atrasada${totalAtras !== 1 ? 's' : ''} · ${munImpl} municípios`;
+  } else {
+    document.getElementById('kpi-impl').textContent = '—';
+    document.getElementById('kpi-impl-sub').textContent = 'Dados indisponíveis';
+  }
+}
+
+// NPS = % Promotores (9-10) − % Detratores (0-6). Neutros (7-8) não contam.
+// Resultado de -100 a 100. Dados vêm pré-agregados de NPS_Calculado.
+function calcNPS(rows) {
+  const total      = rows.reduce((s, r) => s + (parseInt(r.total)      || 0), 0);
+  const promotores = rows.reduce((s, r) => s + (parseInt(r.promotores) || 0), 0);
+  const neutros    = rows.reduce((s, r) => s + (parseInt(r.neutros)    || 0), 0);
+  const detratores = rows.reduce((s, r) => s + (parseInt(r.detratores) || 0), 0);
+  const score = total > 0 ? Math.round((promotores / total) * 100 - (detratores / total) * 100) : 0;
+  return { score, promotores, neutros, detratores, total };
+}
+
+// Faixas NPS: 76-100 Excelência | 51-75 Qualidade | 1-50 Aperfeiçoamento | ≤0 Crítica
+function npsZone(score) {
+  if (score >= 76) return { label: 'Excelência',      color: '#16a34a', bg: '#f0fdf4' };
+  if (score >= 51) return { label: 'Qualidade',       color: '#65a30d', bg: '#f7fee7' };
+  if (score >=  1) return { label: 'Aperfeiçoamento', color: '#ea580c', bg: '#fff7ed' };
+  return               { label: 'Crítica',           color: '#dc2626', bg: '#fef2f2' };
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+// Mapa índice → id da view (necessário pois os índices não são sequenciais no DOM)
+const TAB_VIEW_IDS = { 0: 'view-0', 6: 'view-suporte', 1: 'view-7', 2: 'view-3' };
+
+function switchTab(idx) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  // Ativa a view pelo id mapeado ou por posição DOM (abas sem mapa)
+  const viewId = TAB_VIEW_IDS[idx];
+  if (viewId) {
+    document.getElementById(viewId)?.classList.add('active');
+  } else {
+    // Fallback: posição DOM (para NPS=3, CND=4, Colaboradores=5)
+    const domIdx = [6,0,1,2,3,4,5].indexOf(idx); // ordem das tabs no nav
+    document.querySelectorAll('.view')[domIdx]?.classList.add('active');
+  }
+  document.querySelectorAll('.tab-btn')[([6,0,1,2,3,4,5].indexOf(idx))]?.classList.add('active');
+  activeTab = idx;
+  renderView(idx);
+}
+
+function renderActiveView() { renderView(activeTab); }
+
+function renderView(idx) {
+  switch(idx) {
+    case 0: renderChamadosServico(); break;
+    case 6: renderChamadosSuporte(); break;
+    case 1: renderImplantacoes(); break;
+    case 2: renderRisco(); break;
+    case 3: renderNPSGeral(); renderNPSPorCliente(); break;
+    case 4: renderCND(); break;
+    case 5: renderColaboradores(); break;
+  }
+}
+
+// ============================================================
+// HELPERS DE CHART
+// ============================================================
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function unavailable(container, msg) {
+  container.innerHTML = `<div class="unavailable">
+    <div class="unavailable-icon">📭</div>
+    <div class="unavailable-text">${msg}</div>
+  </div>`;
+}
+
+// ============================================================
+// VIEW 1 — Chamados por Cliente (Donut + Tabela)
+// ============================================================
+const PIE_COLORS = [
+  '#5B8DB8','#7DBE8B','#E8896B','#E6C46B','#A67DBE',
+  '#5BB8A6','#E87B91','#8BBAC8','#B8A67D','#9DC87D','#BBBBBB'
+];
+
+// Guarda os municípios agrupados em "Outro..." para a modal
+let _outroMunicipios = [];
+
+function openOutroModal() {
+  if (!_outroMunicipios.length) return;
+  const tbody = document.getElementById('outro-modal-body');
+  tbody.innerHTML = _outroMunicipios.map(([m, v]) => `
+    <tr><td>${m}</td><td>${v}</td></tr>`).join('');
+  document.getElementById('outro-modal').classList.remove('hidden');
+}
+
+function closeOutroModal(e) {
+  // Fecha só se clicou no overlay (fora do box) ou no botão ✕
+  if (e && e.target !== document.getElementById('outro-modal')) return;
+  document.getElementById('outro-modal').classList.add('hidden');
+}
+
+// Contexto do modal aberto — usado pelo CSV
+let _implModalCtx = { issues: [], showMunVert: false, title: '' };
+// Issues pré-filtradas por vertical para os totalizadores
+let _implTotalIssues = {};
+
+function _buildImplTable(issues, showMunVert) {
+  if (!issues.length) {
+    return '<p style="text-align:center;color:#94A3B8;padding:20px">Nenhum chamado encontrado para os filtros aplicados.</p>';
+  }
+  const munVertHead = showMunVert ? '<th style="width:130px">Município</th><th style="width:100px">Vertical</th>' : '';
+  const rows = issues.map(r => {
+    const prazo = r.prazo ? fmtDate(r.prazo) : '—';
+    const link  = r.url ? `<a href="${r.url}" target="_blank" style="color:#2B6CB0;font-weight:600">${r.key}</a>` : (r.key || '—');
+    const munVertCells = showMunVert
+      ? `<td style="white-space:nowrap;font-size:.78rem">${r.municipio || '—'}</td><td style="font-size:.78rem;white-space:nowrap">${r.vertical || '—'}</td>`
+      : '';
+    return `<tr>
+      <td style="white-space:nowrap">${link}</td>
+      ${munVertCells}
+      <td>${r.summary || '—'}</td>
+      <td style="text-align:left"><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#EDF2F7;font-size:.76rem;white-space:nowrap">${r.status || '—'}</span></td>
+      <td style="text-align:left;white-space:nowrap">${prazo}</td>
+    </tr>`;
+  }).join('');
+  return `<table class="modal-table" style="font-size:.82rem">
+    <thead><tr>
+      <th style="width:110px">Código</th>
+      ${munVertHead}
+      <th>Resumo</th>
+      <th style="width:200px;text-align:center">Situação</th>
+      <th style="width:120px;text-align:center">Prazo Contratual</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function openImplModal(td) {
+  const mun  = td.dataset.mun;
+  const vert = td.dataset.vert;
+
+  // Aplica o mesmo filtro de Produto ativo no pivot
+  const fProdRaw  = (document.getElementById('impl-f-prod') || {}).value || '';
+  const modeProd  = (document.getElementById('impl-f-prod-mode') || {}).dataset?.mode || 'include';
+  const prodTerms = fProdRaw.toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+
+  const issues = state.implantacoesIssues.filter(r => {
+    if (r.municipio !== mun || r.vertical !== vert) return false;
+    if (!prodTerms.length) return true;
+    const sumL = (r.summary || '').toLowerCase();
+    const matchesAny = prodTerms.some(t => sumL.includes(t));
+    return modeProd === 'exclude' ? !matchesAny : matchesAny;
+  });
+
+  const title = `${mun} — ${vert}`;
+  _implModalCtx = { issues, showMunVert: false, title };
+  document.getElementById('impl-modal-title').textContent = title;
+  document.getElementById('impl-modal-content').innerHTML = _buildImplTable(issues, false);
+  document.getElementById('impl-detail-modal').classList.remove('hidden');
+}
+
+function openImplTotalModal(vert) {
+  const issues = (_implTotalIssues && _implTotalIssues[vert]) || [];
+  const title  = vert === '__all__' ? 'Total Geral — todos os chamados filtrados' : `Total — ${vert}`;
+  _implModalCtx = { issues, showMunVert: true, title };
+  document.getElementById('impl-modal-title').textContent = title;
+  document.getElementById('impl-modal-content').innerHTML = _buildImplTable(issues, true);
+  document.getElementById('impl-detail-modal').classList.remove('hidden');
+}
+
+function exportImplModalCSV() {
+  const { issues, showMunVert, title } = _implModalCtx;
+  if (!issues.length) return;
+  const header = ['Código', 'URL', ...(showMunVert ? ['Município', 'Vertical'] : []), 'Resumo', 'Situação', 'Prazo Contratual'];
+  const rows = issues.map(r => {
+    const cols = [r.key || '', r.url || ''];
+    if (showMunVert) { cols.push(r.municipio || '', r.vertical || ''); }
+    cols.push((r.summary || '').replace(/"/g, '""'), r.status || '', r.prazo ? fmtDate(r.prazo) : '');
+    return cols.map(v => `"${v}"`).join(',');
+  });
+  const csv  = [header.map(v => `"${v}"`).join(','), ...rows].join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `implantacoes_${title.replace(/[^a-z0-9]/gi, '_').slice(0, 60)}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function closeImplModal(e) {
+  if (e && e.target !== document.getElementById('impl-detail-modal')) return;
+  document.getElementById('impl-detail-modal').classList.add('hidden');
+}
+
+// Converte string de SLO ("-1h 30min", "+7h 56min", "—") para número de horas
+function _parseSloStr(s) {
+  if (!s || s === '—') return Infinity; // sem dado vai para o fim
+  const neg    = s.startsWith('-');
+  const abs    = s.replace(/^[+-]/, '');
+  const hMatch = abs.match(/(\d+)h/);
+  const mMatch = abs.match(/(\d+)min/);
+  const val    = (hMatch ? parseInt(hMatch[1]) : 0) + (mMatch ? parseInt(mMatch[1]) / 60 : 0);
+  return neg ? -val : val;
+}
+
+// Contexto do modal de chamados — usado pelo CSV
+let _chamadosModalCtx = { issues: [], showMunVert: false, title: '', source: '' };
+
+function _buildChamadosTable(issues, showMunVert, source) {
+  if (!issues.length) {
+    return '<p style="text-align:center;color:#94A3B8;padding:20px">Nenhum chamado encontrado — execute o Apps Script para popular a aba de issues.</p>';
+  }
+  const isServico    = source !== 'suporte';
+  const munVertHead  = showMunVert
+    ? '<th style="width:130px">Município</th><th style="width:100px">Vertical</th>'
+    : '';
+  const tipoHead     = isServico ? '<th style="width:130px">Tipo</th>' : '';
+  const rows = issues.map(r => {
+    const link = r.url
+      ? `<a href="${r.url}" target="_blank" style="color:#2B6CB0;font-weight:600">${r.key}</a>`
+      : (r.key || '—');
+    const sloVal    = r.slo_horas || '—';
+    const sloExc    = sloVal.startsWith('-');
+    const sloColor  = sloVal === '—' ? '#94A3B8' : sloExc ? '#B91C1C' : '#15803D';
+    const sloBg     = sloVal === '—' ? 'transparent' : sloExc ? '#FEE2E2' : '#DCFCE7';
+    const sloBorder = sloVal === '—' ? 'transparent' : sloExc ? '#FECACA' : '#86EFAC';
+    const sloBadge  = `<span style="display:inline-block;padding:3px 8px;border-radius:12px;background:${sloBg};border:1px solid ${sloBorder};color:${sloColor};font-size:.76rem;font-weight:600;white-space:nowrap">${sloVal}</span>`;
+    const munVertCells = showMunVert
+      ? `<td style="white-space:nowrap;font-size:.78rem">${r.municipio || '—'}</td><td style="font-size:.78rem;white-space:nowrap">${r.vertical || '—'}</td>`
+      : '';
+    const tipoCell = isServico
+      ? `<td style="white-space:nowrap;font-size:.78rem;color:#4A5568">${r.issuetype || '—'}</td>`
+      : '';
+    return `<tr>
+      <td style="white-space:nowrap">${link}</td>
+      ${munVertCells}
+      <td>${r.summary || '—'}</td>
+      <td style="white-space:nowrap;font-size:.78rem;color:#4A5568">${r.responsavel || '—'}</td>
+      ${tipoCell}
+      <td style="text-align:center">${sloBadge}</td>
+      <td style="text-align:left"><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#EDF2F7;font-size:.76rem;white-space:nowrap">${r.status || '—'}</span></td>
+    </tr>`;
+  }).join('');
+  return `<table class="modal-table" style="font-size:.82rem">
+    <thead><tr>
+      <th style="width:110px">Código</th>
+      ${munVertHead}
+      <th>Resumo</th>
+      <th style="width:140px">Responsável</th>
+      ${tipoHead}
+      <th style="width:110px;text-align:center">SLO</th>
+      <th style="width:200px;text-align:center">Status</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function openChamadosModal(td, source) {
+  const mun  = td.dataset.mun;
+  const vert = td.dataset.vert;
+  const pool = source === 'suporte' ? state.suporteIssues : state.chamadosIssues;
+  const issues = pool
+    .filter(r => r.municipio === mun && r.vertical === vert)
+    .sort((a, b) => _parseSloStr(a.slo_horas) - _parseSloStr(b.slo_horas));
+  const src   = source || 'servico';
+  const title = `${mun} — ${vert}`;
+  _chamadosModalCtx = { issues, showMunVert: false, title, source: src };
+  document.getElementById('chamados-modal-title').textContent = title;
+  document.getElementById('chamados-modal-content').innerHTML = _buildChamadosTable(issues, false, src);
+  document.getElementById('chamados-detail-modal').classList.remove('hidden');
+}
+
+function openChamadosTotalModal(source, vert) {
+  const pool   = source === 'suporte' ? state.suporteIssues : state.chamadosIssues;
+  const issues = (vert === '__all__' ? [...pool] : pool.filter(r => (r.vertical || '') === vert))
+    .sort((a, b) => _parseSloStr(a.slo_horas) - _parseSloStr(b.slo_horas));
+  const src   = source === 'suporte' ? 'Suporte' : 'Serviço';
+  const title = vert === '__all__'
+    ? `Total Geral — ${src} — todos os chamados`
+    : `Total — ${src} · ${vert}`;
+  _chamadosModalCtx = { issues, showMunVert: true, title, source };
+  document.getElementById('chamados-modal-title').textContent = title;
+  document.getElementById('chamados-modal-content').innerHTML = _buildChamadosTable(issues, true, source);
+  document.getElementById('chamados-detail-modal').classList.remove('hidden');
+}
+
+function exportChamadosModalCSV() {
+  const { issues, showMunVert, title } = _chamadosModalCtx;
+  if (!issues.length) return;
+  const isServico = _chamadosModalCtx.source !== 'suporte';
+  const header = ['Código', 'URL', ...(showMunVert ? ['Município', 'Vertical'] : []), 'Resumo', 'Responsável', ...(isServico ? ['Tipo'] : []), 'SLO', 'Status'];
+  const rows = issues.map(r => {
+    const cols = [r.key || '', r.url || ''];
+    if (showMunVert) { cols.push(r.municipio || '', r.vertical || ''); }
+    cols.push((r.summary || '').replace(/"/g, '""'), r.responsavel || '');
+    if (isServico) { cols.push(r.issuetype || ''); }
+    cols.push(r.slo_horas || '', r.status || '');
+    return cols.map(v => `"${v}"`).join(',');
+  });
+  const csv  = [header.map(v => `"${v}"`).join(','), ...rows].join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `chamados_${title.replace(/[^a-z0-9]/gi, '_').slice(0, 60)}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function closeChamadosModal(e) {
+  if (e && e.target !== document.getElementById('chamados-detail-modal')) return;
+  document.getElementById('chamados-detail-modal').classList.add('hidden');
+}
+
+function renderChamadosPorCliente() {
+  destroyChart('chart-0');
+  const container = document.getElementById('view0-content');
+
+  if (!state.jira.length) {
+    unavailable(container, 'Dados do Jira indisponíveis. Verifique se a planilha está publicada.');
+    return;
+  }
+
+  // Agregar por município
+  const agg = {};
+  state.jira.forEach(r => {
+    const m = r.municipio || 'Não informado';
+    agg[m] = (agg[m] || 0) + (parseInt(r.total_chamados) || 0);
+  });
+  const sorted = Object.entries(agg).sort((a, b) => b[1] - a[1]);
+  const total = sorted.reduce((s, e) => s + e[1], 0);
+
+  const TOP_N = 10;
+  const top = sorted.slice(0, TOP_N);
+  _outroMunicipios = sorted.slice(TOP_N);
+  const outroTotal = _outroMunicipios.reduce((s, e) => s + e[1], 0);
+
+  const labels = top.map(e => e[0]);
+  const values = top.map(e => e[1]);
+  if (outroTotal > 0) { labels.push('Outro...'); values.push(outroTotal); }
+
+  const colors = PIE_COLORS.slice(0, labels.length);
+  const hasOutro = outroTotal > 0;
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:340px 1fr;gap:32px;align-items:start;margin-top:8px">
+      <div>
+        <div style="font-size:.8rem;font-weight:600;color:var(--text-muted);margin-bottom:2px">Município</div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:14px">Total de Pendências: <strong style="color:var(--text)">${total}</strong></div>
+        <div style="position:relative;height:300px;${hasOutro ? 'cursor:pointer' : ''}" title="${hasOutro ? 'Clique em Outro... para ver os demais municípios' : ''}">
+          <canvas id="chart-0"></canvas>
+        </div>
+        ${hasOutro ? `<div style="font-size:.72rem;color:var(--text-muted);text-align:center;margin-top:6px">Clique em <strong>Outro...</strong> para ver os demais municípios</div>` : ''}
+      </div>
+      <div id="mun-legend" style="margin-top:36px"></div>
+    </div>`;
+
+  charts['chart-0'] = new Chart(document.getElementById('chart-0'), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '52%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} chamados` } }
+      },
+      onClick(_, elements) {
+        if (!elements.length) return;
+        const idx = elements[0].index;
+        if (labels[idx] === 'Outro...') openOutroModal();
+      },
+      onHover(event, elements) {
+        const canvas = event.native?.target;
+        if (!canvas) return;
+        const hovering = elements.length && labels[elements[0].index] === 'Outro...';
+        canvas.style.cursor = hovering ? 'pointer' : 'default';
+      }
+    }
+  });
+
+  // Tabela de legendas
+  const rows = labels.map((label, i) => {
+    const isOutro = label === 'Outro...';
+    const clickAttr = isOutro ? `onclick="openOutroModal()" style="cursor:pointer"` : '';
+    const nameStyle = isOutro
+      ? `font-size:.83rem;color:var(--accent);text-decoration:underline;text-underline-offset:2px`
+      : `font-size:.83rem`;
+    return `
+    <tr style="border-bottom:1px solid #F0F2F5" ${clickAttr}>
+      <td style="padding:5px 8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="display:inline-block;width:13px;height:13px;border-radius:3px;background:${colors[i]};flex-shrink:0"></span>
+          <span style="${nameStyle}">${label}${isOutro ? ' ↗' : ''}</span>
+        </div>
+      </td>
+      <td style="padding:5px 12px;text-align:right;font-size:.83rem;font-weight:700;color:${colors[i]}">${values[i]}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('mun-legend').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;max-width:420px">
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ============================================================
+// VIEW 2 — Chamados por Vertical (Tabela Cruzada)
+// ============================================================
+function renderChamadosPorVertical() {
+  destroyChart('chart-1');
+  const container = document.getElementById('view1-content');
+
+  if (!state.jira.length) {
+    unavailable(container, 'Dados do Jira indisponíveis.');
+    return;
+  }
+
+  // Coletar verticais únicas ordenadas
+  const verticais = [...new Set(state.jira.map(r => r.vertical || 'Não informado'))].sort();
+
+  // Agregar por município × vertical (total + slo_estourado)
+  const munMap = {};
+  const sloMap = {};
+  state.jira.forEach(r => {
+    const m = r.municipio || 'Não informado';
+    const v = r.vertical   || 'Não informado';
+    if (!munMap[m]) munMap[m] = { total: 0 };
+    if (!sloMap[m]) sloMap[m] = {};
+    const n   = parseInt(r.total_chamados) || 0;
+    const slo = parseInt(r.slo_estourado)  || 0;
+    munMap[m][v] = (munMap[m][v] || 0) + n;
+    munMap[m].total += n;
+    sloMap[m][v] = (sloMap[m][v] || 0) + slo;
+  });
+
+  // Municípios ordenados por total desc
+  const municipios = Object.entries(munMap)
+    .sort((a, b) => b[1].total - a[1].total)
+    .map(e => e[0]);
+
+  const thStyle = `padding:8px 8px;text-align:center;font-size:.72rem;font-weight:600;white-space:nowrap;border-right:1px solid rgba(255,255,255,0.15)`;
+  const thFirst = `padding:8px 12px;text-align:left;font-size:.72rem;font-weight:600;white-space:nowrap;border-right:1px solid rgba(255,255,255,0.15)`;
+  const cb      = `padding:5px 8px;text-align:center;font-size:.8rem;border-right:1px solid #EDF2F7`;
+
+  // Totais por vertical (linha de rodapé)
+  const footTotais = {};
+  verticais.forEach(v => { footTotais[v] = 0; });
+  municipios.forEach(m => { verticais.forEach(v => { footTotais[v] += (munMap[m][v] || 0); }); });
+  const totalGeral = municipios.reduce((s, m) => s + munMap[m].total, 0);
+
+  const headerCells = verticais.map(v =>
+    `<th style="${thStyle}" title="${v}">${v.length > 9 ? v.slice(0,8)+'…' : v}</th>`).join('');
+
+  const bodyRows = municipios.map((m, ri) => {
+    const bg = ri % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
+    const cells = verticais.map(v => {
+      const val      = munMap[m][v] || 0;
+      const slo      = (sloMap[m] && sloMap[m][v]) || 0;
+      const munAttr  = m.replace(/"/g, '&quot;');
+      const vertAttr = v.replace(/"/g, '&quot;');
+      if (!val) return `<td style="${cb};color:#CBD5E0">—</td>`;
+      const bg     = slo > 0 ? '#FEE2E2' : '#EFF6FF';
+      const color  = slo > 0 ? '#B91C1C' : '#2563EB';
+      const border = slo > 0 ? '#FECACA' : '#BFDBFE';
+      const tip    = slo > 0
+        ? `${munAttr} · ${vertAttr} — ${slo} com SLO estourado`
+        : `Ver chamados: ${munAttr} · ${vertAttr}`;
+      return `<td style="${cb};background:${bg};color:${color};font-weight:600;border:1px solid ${border};cursor:pointer"
+                data-mun="${munAttr}" data-vert="${vertAttr}"
+                onclick="openChamadosModal(this)"
+                title="${tip}">${val}</td>`;
+    }).join('');
+
+    return `<tr style="background:${bg};border-bottom:1px solid #EDF2F7">
+      <td style="padding:6px 12px;font-size:.8rem;font-weight:600;white-space:nowrap;border-right:1px solid #EDF2F7">${m}</td>
+      ${cells}
+      <td style="padding:6px 8px;text-align:center;font-size:.8rem;font-weight:700;border-left:1px solid #CBD5E0;color:#1E3A5F">${munMap[m].total}</td>
+    </tr>`;
+  }).join('');
+
+  const tdFoot = `padding:6px 8px;text-align:center;font-size:.78rem;border-right:1px solid #CBD5E0;cursor:pointer`;
+  const footCells = verticais.map(v => {
+    const tot   = footTotais[v];
+    const vAttr = v.replace(/'/g, "\\'");
+    return tot
+      ? `<td style="${tdFoot};font-weight:700;color:#2563EB;background:#EDF2F7" title="Ver lista · ${tot} chamados" onclick="openChamadosTotalModal('servico','${vAttr}')">${tot}</td>`
+      : `<td style="${tdFoot};color:#94A3B8;background:#EDF2F7">—</td>`;
+  }).join('');
+
+  const legendaHtml = `
+    <div style="display:flex;gap:16px;margin-top:12px;font-size:.73rem;color:var(--text-muted);flex-wrap:wrap;align-items:center">
+      <strong style="color:var(--text)">Legenda:</strong>
+      <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#FEE2E2;border:1px solid #FECACA"></span> Com SLO estourado</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#EFF6FF;border:1px solid #BFDBFE"></span> Sem SLO estourado</span>
+      <span style="color:#94A3B8;font-style:italic">Clique na célula ou nos totais para ver os chamados</span>
+    </div>`;
+
+  container.innerHTML = `
+    <div style="overflow-x:auto;margin-top:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <table style="width:100%;border-collapse:collapse;font-family:inherit">
+        <thead>
+          <tr style="background:#1E3A5F;color:#fff">
+            <th style="${thFirst}">Município</th>
+            ${headerCells}
+            <th style="${thStyle}">T</th>
+          </tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+        <tfoot>
+          <tr style="background:#EDF2F7;border-top:2px solid #CBD5E0">
+            <td style="padding:6px 12px;font-size:.78rem;font-weight:700;color:#2D3748;border-right:1px solid #CBD5E0">TOTAL</td>
+            ${footCells}
+            <td style="padding:6px 8px;text-align:center;font-size:.78rem;font-weight:700;color:#1E3A5F;background:#E2E8F0;cursor:pointer" title="Ver lista completa · ${totalGeral} chamados" onclick="openChamadosTotalModal('servico','__all__')">${totalGeral}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    ${legendaHtml}`;
+}
+
+// ============================================================
+// HELPER — linha de issue para tabelas de SLO (reutilizado por Serviço e Suporte)
+// ============================================================
+// ============================================================
+// CLASSIFICAÇÃO DE CHAMADOS ABERTOS
+//   • cliente  → aguardando retorno do cliente/solicitante/negociação
+//   • depende  → TODO o restante depende de ação do time, INCLUSIVE
+//                os que aguardam triagem/atendimento (também são ação
+//                do time) e Em atendimento (FL)/N2 (SUP), planejamento.
+//   • fila     → SUBCONJUNTO de "depende": em triagem (Suporte) /
+//                em atendimento (Serviço) — exibido como recorte próprio.
+// Soma: depende + cliente = 100% dos abertos (fila está dentro de depende).
+// ============================================================
+
+// Normaliza status p/ comparação robusta (sem acento, minúsculo, espaços colapsados)
+function _normStatus(s) {
+  return (s || '').toString().trim().toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ');
+}
+
+// Status que aguardam retorno do cliente/solicitante (não dependem do time)
+const STATUS_AGUARDANDO_CLIENTE = [
+  'Aguardando Aprovação do Cliente',
+  'Aguardando aprovação do cliente (Apoio)',
+  'Aguardando aprovação do solicitante',
+  'Aguardando solicitante',
+  'Aguardando Negociação',
+  'Aguardando informações (Planejamento)'
+];
+const _SET_CLIENTE = new Set(STATUS_AGUARDANDO_CLIENTE.map(_normStatus));
+function isAguardandoCliente(r) { return _SET_CLIENTE.has(_normStatus(r.status)); }
+function isTriagemStatus(r)     { return _normStatus(r.status).includes('triagem'); }
+function isAtendimentoStatus(r) { return _normStatus(r.status).includes('atendimento'); }
+
+// Recorte "fila" por guia: em triagem (Suporte) / em atendimento (Serviço)
+function isFilaStatus(r, source) {
+  return source === 'suporte' ? isTriagemStatus(r) : isAtendimentoStatus(r);
+}
+// Depende de ação do time = tudo que NÃO está aguardando retorno do cliente.
+// (Inclui triagem/atendimento, pois também são ações do time.)
+function dependeDoTime(r) {
+  return !isAguardandoCliente(r);
+}
+
+function _buildIssueRow(r, i) {
+  const bg        = i % 2 === 0 ? '#fff' : '#F8FAFC';
+  const sloVal    = r.slo_horas || '—';
+  const sloExc    = sloVal.startsWith('-');
+  const sloColor  = sloVal === '—' ? '#94A3B8' : sloExc ? '#B91C1C' : '#15803D';
+  const sloBg     = sloVal === '—' ? 'transparent' : sloExc ? '#FEE2E2' : '#DCFCE7';
+  const sloBorder = sloVal === '—' ? 'transparent' : sloExc ? '#FECACA' : '#86EFAC';
+  const link      = r.url ? `<a href="${r.url}" target="_blank" style="color:#2B6CB0;font-weight:600">${r.key}</a>` : r.key;
+  const resp      = r.responsavel || '—';
+  return `<tr style="background:${bg};border-bottom:1px solid #EDF2F7">
+    <td style="padding:6px 12px;white-space:nowrap">${link}</td>
+    <td style="padding:6px 12px;font-size:.8rem">${r.municipio || '—'}</td>
+    <td style="padding:6px 12px;font-size:.8rem">${resp}</td>
+    <td style="padding:6px 12px;text-align:center"><span style="display:inline-block;padding:2px 8px;border-radius:12px;background:${sloBg};border:1px solid ${sloBorder};color:${sloColor};font-size:.76rem;font-weight:600;white-space:nowrap">${sloVal}</span></td>
+    <td style="padding:6px 12px;font-size:.78rem"><span style="display:inline-block;padding:2px 8px;border-radius:12px;background:#EDF2F7;white-space:nowrap">${r.status || '—'}</span></td>
+  </tr>`;
+}
+
+// ============================================================
+// HELPER — monta bloco de tabelas por vertical para seções de SLO
+// issues: array já filtrado e ordenado; titulo: texto do cabeçalho da seção
+// ============================================================
+function _renderIssuesPorVertical(container, issues, titulo) {
+  if (!issues.length) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const porVertical = {};
+  issues.forEach(r => {
+    const v = r.vertical || 'Não informado';
+    if (!porVertical[v]) porVertical[v] = [];
+    porVertical[v].push(r);
+  });
+  const verticais = Object.keys(porVertical).sort();
+
+  const tabelasPorVertical = verticais.map(v => {
+    const itens = porVertical[v];
+    const sloEstourado = itens.filter(r => (r.slo_horas || '').startsWith('-')).length;
+    const badgeCor = sloEstourado > 0
+      ? 'background:#FEE2E2;color:#B91C1C;border:1px solid #FECACA'
+      : 'background:#DCFCE7;color:#15803D;border:1px solid #86EFAC';
+    const rows = itens.map((r, i) => _buildIssueRow(r, i)).join('');
+    return `
+      <div style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:.82rem;font-weight:700;color:#1E3A5F">${v}</span>
+          <span style="font-size:.72rem;font-weight:600;padding:1px 8px;border-radius:10px;${badgeCor}">
+            ${sloEstourado > 0 ? sloEstourado + ' com SLO estourado' : '✓ Sem SLO estourado'}
+          </span>
+          <span style="font-size:.72rem;color:#718096">${itens.length} chamado(s)</span>
+        </div>
+        <div style="overflow-x:auto;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+          <table style="width:100%;border-collapse:collapse;font-family:inherit;font-size:.82rem">
+            <thead><tr style="background:#1E3A5F;color:#fff">
+              <th style="padding:8px 12px;text-align:left;font-size:.72rem;font-weight:600;white-space:nowrap">Código</th>
+              <th style="padding:8px 12px;text-align:left;font-size:.72rem;font-weight:600">Município</th>
+              <th style="padding:8px 12px;text-align:left;font-size:.72rem;font-weight:600">Responsável</th>
+              <th style="padding:8px 12px;text-align:center;font-size:.72rem;font-weight:600;white-space:nowrap">SLO</th>
+              <th style="padding:8px 12px;text-align:left;font-size:.72rem;font-weight:600">Status</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="font-size:.9rem;font-weight:700;color:#1E3A5F;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      ${titulo}
+      <span style="font-size:.72rem;font-weight:400;color:#718096">${issues.length} chamado(s) em ${verticais.length} vertical(is) — ordenado por SLO mais crítico</span>
+    </div>
+    ${tabelasPorVertical}`;
+}
+
+// ============================================================
+// VIEW 0 — Aguardando Atendimento × SLO (Chamados de Serviço)
+// ============================================================
+function renderChamadosAtendimento() {
+  const container = document.getElementById('atendimento-content');
+  if (!container) return;
+
+  const issues = state.chamadosIssues
+    .filter(r => (r.status || '').toLowerCase().includes('atendimento'))
+    .sort((a, b) => _parseSloStr(a.slo_horas) - _parseSloStr(b.slo_horas));
+
+  _renderIssuesPorVertical(container, issues, '⏳ Aguardando Atendimento × SLO de Atendimento');
+}
+
+// ============================================================
+// VIEW 6 — Chamados de Suporte (Suporte + Residente)
+// ============================================================
+// ============================================================
+// VISÃO INTERATIVA DE CHAMADOS (Suporte / Serviço)
+// 3 pizzas por vertical (selecionáveis) + 1 listagem por vertical filtrável
+// ============================================================
+const VERT_PIE_COLORS = ['#2B6CB0','#DD6B20','#38A169','#805AD5','#D69E2E','#0987A0','#C53030','#3182CE','#9F7AEA','#48BB78','#718096','#ED8936'];
+
+// Filtro ativo por guia: ds = 'depende' | 'fila' | null ; vert = string | null
+const _chFilter = { suporte: { ds: null, verts: new Set() }, servico: { ds: null, verts: new Set() } };
+
+// Configuração de cada guia (pools de chamados por conjunto)
+function _chamadosCfg(source) {
+  const all = (source === 'suporte' ? state.suporteIssues : state.chamadosIssues) || [];
+  return {
+    source, all,
+    summary: (source === 'suporte' ? state.suporte : state.jira) || [],
+    pie1: { key:'depende', label:'Dependendo de Ação do Time',     color:'#4338CA', issues: all.filter(dependeDoTime) },
+    pie2: { key:'fila',    label: source === 'suporte' ? 'Aguardando Triagem × SLO' : 'Aguardando Atendimento × SLO',
+            color: source === 'suporte' ? '#B45309' : '#0E7490', issues: all.filter(r => isFilaStatus(r, source)) },
+    pie3: { key:'cliente', label:'Aguardando Retorno do Cliente',  color:'#9D174D', issues: all.filter(isAguardandoCliente) },
+    filaLabel:    source === 'suporte' ? 'Aguard. Triagem' : 'Aguard. Atendimento',
+    filaSloLabel: source === 'suporte' ? 'Triagem c/ SLO Estourado' : 'Atendimento c/ SLO Estourado'
+  };
+}
+
+// Lista filtrada conforme seleção (vertical + conjunto da pizza)
+function _chamadosFiltered(cfg) {
+  const cur = _chFilter[cfg.source];
+  let arr;
+  if (!cur.ds || cur.verts.size === 0) arr = cfg.all;
+  else {
+    const ds = cur.ds === 'depende' ? cfg.pie1.issues : cur.ds === 'fila' ? cfg.pie2.issues : cfg.pie3.issues;
+    arr = ds.filter(r => cur.verts.has(r.vertical || 'Não informado'));
+  }
+  return [...arr].sort((a, b) => _parseSloStr(a.slo_horas) - _parseSloStr(b.slo_horas));
+}
+
+// Tabela plana — mesmas colunas das listagens de SLO (Código, Município, Responsável, SLO, Status)
+function _buildFlatChamadosTable(issues) {
+  if (!issues.length) {
+    return '<p style="text-align:center;color:#94A3B8;padding:24px">Nenhum chamado para o filtro selecionado.</p>';
+  }
+  const rows = issues.map((r, i) => _buildIssueRow(r, i)).join('');
+  return `<div style="overflow-x:auto;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+    <table style="width:100%;border-collapse:collapse;font-family:inherit;font-size:.82rem">
+      <thead><tr style="background:#1E3A5F;color:#fff">
+        <th style="padding:8px 12px;text-align:left;font-size:.72rem;font-weight:600;white-space:nowrap">Código</th>
+        <th style="padding:8px 12px;text-align:left;font-size:.72rem;font-weight:600">Município</th>
+        <th style="padding:8px 12px;text-align:left;font-size:.72rem;font-weight:600">Responsável</th>
+        <th style="padding:8px 12px;text-align:center;font-size:.72rem;font-weight:600;white-space:nowrap">SLO</th>
+        <th style="padding:8px 12px;text-align:left;font-size:.72rem;font-weight:600">Status</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+// Pizza por vertical, com clique para filtrar a listagem
+function _renderVertPie(canvasId, issues, source, dsKey) {
+  destroyChart(canvasId);
+  const cont = document.getElementById(canvasId);
+  if (!cont) return;
+  const agg = {};
+  issues.forEach(r => { const v = r.vertical || 'Não informado'; agg[v] = (agg[v] || 0) + 1; });
+  const labels = Object.keys(agg).sort((a, b) => agg[b] - agg[a]);
+  const data   = labels.map(l => agg[l]);
+  const total  = data.reduce((sm, n) => sm + n, 0);
+  if (!total) {
+    if (cont.parentElement) cont.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94A3B8;font-size:.82rem">Nenhum chamado</div>';
+    return;
+  }
+  const colors  = labels.map((_, i) => VERT_PIE_COLORS[i % VERT_PIE_COLORS.length]);
+  const cur     = _chFilter[source];
+  const offsets = labels.map(l => (cur.ds === dsKey && cur.verts.has(l)) ? 18 : 0);
+  charts[canvasId] = new Chart(cont, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff', offset: offsets, hoverOffset: 18 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '56%',
+      onClick: (e, els) => { if (els.length) _toggleChamadosFilter(source, dsKey, labels[els[0].index]); },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed / total * 100)}%) — clique p/ filtrar` } }
+      }
+    },
+    plugins: [{
+      id: 'ct-' + canvasId,
+      afterDraw(chart) {
+        const { ctx, chartArea: { width, height, left, top } } = chart;
+        ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const cx = left + width / 2, cy = top + height / 2;
+        ctx.font = 'bold 22px system-ui'; ctx.fillStyle = '#1A202C'; ctx.fillText(total, cx, cy - 6);
+        ctx.font = '10px system-ui'; ctx.fillStyle = '#718096'; ctx.fillText('chamados', cx, cy + 11);
+        ctx.restore();
+      }
+    }]
+  });
+}
+
+function _toggleChamadosFilter(source, dsKey, vert) {
+  const cur = _chFilter[source];
+  if (cur.ds !== dsKey) { cur.ds = dsKey; cur.verts = new Set([vert]); }
+  else if (cur.verts.has(vert)) { cur.verts.delete(vert); if (cur.verts.size === 0) cur.ds = null; }
+  else { cur.verts.add(vert); }
+  source === 'suporte' ? renderChamadosSuporte() : renderChamadosServico();
+}
+function _clearChamadosFilter(source) {
+  _chFilter[source] = { ds: null, verts: new Set() };
+  source === 'suporte' ? renderChamadosSuporte() : renderChamadosServico();
+}
+
+// Núcleo: KPIs + 2 pizzas + listagem filtrável
+function _renderChamadosTab(source, container) {
+  const cfg = _chamadosCfg(source);
+  const cur = _chFilter[source];
+  const sum = (rows, f) => rows.reduce((sm, r) => sm + (parseInt(r[f]) || 0), 0);
+
+  const totalAbertos = sum(cfg.summary, 'total_chamados');
+  const sloEstour    = sum(cfg.summary, 'slo_estourado');
+  const filaCount    = cfg.pie2.issues.length;
+  const filaSlo      = cfg.pie2.issues.filter(r => (r.slo_horas || '').startsWith('-')).length;
+
+  const kpi = (val, label, bg, bd, fg, lc) => `
+    <div style="background:${bg};border:1px solid ${bd};border-radius:8px;padding:12px 20px;text-align:center;min-width:110px">
+      <div style="font-size:2rem;font-weight:700;color:${fg};line-height:1">${val}</div>
+      <div style="font-size:.68rem;font-weight:600;color:${lc};text-transform:uppercase;margin-top:4px">${label}</div>
+    </div>`;
+  const kpiHtml = `<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+    ${kpi(totalAbertos, 'Total em Aberto', '#EFF6FF', '#BFDBFE', '#2563EB', '#3B82F6')}
+    ${kpi(sloEstour, 'SLO Estourado', sloEstour > 0 ? '#FEF2F2' : '#F0FDF4', sloEstour > 0 ? '#FECACA' : '#86EFAC', sloEstour > 0 ? '#DC2626' : '#15803D', sloEstour > 0 ? '#EF4444' : '#16A34A')}
+    ${kpi(filaCount, cfg.filaLabel, '#FFFBEB', '#FDE68A', '#B45309', '#D97706')}
+    ${kpi(filaSlo, cfg.filaSloLabel, filaSlo > 0 ? '#FEF2F2' : '#F8FAFC', filaSlo > 0 ? '#FECACA' : '#E2E8F0', filaSlo > 0 ? '#DC2626' : '#64748B', filaSlo > 0 ? '#EF4444' : '#94A3B8')}
+  </div>`;
+
+  const c1 = source + '-pie-depende', c2 = source + '-pie-fila', c3 = source + '-pie-cliente';
+  const pieCard = (pie, canvasId, icon) => `
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px">
+        <div style="font-size:.85rem;font-weight:700;color:${pie.color};margin-bottom:8px;display:flex;align-items:center;gap:6px">${icon} ${pie.label} <span style="font-size:.72rem;font-weight:600;color:#718096">${pie.issues.length}</span></div>
+        <div style="position:relative;height:300px"><canvas id="${canvasId}"></canvas></div>
+      </div>`;
+  const piesHtml = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:20px">
+      ${pieCard(cfg.pie1, c1, '👥')}
+      ${pieCard(cfg.pie2, c2, '⏳')}
+      ${pieCard(cfg.pie3, c3, '🙋')}
+    </div>`;
+
+  const filterActive = cur.ds && cur.verts.size > 0;
+  const dsLabel = cur.ds === 'depende' ? cfg.pie1.label : cur.ds === 'fila' ? cfg.pie2.label : cfg.pie3.label;
+  const chips = filterActive ? [...cur.verts].map(v =>
+    `<span style="font-size:.76rem;font-weight:700;padding:3px 12px;border-radius:14px;background:#E0E7FF;color:#3730A3;border:1px solid #C7D2FE">${v}</span>`).join(' ') : '';
+  const filtroBar = filterActive
+    ? `<div style="display:flex;align-items:center;gap:8px;margin:18px 0 12px;flex-wrap:wrap">
+         <span style="font-size:.78rem;color:#475569">Filtro (${dsLabel}):</span>
+         ${chips}
+         <button onclick="_clearChamadosFilter('${source}')" style="font-size:.74rem;font-weight:600;padding:3px 12px;border-radius:14px;border:1px solid #CBD5E0;background:#fff;color:#475569;cursor:pointer">✕ Limpar filtro</button>
+       </div>`
+    : `<div style="font-size:.74rem;color:#94A3B8;margin:18px 0 12px;font-style:italic">💡 Clique em uma ou mais fatias dos gráficos para filtrar a listagem por vertical. Clique de novo numa fatia para removê-la.</div>`;
+
+  const listIssues = _chamadosFiltered(cfg);
+  const listLabel  = filterActive ? `${dsLabel} · ${[...cur.verts].join(', ')}` : 'Todos os chamados em aberto';
+
+  container.innerHTML = kpiHtml + piesHtml + filtroBar + `<div id="${source}-listagem"></div>`;
+  _renderVertPie(c1, cfg.pie1.issues, source, 'depende');
+  _renderVertPie(c2, cfg.pie2.issues, source, 'fila');
+  _renderVertPie(c3, cfg.pie3.issues, source, 'cliente');
+  const listEl = document.getElementById(source + '-listagem');
+  if (!listIssues.length) {
+    listEl.innerHTML = '<p style="text-align:center;color:#94A3B8;padding:24px">Nenhum chamado para o filtro selecionado.</p>';
+  } else {
+    _renderIssuesPorVertical(listEl, listIssues, `📋 Listagem — ${listLabel}`);
+  }
+}
+
+function renderChamadosSuporte() {
+  const container = document.getElementById('suporte-content');
+  if (!container) return;
+  if (!(state.suporte || []).length && !(state.suporteIssues || []).length) {
+    unavailable(container, 'Dados de Chamados de Suporte indisponíveis. Execute o Apps Script para popular a aba Jira_Chamados_Suporte.');
+    return;
+  }
+  _renderChamadosTab('suporte', container);
+}
+
+function renderChamadosServico() {
+  const container = document.getElementById('servico-content');
+  if (!container) return;
+  if (!(state.jira || []).length && !(state.chamadosIssues || []).length) {
+    unavailable(container, 'Dados de Chamados de Serviço indisponíveis. Verifique se a planilha está publicada.');
+    return;
+  }
+  _renderChamadosTab('servico', container);
+}
+
+// ============================================================
+// VIEW 3 — CND (sub-abas Estadual + Federal)
+// ============================================================
+
+// Helper genérico: donut "Com/Sem CND" com % centralizado
+function makeCNDDonutGeneric(canvasId, comCount, semCount, opts) {
+  opts = opts || {};
+  const com = comCount, sem = semCount;
+  const total = com + sem;
+  const pct = total ? Math.round(com / total * 100) : 0;
+  const highlight = !!opts.highlight;
+
+  charts[canvasId] = new Chart(document.getElementById(canvasId), {
+    type: 'doughnut',
+    data: {
+      labels: ['Com CND', 'Sem CND'],
+      datasets: [{
+        data: [com, sem],
+        backgroundColor: ['#276749', '#C53030'],
+        borderWidth: highlight ? 0 : 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${total ? Math.round(ctx.parsed/total*100) : 0}%)` } }
+      }
+    },
+    plugins: [{
+      id: 'center-text-' + canvasId,
+      afterDraw(chart) {
+        const { ctx, chartArea: { width, height, left, top } } = chart;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const cx = left + width / 2, cy = top + height / 2;
+        ctx.font = 'bold ' + (highlight ? 24 : 20) + 'px system-ui';
+        ctx.fillStyle = '#1A202C';
+        ctx.fillText(pct + '%', cx, cy - 6);
+        ctx.font = '10px system-ui';
+        ctx.fillStyle = '#718096';
+        ctx.fillText(opts.subText || 'com CND', cx, cy + 11);
+        ctx.restore();
+      }
+    }]
+  });
+  return { com, sem, total, pct };
+}
+
+// Formata qualquer representação de data para dd/MM/yyyy (sem hora)
+// Aceita: Date JS string ("Fri Mar 27 2026..."), ISO, ou já formatado DD/MM/YYYY [HH:mm:ss]
+function formatDataFonte(raw) {
+  if (!raw) return '';
+  const s = raw.toString().trim();
+  // Já é DD/MM/YYYY (com ou sem hora) → devolve só a parte da data
+  const mDate = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (mDate) {
+    const dd = mDate[1].padStart(2,'0'), mm = mDate[2].padStart(2,'0');
+    let yy = mDate[3]; if (yy.length === 2) yy = '20' + yy;
+    return `${dd}/${mm}/${yy}`;
+  }
+  // Qualquer outra coisa parseável (JS Date toString, ISO, etc.)
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    const pad = n => String(n).padStart(2,'0');
+    return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+  }
+  return s; // fallback
+}
+
+// Formata tipo de entidade (SICONFI): PREFEITURA, CAMARA, FUNDO_FUNDACAO, CONSORCIO
+function formatTipoEntidade(t) {
+  if (!t) return '';
+  const s = t.toString().trim().toUpperCase();
+  if (s === 'PREFEITURA')      return 'Prefeitura';
+  if (s === 'CAMARA')          return 'Câmara';
+  if (s === 'FUNDO_FUNDACAO')  return 'Fundo/Fundação';
+  if (s === 'CONSORCIO')       return 'Consórcio';
+  // Fallback: title case + troca underscore por espaço
+  return t.toString().replace(/_/g, ' ').toLowerCase()
+    .split(/\s+/).filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+// Title Case para município (com preposições minúsculas) — aplicado no client como defesa
+function titleCaseMun(s) {
+  if (!s) return '';
+  const lower = { 'de':1,'da':1,'do':1,'dos':1,'das':1,'e':1,'a':1,'o':1 };
+  return s.toString().toLowerCase().split(/\s+/).filter(Boolean).map((w, i) => {
+    if (i > 0 && lower[w]) return w;
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join(' ');
+}
+
+// Banner "Fonte atualizada em DD/MM/YYYY HH:MM:SS" no topo de cada sub-aba CND
+function renderCNDStatusFonte(containerId, dataFonte, nomeFonte) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!dataFonte) { el.innerHTML = ''; return; }
+  const display = formatDataFonte(dataFonte);
+  el.innerHTML = `
+    <div style="display:inline-flex;align-items:center;gap:8px;background:#EDF2F7;border-left:3px solid #2B6CB0;padding:8px 14px;border-radius:6px;font-size:.82rem;color:#2D3748">
+      <span style="font-size:1rem">📅</span>
+      <span><strong>Fonte ${nomeFonte} atualizada em:</strong> ${display}</span>
+    </div>`;
+}
+
+// Alterna sub-aba CND (Estadual/Federal)
+function switchCNDSubTab(tab) {
+  state.cndSubTab = tab;
+  const paneE = document.getElementById('cnd-pane-estadual');
+  const paneF = document.getElementById('cnd-pane-federal');
+  const btnE  = document.getElementById('cnd-sub-estadual');
+  const btnF  = document.getElementById('cnd-sub-federal');
+  if (tab === 'federal') {
+    paneE.style.display = 'none'; paneF.style.display = '';
+    btnF.style.color = 'var(--accent)';  btnF.style.borderBottomColor = 'var(--accent)';
+    btnE.style.color = 'var(--text-muted)'; btnE.style.borderBottomColor = 'transparent';
+  } else {
+    paneE.style.display = ''; paneF.style.display = 'none';
+    btnE.style.color = 'var(--accent)';  btnE.style.borderBottomColor = 'var(--accent)';
+    btnF.style.color = 'var(--text-muted)'; btnF.style.borderBottomColor = 'transparent';
+  }
+  renderCND();
+}
+
+function renderCND() {
+  // Destroi charts existentes (tanto estadual quanto federal)
+  destroyChart('cnd-est-atual');
+  destroyChart('cnd-fed-atual');
+
+  // Destaque visual das sub-abas no primeiro render
+  const btnE = document.getElementById('cnd-sub-estadual');
+  const btnF = document.getElementById('cnd-sub-federal');
+  if (btnE && btnF && !btnE.getAttribute('data-styled')) {
+    btnE.setAttribute('data-styled', '1');
+    const isEst = state.cndSubTab !== 'federal';
+    btnE.style.color = isEst ? 'var(--accent)' : 'var(--text-muted)';
+    btnE.style.borderBottomColor = isEst ? 'var(--accent)' : 'transparent';
+    btnF.style.color = !isEst ? 'var(--accent)' : 'var(--text-muted)';
+    btnF.style.borderBottomColor = !isEst ? 'var(--accent)' : 'transparent';
+  }
+
+  if (state.cndSubTab === 'federal') renderCNDFederal();
+  else renderCNDEstadual();
+}
+
+// ─── Toggle expand/collapse de sub-linhas de entidades ────────────────
+function toggleCndGroup(grpId) {
+  const rows = document.querySelectorAll('.' + grpId);
+  const arrow = document.getElementById('arrow-' + grpId);
+  const visible = rows.length && rows[0].style.display !== 'none';
+  rows.forEach(r => r.style.display = visible ? 'none' : 'table-row');
+  if (arrow) arrow.style.transform = visible ? 'rotate(0deg)' : 'rotate(90deg)';
+}
+
+// ─── Estadual (TCE-SC): período anterior + período atual ─────────
+function renderCNDEstadual() {
+  const donutsDiv = document.getElementById('cnd-estadual-donuts');
+  const tableDiv  = document.getElementById('cnd-estadual-table');
+
+  if (!state.cndEstadual.length) {
+    donutsDiv.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--text-muted)">Dados CND Estadual indisponíveis.</div>';
+    tableDiv.innerHTML = '';
+    renderCNDStatusFonte('cnd-estadual-status', '', '');
+    return;
+  }
+
+  const labels = [
+    { key: 'periodo1', label: state.cndEstadual[0].p1_label || 'Período 1' },
+    { key: 'periodo2', label: state.cndEstadual[0].p2_label || 'Período 2' },
+    { key: 'periodo3', label: state.cndEstadual[0].p3_label || 'Período 3' },
+  ];
+  const parseStartDate = (lbl) => {
+    const m = lbl.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+    if (!m) return null;
+    const yy = m[3].length === 2 ? 2000 + parseInt(m[3]) : parseInt(m[3]);
+    return new Date(yy, parseInt(m[2]) - 1, parseInt(m[1]));
+  };
+
+  // Detectar o período cronologicamente atual
+  const hoje = new Date();
+  let curIdx = 0;
+  labels.forEach((p, i) => { const d = parseStartDate(p.label); if (d && d <= hoje) curIdx = i; });
+
+  // Período atual (cronológico) e anterior
+  const curPeriod  = labels[curIdx];
+  const prevPeriod = curIdx > 0 ? labels[curIdx - 1] : null;
+
+  const statusFonte = state.cndEstadual[0].status_fonte || '';
+  renderCNDStatusFonte('cnd-estadual-status', statusFonte, 'e-Sfinge TCE/SC');
+
+  // Agrupar por município
+  const ordenados = [...state.cndEstadual].sort((a, b) => {
+    const mdiff = a.municipio.localeCompare(b.municipio, 'pt-BR');
+    if (mdiff !== 0) return mdiff;
+    return (a.entidade || '').localeCompare(b.entidade || '', 'pt-BR');
+  });
+  const grupos = {};
+  ordenados.forEach(r => {
+    const key = normMun(r.municipio);
+    if (!grupos[key]) grupos[key] = { nome: r.municipio, items: [] };
+    grupos[key].items.push(r);
+  });
+  const munKeys = Object.keys(grupos).sort((a, b) => grupos[a].nome.localeCompare(grupos[b].nome, 'pt-BR'));
+  const totalMuns = munKeys.length;
+
+  // Conta municípios Com / Sem CND para um dado período
+  const countPeriod = (key) => {
+    const com = munKeys.filter(k => {
+      const items = grupos[k].items;
+      return !items.some(r => r[key] === 'Sem CND') && items.some(r => r[key] === 'Com CND');
+    }).length;
+    const semOrAusente = munKeys.filter(k => grupos[k].items.some(r => r[key] === 'Sem CND')).length;
+    const hasAnyData = state.cndEstadual.some(r => r[key] === 'Com CND' || r[key] === 'Sem CND');
+    return { com, sem: semOrAusente, total: totalMuns, hasData: hasAnyData };
+  };
+
+  // ── Donuts ──────────────────────────────────────────────────────
+  const makeDonutBlock = (title, label, key, canvasId, highlight) => {
+    const { com, sem, hasData } = countPeriod(key);
+    const donutEl = hasData
+      ? `<div class="chart-wrap short"><canvas id="${canvasId}"></canvas></div>`
+      : `<div style="height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+           <div style="width:80px;height:80px;border-radius:50%;border:10px solid #E2E8F0;display:flex;align-items:center;justify-content:center">
+             <span style="font-size:.7rem;color:#A0AEC0;font-weight:600;text-align:center">Em<br>andamento</span>
+           </div>
+         </div>`;
+    return { html: `
+      <div style="max-width:220px;margin:0 auto;text-align:center">
+        <div style="font-size:.82rem;font-weight:700;color:var(--accent);margin-bottom:2px">${title}</div>
+        <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:8px">${label}</div>
+        ${donutEl}
+      </div>`, com, sem, hasData };
+  };
+
+  let donutsHTML = '';
+  const donuts = [];
+
+  if (prevPeriod) {
+    const b = makeDonutBlock('Período Anterior', prevPeriod.label, prevPeriod.key, 'cnd-est-prev', false);
+    donuts.push({ id: 'cnd-est-prev', com: b.com, sem: b.sem, hasData: b.hasData, highlight: false });
+    donutsHTML += b.html;
+  }
+  const bCur = makeDonutBlock('Período Atual', curPeriod.label, curPeriod.key, 'cnd-est-cur', true);
+  donuts.push({ id: 'cnd-est-cur', com: bCur.com, sem: bCur.sem, hasData: bCur.hasData, highlight: true });
+  donutsHTML += bCur.html;
+
+  donutsDiv.innerHTML = `<div style="display:flex;justify-content:center;gap:32px;align-items:start;flex-wrap:wrap">${donutsHTML}</div>`;
+  donuts.forEach(d => { if (d.hasData) makeCNDDonutGeneric(d.id, d.com, d.sem, { highlight: d.highlight }); });
+
+  // ── Badges ──────────────────────────────────────────────────────
+  const badgeMun = (v, isCurrentPeriod) => {
+    if (v === 'Com CND') return `<span style="background:#C6F6D5;color:#276749;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;white-space:nowrap">✓ Com CND</span>`;
+    if (v === 'Sem CND') return `<span style="background:#FED7D7;color:#C53030;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;white-space:nowrap">✗ Sem CND</span>`;
+    if (isCurrentPeriod) return `<span style="background:#EDF2F7;color:#718096;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:600;white-space:nowrap">Em andamento</span>`;
+    return `<span style="color:#A0AEC0;font-size:.78rem">—</span>`;
+  };
+
+  // ── Tabela com 2 colunas de período ─────────────────────────────
+  const prevCol = prevPeriod
+    ? `<th style="padding:10px 12px;font-size:.73rem;white-space:nowrap">Anterior<br><span style="font-weight:400;font-size:.68rem">${prevPeriod.label}</span></th>`
+    : '';
+  const rows = munKeys.map((k, gi) => {
+    const { nome: mun, items } = grupos[k];
+    const bg = gi % 2 === 0 ? '#fff' : '#F8FAFC';
+    const r = items[0];
+    const prevCell = prevPeriod
+      ? `<td style="padding:8px 12px;text-align:center">${badgeMun(r[prevPeriod.key], false)}</td>`
+      : '';
+    return `<tr style="background:${bg}">
+      <td style="padding:8px 12px;font-size:.82rem;font-weight:600">${mun}</td>
+      ${prevCell}
+      <td style="padding:8px 12px;text-align:center">${badgeMun(r[curPeriod.key], true)}</td>
+    </tr>`;
+  }).join('');
+
+  tableDiv.innerHTML = `
+    <h4 style="font-size:.85rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">
+      Situação CND Estadual
+    </h4>
+    <div style="overflow-x:auto;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
+    <table style="width:100%;border-collapse:collapse;font-family:inherit">
+      <thead>
+        <tr style="background:var(--header-bg);color:#fff;text-align:center">
+          <th style="padding:10px 12px;text-align:left;font-size:.76rem">Município</th>
+          ${prevCol}
+          <th style="padding:10px 12px;font-size:.73rem;white-space:nowrap">Atual<br><span style="font-weight:400;font-size:.68rem">${curPeriod.label}</span></th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>`;
+}
+
+// ─── Federal (SICONFI): somente mês atual ────────────────────────────
+function renderCNDFederal() {
+  const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const MESES_LBL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const donutsDiv = document.getElementById('cnd-federal-donuts');
+  const tableDiv  = document.getElementById('cnd-federal-table');
+
+  if (!state.cndFederal.length) {
+    donutsDiv.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--text-muted)">Dados CND Federal indisponíveis.</div>';
+    tableDiv.innerHTML = '';
+    renderCNDStatusFonte('cnd-federal-status', '', '');
+    return;
+  }
+
+  renderCNDStatusFonte('cnd-federal-status', state.cndFederal[0].status_fonte || '', 'SICONFI');
+
+  // Classifica status
+  const classify = (v) => {
+    const s = (v || '').toString().trim().toLowerCase();
+    if (!s) return 'nd';
+    const isNao = s.includes('não') || s.includes('nao');
+    if (s.includes('enviado') && !isNao) return 'com';
+    if (isNao && s.includes('enviado') && !s.includes('-') && !s.includes('problema') && !s.includes('atraso')) return 'sem';
+    return 'atraso';
+  };
+
+  // Mês atual
+  const mesAtual = new Date().getMonth(); // 0..11
+  const mesKey   = MESES[mesAtual];
+  const mesLabel = MESES_LBL[mesAtual];
+  const anoAtual = new Date().getFullYear();
+
+  // Agrupar por município (dados reais)
+  const ordenados = [...state.cndFederal].sort((a, b) => {
+    const mdiff = a.municipio.localeCompare(b.municipio, 'pt-BR');
+    if (mdiff !== 0) return mdiff;
+    return (a.tipo || '').localeCompare(b.tipo || '', 'pt-BR');
+  });
+  const grupos = {};
+  ordenados.forEach(r => {
+    const key = normMun(r.municipio);
+    if (!grupos[key]) grupos[key] = { nome: r.municipio, items: [] };
+    grupos[key].items.push(r);
+  });
+  const munKeys = Object.keys(grupos).sort((a, b) => grupos[a].nome.localeCompare(grupos[b].nome, 'pt-BR'));
+  const totalMuns = munKeys.length;
+
+  // Donut — apenas municípios presentes nos dados
+  const comMun = munKeys.filter(k => {
+    const vals = grupos[k].items.map(r => classify(r[mesKey]));
+    return vals.every(v => v === 'com' || v === 'nd') && vals.some(v => v === 'com');
+  }).length;
+  const semMun = totalMuns - comMun;
+
+  donutsDiv.innerHTML = `
+    <div style="max-width:220px;margin:0 auto">
+      <div style="text-align:center;font-size:.82rem;font-weight:700;color:var(--accent);margin-bottom:2px">Mês Atual</div>
+      <div style="text-align:center;font-size:.72rem;color:var(--text-muted);margin-bottom:8px">${mesLabel} ${anoAtual}</div>
+      <div class="chart-wrap short"><canvas id="cnd-fed-atual"></canvas></div>
+    </div>`;
+  makeCNDDonutGeneric('cnd-fed-atual', comMun, semMun, { highlight: true, subText: 'com CND' });
+
+  // Badges — município
+  const badgeMun = (worst) => {
+    if (worst === 'com') return `<span style="background:#C6F6D5;color:#276749;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;white-space:nowrap">✓ Com CND</span>`;
+    if (worst === 'sem' || worst === 'atraso') return `<span style="background:#FED7D7;color:#C53030;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;white-space:nowrap">✗ Sem CND</span>`;
+    return `<span style="color:#A0AEC0;font-size:.78rem">—</span>`;
+  };
+
+  // Badges — entidade (detalhe da pendência)
+  const badgeEnt = (v) => {
+    const k = classify(v);
+    if (k === 'com')    return `<span style="background:#C6F6D5;color:#276749;padding:2px 10px;border-radius:10px;font-size:.74rem;font-weight:600;white-space:nowrap">✓ Sem Pendência</span>`;
+    if (k === 'atraso') return `<span style="background:#FEEBC8;color:#9C4221;padding:2px 10px;border-radius:10px;font-size:.74rem;font-weight:600;white-space:nowrap">⚠ Com Problema</span>`;
+    if (k === 'sem')    return `<span style="background:#FED7D7;color:#C53030;padding:2px 10px;border-radius:10px;font-size:.74rem;font-weight:600;white-space:nowrap">✗ Não Enviado</span>`;
+    return `<span style="color:#A0AEC0;font-size:.74rem">—</span>`;
+  };
+
+  const munStatusVal = (items) => {
+    const vals = items.map(r => classify(r[mesKey]));
+    if (vals.includes('atraso')) return 'atraso';
+    if (vals.includes('sem'))    return 'sem';
+    if (vals.includes('com'))    return 'com';
+    return 'nd';
+  };
+
+  const rows = munKeys.map((k, gi) => {
+    const { nome: mun, items } = grupos[k];
+    const bg = gi % 2 === 0 ? '#fff' : '#F8FAFC';
+    const hasMultiple = items.length > 1;
+    const grpId = 'fed-grp-' + gi;
+
+    const arrow = hasMultiple ? `<span class="cnd-expand-arrow" id="arrow-${grpId}" style="display:inline-block;transition:transform .2s;margin-right:6px;font-size:.7rem;color:var(--text-muted)">▶</span>` : `<span style="display:inline-block;width:16px"></span>`;
+    const cursor = hasMultiple ? 'cursor:pointer' : '';
+    const onclick = hasMultiple ? `onclick="toggleCndGroup('${grpId}')"` : '';
+
+    let mainRow;
+    if (hasMultiple) {
+      const countLabel = `<span style="font-size:.7rem;color:var(--text-muted);font-weight:400;margin-left:6px">(${items.length} entidades)</span>`;
+      mainRow = `<tr style="background:${bg};${cursor}" ${onclick}>
+        <td style="padding:8px 12px;font-size:.82rem;font-weight:600;white-space:nowrap">${arrow}${mun}${countLabel}</td>
+        <td style="padding:8px 12px;text-align:center">${badgeMun(munStatusVal(items))}</td>
+      </tr>`;
+    } else {
+      mainRow = `<tr style="background:${bg}">
+        <td style="padding:8px 12px;font-size:.82rem;font-weight:600;white-space:nowrap">${arrow}${mun}</td>
+        <td style="padding:8px 12px;text-align:center">${badgeMun(classify(items[0][mesKey]))}</td>
+      </tr>`;
+    }
+
+    const subRows = hasMultiple ? items.map(r => {
+      return `<tr class="${grpId}" style="display:none;background:${gi % 2 === 0 ? '#F7FAFC' : '#EDF2F7'}">
+        <td style="padding:4px 12px 4px 34px;font-size:.76rem;color:var(--text-muted);white-space:nowrap;border-left:3px solid #CBD5E0">↳ ${formatTipoEntidade(r.tipo)}</td>
+        <td style="padding:4px 12px;text-align:center">${badgeEnt(r[mesKey])}</td>
+      </tr>`;
+    }).join('') : '';
+
+    return mainRow + subRows;
+  }).join('');
+
+  tableDiv.innerHTML = `
+    <h4 style="font-size:.85rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">
+      Situação CND Federal — ${mesLabel} ${anoAtual}
+    </h4>
+    <div style="overflow-x:auto;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
+    <table style="width:100%;border-collapse:collapse;font-family:inherit">
+      <thead>
+        <tr style="background:var(--header-bg);color:#fff;text-align:center">
+          <th style="padding:10px 12px;text-align:left;font-size:.76rem">Município</th>
+          <th style="padding:10px 12px;font-size:.76rem">Situação</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>`;
+}
+
+// ============================================================
+// VIEW 4 — Risco de Churn
+// ============================================================
+function renderRisco() {
+  const container = document.getElementById('risk-container');
+  if (!state.risco.length) {
+    unavailable(container, 'Dados de risco indisponíveis. Verifique se a planilha está publicada.');
+    return;
+  }
+
+  // Normalize risco value (strips accents for CSS class use)
+  const normRisco = v => (v || '').trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  const alto     = state.risco.filter(r => normRisco(r.risco) === 'Alto');
+  const medio    = state.risco.filter(r => normRisco(r.risco) === 'Medio');
+  const baixo    = state.risco.filter(r => normRisco(r.risco) === 'Baixo');
+  const semRisco = state.risco.filter(r => !r.risco || r.risco === 'Sem Risco');
+  const emRisco  = [...alto, ...medio, ...baixo];
+
+  // ── KPI cards ──────────────────────────────────────────────
+  const kpiHtml = `<div class="risk-kpis">
+    <div class="risk-kpi-card" style="background:#fef2f2;border-color:#fca5a5">
+      <div class="risk-kpi-num" style="color:#dc2626">${alto.length}</div>
+      <div class="risk-kpi-label" style="color:#b91c1c">Alto Risco</div>
+    </div>
+    <div class="risk-kpi-card" style="background:#fff7ed;border-color:#fdba74">
+      <div class="risk-kpi-num" style="color:#ea580c">${medio.length}</div>
+      <div class="risk-kpi-label" style="color:#c2410c">Médio Risco</div>
+    </div>
+    ${baixo.length ? `<div class="risk-kpi-card" style="background:#fefce8;border-color:#fde047">
+      <div class="risk-kpi-num" style="color:#d97706">${baixo.length}</div>
+      <div class="risk-kpi-label" style="color:#b45309">Baixo Risco</div>
+    </div>` : ''}
+    <div class="risk-kpi-card" style="background:#f0fdf4;border-color:#86efac">
+      <div class="risk-kpi-num" style="color:#16a34a">${semRisco.length}</div>
+      <div class="risk-kpi-label" style="color:#15803d">Sem Risco</div>
+    </div>
+  </div>`;
+
+  // ── Insights: agrupar motivos por tema ────────────────────
+  const TEMAS = [
+    { label: 'Licitando / IPM',  keys: ['licitad', 'licitac', 'ipm'],          color: '#dc2626' },
+    { label: 'Apenas Educação',  keys: ['educac', 'educao'],                    color: '#d97706' },
+    { label: 'Migrado recente',  keys: ['migrado', 'migracao', 'migrac'],       color: '#ea580c' },
+    { label: 'Apenas Saúde',     keys: ['saude', 'saúde'],                      color: '#7c3aed' },
+    { label: 'Câmara Municipal', keys: ['camara', 'câmara'],                    color: '#0891b2' },
+    { label: 'Consórcio',        keys: ['consorcio', 'consórcio'],              color: '#2563eb' },
+    { label: 'Merece atenção',   keys: ['atenc', 'atenção', 'auxilio', 'merece'], color: '#059669' },
+  ];
+
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  const temaData = TEMAS.map(t => {
+    const matches = emRisco.filter(r => {
+      const m = norm(r.motivo || '');
+      return t.keys.some(k => m.includes(k));
+    });
+    return { ...t, count: matches.length, nomes: matches.map(r => r.municipio) };
+  }).filter(t => t.count > 0).sort((a, b) => b.count - a.count);
+
+  const semMotivo = emRisco.filter(r => !r.motivo || !r.motivo.trim());
+
+  const pillsHtml = [
+    ...temaData.map(t => `
+      <div class="risk-tema-pill" title="Municípios: ${t.nomes.join(', ')}" style="border-color:${t.color};color:${t.color}">
+        <span class="risk-tema-count" style="background:${t.color}">${t.count}</span>
+        ${t.label}
+      </div>`),
+    semMotivo.length ? `<div class="risk-tema-pill" style="border-color:#94a3b8;color:#64748b">
+        <span class="risk-tema-count" style="background:#94a3b8">${semMotivo.length}</span>
+        Sem motivo
+      </div>` : '',
+  ].join('');
+
+  // ── Tabela de municípios em risco ─────────────────────────
+  const badgeClass = r => 'risk-badge risk-badge-' + normRisco(r.risco);
+  const tableRows = emRisco.map(r => `
+    <tr>
+      <td class="risk-table-mun">${r.municipio}</td>
+      <td><span class="${badgeClass(r)}">${r.risco || '—'}</span></td>
+      <td class="risk-table-motivo">${r.motivo || '—'}</td>
+      <td class="risk-table-cons">${r.consultor || '—'}</td>
+    </tr>`).join('');
+
+  // ── Montar HTML ────────────────────────────────────────────
+  destroyChart('chart-3');
+  container.innerHTML = kpiHtml + `
+    <div class="risk-main">
+      <div>
+        <div class="risk-col-title">Distribuição por risco</div>
+        <div style="height:240px"><canvas id="chart-3"></canvas></div>
+      </div>
+      <div>
+        <div class="risk-col-title">Motivos mapeados</div>
+        <div class="risk-temas">${pillsHtml}</div>
+      </div>
+    </div>
+    <div style="margin-top:24px">
+      <div class="risk-col-title">Municípios em risco — ${emRisco.length} clientes</div>
+      <table class="risk-table">
+        <thead><tr>
+          <th>Município</th><th>Risco</th><th>Motivo</th><th>Consultor</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>`;
+
+  // ── Donut de distribuição ──────────────────────────────────
+  const donutData = [
+    { label: 'Alto',      count: alto.length,     color: '#dc2626' },
+    { label: 'Médio',     count: medio.length,    color: '#ea580c' },
+    { label: 'Baixo',     count: baixo.length,    color: '#d97706' },
+    { label: 'Sem Risco', count: semRisco.length, color: '#16a34a' },
+  ].filter(d => d.count > 0);
+
+  charts['chart-3'] = new Chart(document.getElementById('chart-3'), {
+    type: 'doughnut',
+    data: {
+      labels: donutData.map(d => d.label),
+      datasets: [{ data: donutData.map(d => d.count), backgroundColor: donutData.map(d => d.color), borderWidth: 0 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.parsed + ' municípios' } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// VIEW 5 — NPS Geral
+// ============================================================
+function renderNPSGeral() {
+  destroyChart('chart-4');
+  const canvas = document.getElementById('chart-4');
+
+  if (!state.nps.length) {
+    unavailable(document.getElementById('nps-panel'), 'Dados NPS indisponíveis.');
+    return;
+  }
+
+  const { score, promotores, neutros, detratores, total } = calcNPS(state.nps);
+  const zone = npsZone(score);
+
+  // Score box + zona
+  const numEl = document.getElementById('nps-score-num');
+  numEl.textContent = score;
+  numEl.style.color = zone.color;
+  numEl.className = 'nps-score-num';
+
+  // Zona label (injeta abaixo do score se existir elemento, ou no titulo)
+  const zoneEl = document.getElementById('nps-zone-label');
+  if (zoneEl) {
+    zoneEl.textContent = zone.label;
+    zoneEl.style.color = zone.color;
+    zoneEl.style.background = zone.bg;
+  }
+
+  // Categorias
+  document.getElementById('nps-cats').innerHTML = [
+    { label: 'Promotores (9–10)', count: promotores, color: '#16a34a' },
+    { label: 'Neutros (7–8)',     count: neutros,    color: '#ca8a04' },
+    { label: 'Detratores (0–6)', count: detratores, color: '#dc2626' },
+  ].map(c => `
+    <div class="nps-cat">
+      <div class="nps-cat-dot" style="background:${c.color}"></div>
+      <div class="nps-cat-info">
+        <div class="nps-cat-name">${c.label}</div>
+        <div class="nps-cat-count">${c.count} respostas (${total ? Math.round(c.count/total*100) : 0}%)</div>
+      </div>
+    </div>`).join('');
+
+  // Barra proporcional
+  const pProm = total ? promotores / total * 100 : 0;
+  const pNeu  = total ? neutros    / total * 100 : 0;
+  const pDetr = total ? detratores / total * 100 : 0;
+  document.getElementById('nps-bar').innerHTML = `
+    <div class="nps-bar-seg" style="width:${pProm}%;background:#16a34a" title="Promotores: ${promotores}"></div>
+    <div class="nps-bar-seg" style="width:${pNeu}%;background:#ca8a04"  title="Neutros: ${neutros}"></div>
+    <div class="nps-bar-seg" style="width:${pDetr}%;background:#dc2626" title="Detratores: ${detratores}"></div>`;
+
+  // Tabela de zonas NPS — destaca a zona atual
+  const zonaTabEl = document.getElementById('nps-zona-tabela');
+  if (zonaTabEl) {
+    const zonas = [
+      { faixa: '76 a 100', zona: 'Excelência',      color: '#16a34a' },
+      { faixa: '51 a 75',  zona: 'Qualidade',       color: '#65a30d' },
+      { faixa: '1 a 50',   zona: 'Aperfeiçoamento', color: '#ea580c' },
+      { faixa: '-100 a 0', zona: 'Crítica',          color: '#dc2626' },
+    ];
+    zonaTabEl.innerHTML = zonas.map(z => {
+      const ativo = zone.label === z.zona;
+      const rowStyle = ativo ? 'background:' + z.color + '18;font-weight:700' : '';
+      return '<tr style="' + rowStyle + '">' +
+        '<td style="padding:4px 10px;color:' + z.color + ';font-weight:bold">' + z.faixa + '</td>' +
+        '<td style="padding:4px 10px;color:' + z.color + '">' + z.zona + (ativo ? ' ◀' : '') + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  // Gráfico de donut
+  charts['chart-4'] = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: ['Promotores', 'Neutros', 'Detratores'],
+      datasets: [{ data: [promotores, neutros, detratores], backgroundColor: ['#16a34a','#ca8a04','#dc2626'], borderWidth: 0 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${total ? Math.round(ctx.parsed/total*100) : 0}%)` } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// VIEW 6 — NPS por Cliente
+// ============================================================
+function renderNPSPorCliente() {
+  destroyChart('chart-5');
+  const canvas = document.getElementById('chart-5');
+
+  if (!state.nps.length) {
+    unavailable(canvas.parentElement, 'Dados NPS indisponíveis.');
+    return;
+  }
+
+  // Dados já pré-agregados por município em NPS_Calculado
+  const entries = state.nps
+    .filter(r => r.municipio)
+    .map(r => ({
+      municipio:   r.municipio,
+      nps:         parseInt(r.nps_score) || 0,
+      total:       parseInt(r.total)      || 0,
+      promotores:  parseInt(r.promotores) || 0,
+      neutros:     parseInt(r.neutros)    || 0,
+      detratores:  parseInt(r.detratores) || 0,
+    }))
+    .sort((a, b) => b.nps - a.nps);
+
+  const labels = entries.map(e => e.municipio);
+  const values = entries.map(e => e.nps);
+  const colors = values.map(v => npsZone(v).color);
+
+  const { score: scoreGeral } = calcNPS(state.nps);
+
+  canvas.style.height = Math.max(300, entries.length * 22) + 'px';
+
+  charts['chart-5'] = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'NPS',
+        data: values,
+        backgroundColor: colors,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: {
+          title: ctx => ctx[0].label,
+          label: ctx => {
+            const e = entries[ctx.dataIndex];
+            const z = npsZone(e.nps);
+            return [
+              ` NPS: ${e.nps} — ${z.label}`,
+              ` Promotores: ${e.promotores} | Neutros: ${e.neutros} | Detratores: ${e.detratores}`,
+              ` Total respostas: ${e.total}`,
+            ];
+          }
+        }},
+        annotation: scoreGeral !== undefined ? {
+          annotations: {
+            mediaLine: {
+              type: 'line', scaleID: 'x', value: scoreGeral,
+              borderColor: '#1E3A5F', borderWidth: 1.5, borderDash: [4,3],
+              label: { content: `Média ${scoreGeral}`, display: true, position: 'end', font: { size: 10 } }
+            }
+          }
+        } : {}
+      },
+      scales: {
+        x: {
+          min: -100, max: 100,
+          grid: { color: ctx => ctx.tick.value === 0 ? '#94a3b8' : '#F0F2F5' },
+          ticks: { stepSize: 25, callback: v => v }
+        },
+        y: { ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// VIEW 7 — Colaboradores
+// ============================================================
+function renderColaboradores() {
+  destroyChart('chart-6');
+  destroyChart('chart-7');
+  const container = document.getElementById('colab-container');
+
+  if (!state.colaboradores.length) {
+    unavailable(container, 'Dados de colaboradores indisponíveis. Verifique se a planilha está publicada.');
+    return;
+  }
+
+  const COLAB_COLORS = [
+    '#2B6CB0','#276749','#C05621','#805AD5','#0987A0',
+    '#C53030','#DD6B20','#B7791F','#2C7A7B','#553C9A',
+    '#2F855A','#9B2C2C','#2A4365','#744210','#1A365D',
+  ];
+  const ATEND_COLORS = [
+    '#0987A0','#C05621','#276749','#805AD5','#2B6CB0',
+    '#B7791F','#C53030','#2C7A7B','#DD6B20','#553C9A',
+  ];
+
+  // ── Agrupar por Vaga ──────────────────────────────────────
+  const vagaMap = {};
+  state.colaboradores.forEach(r => {
+    const v = (r.vaga || 'Sem vaga').trim();
+    vagaMap[v] = (vagaMap[v] || 0) + 1;
+  });
+  const vagaEntries = Object.entries(vagaMap).sort((a, b) => b[1] - a[1]);
+  const vagaLabels  = vagaEntries.map(e => e[0]);
+  const vagaCounts  = vagaEntries.map(e => e[1]);
+  const vagaColors  = vagaLabels.map((_, i) => COLAB_COLORS[i % COLAB_COLORS.length]);
+  const colorByVaga = {};
+  vagaLabels.forEach((v, i) => { colorByVaga[v] = COLAB_COLORS[i % COLAB_COLORS.length]; });
+
+  // ── Agrupar por Área de Atendimento ───────────────────────
+  const atendMap = {};
+  state.colaboradores.forEach(r => {
+    const a = (r.area_de_atendimento || 'Não informado').trim();
+    atendMap[a] = (atendMap[a] || 0) + 1;
+  });
+  const atendEntries = Object.entries(atendMap).sort((a, b) => b[1] - a[1]);
+  const atendLabels  = atendEntries.map(e => e[0]);
+  const atendCounts  = atendEntries.map(e => e[1]);
+  const atendColors  = atendLabels.map((_, i) => ATEND_COLORS[i % ATEND_COLORS.length]);
+
+  // ── Linhas da tabela ──────────────────────────────────────
+  const tableRows = state.colaboradores.map(r => {
+    const vaga = (r.vaga || '').trim();
+    const cor  = colorByVaga[vaga] || '#718096';
+    return `<tr>
+      <td>${r.analista || '—'}</td>
+      <td><span class="colab-vaga-badge" style="background:${cor}20;color:${cor};border:1px solid ${cor}40">${vaga || '—'}</span></td>
+      <td>${r.area_de_atuacao || '—'}</td>
+      <td>${r.regiao || '—'}</td>
+      <td>${r.area_de_atendimento || '—'}</td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+      <div>
+        <div class="risk-col-title">Distribuição por Vaga</div>
+        <div style="height:300px"><canvas id="chart-6"></canvas></div>
+      </div>
+      <div>
+        <div class="risk-col-title">Distribuição por Área de Atendimento</div>
+        <div style="height:300px"><canvas id="chart-7"></canvas></div>
+      </div>
+    </div>
+    <div>
+      <div class="risk-col-title">Equipe — ${state.colaboradores.length} colaboradores</div>
+      <table class="colab-table">
+        <thead><tr>
+          <th>Analista</th><th>Vaga</th><th>Área de Atuação</th><th>Região</th><th>Área de Atendimento</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>`;
+
+  const pieOptions = (label) => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12, padding: 8 } },
+      tooltip: { callbacks: {
+        label: ctx => ` ${ctx.label}: ${ctx.parsed} colaborador${ctx.parsed !== 1 ? 'es' : ''}`
+      }}
+    }
+  });
+
+  charts['chart-6'] = new Chart(document.getElementById('chart-6'), {
+    type: 'pie',
+    data: { labels: vagaLabels, datasets: [{ data: vagaCounts, backgroundColor: vagaColors, borderWidth: 2, borderColor: '#fff' }] },
+    options: pieOptions('vaga'),
+  });
+
+  charts['chart-7'] = new Chart(document.getElementById('chart-7'), {
+    type: 'pie',
+    data: { labels: atendLabels, datasets: [{ data: atendCounts, backgroundColor: atendColors, borderWidth: 2, borderColor: '#fff' }] },
+    options: pieOptions('atendimento'),
+  });
+}
+
+// ============================================================
+// VIEW 7 — Implantações por Município × Vertical (Pivot + Gráficos)
+// ============================================================
+const IMPL_VERTICAIS = ['Arrecadação','Atendimento','Contratos','Contábil','Educação','ISS','Parceiros','Pessoal','Plataforma','Saúde'];
+let implCharts = [];
+
+function implCellStyle(cell) {
+  if (!cell || cell.total === 0) return null;
+  if (cell.atrasados > 0) return { bg: '#FEE2E2', text: '#B91C1C', border: '#FECACA' };
+  if (cell.no_prazo  > 0) return { bg: '#DCFCE7', text: '#15803D', border: '#86EFAC' };
+  return                         { bg: '#EFF6FF', text: '#3B82F6', border: '#BFDBFE' };
+}
+
+function fmtDate(val) {
+  if (!val) return '';
+  const d = new Date(val);
+  if (!isNaN(d)) return d.toLocaleDateString('pt-BR', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' });
+  return val;
+}
+
+// Estado persistente dos dados de implantações (para filtros sem re-renderizar KPIs/gráficos)
+let _implData = null;
+
+// Seleção ativa nos gráficos de Implantações (a vertical vive no <select> impl-f-vert)
+let _implChartSel = { status: new Set(), munClass: new Set() };
+function _implRefresh() { _renderImplCharts(); _updateImplPivot(); }
+
+// (Re)desenha os 3 gráficos com realce conforme a seleção atual
+function _renderImplCharts() {
+  if (!_implData) return;
+  const { munMap, municipios } = _implData;
+
+  let tAtr = 0, tNo = 0, tSem = 0, mAtr = 0, mNo = 0, mSem = 0;
+  const foot = {};
+  IMPL_VERTICAIS.forEach(v => foot[v] = { atrasados: 0, no_prazo: 0, sem_prazo: 0, total: 0 });
+  municipios.forEach(m => {
+    const mm = munMap[m];
+    tAtr += mm.atrasados; tNo += mm.no_prazo; tSem += mm.sem_prazo;
+    if (mm.atrasados > 0) mAtr++; else if (mm.no_prazo > 0) mNo++; else mSem++;
+    IMPL_VERTICAIS.forEach(v => { const c = mm[v]; if (c) { foot[v].atrasados += c.atrasados; foot[v].no_prazo += c.no_prazo; foot[v].sem_prazo += c.sem_prazo; foot[v].total += c.total; } });
+  });
+
+  const COR_ATRASO = '#EF4444', COR_PRAZO = '#22C55E', COR_SEM = '#93C5FD';
+  const STK = ['atrasados', 'no_prazo', 'sem_prazo'];
+  const vertEl = document.getElementById('impl-f-vert');
+  const selVerts = vertEl ? Array.from(vertEl.selectedOptions).map(o => o.value) : [];
+
+  implCharts.forEach(c => c.destroy()); implCharts = [];
+
+  const offMun = STK.map(s => _implChartSel.munClass.has(s) ? 14 : 0);
+  const offSta = STK.map(s => _implChartSel.status.has(s)   ? 14 : 0);
+  const donutLegend = { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } };
+
+  implCharts.push(new Chart(document.getElementById('impl-chart-mun'), {
+    type: 'doughnut',
+    data: { labels: ['Com atraso', 'No prazo', 'Sem prazo'],
+      datasets: [{ data: [mAtr, mNo, mSem], backgroundColor: [COR_ATRASO, COR_PRAZO, COR_SEM], borderWidth: 2, borderColor: '#fff', offset: offMun, hoverOffset: 16 }] },
+    options: { maintainAspectRatio: false,
+      onClick: (e, els) => { if (els.length) _toggleImplStatus('munClass', STK[els[0].index]); },
+      plugins: { legend: donutLegend, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} municípios — clique p/ filtrar` } } } }
+  }));
+
+  implCharts.push(new Chart(document.getElementById('impl-chart-issues'), {
+    type: 'doughnut',
+    data: { labels: ['Atrasadas', 'No prazo', 'Sem prazo'],
+      datasets: [{ data: [tAtr, tNo, tSem], backgroundColor: [COR_ATRASO, COR_PRAZO, COR_SEM], borderWidth: 2, borderColor: '#fff', offset: offSta, hoverOffset: 16 }] },
+    options: { maintainAspectRatio: false,
+      onClick: (e, els) => { if (els.length) _toggleImplStatus('status', STK[els[0].index]); },
+      plugins: { legend: donutLegend, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} implantações — clique p/ filtrar` } } } }
+  }));
+
+  const vertLabels = IMPL_VERTICAIS.filter(v => foot[v].total > 0);
+  const dim = (hex, v) => (selVerts.length && !selVerts.includes(v)) ? hex + '59' : hex;
+  implCharts.push(new Chart(document.getElementById('impl-chart-vert'), {
+    type: 'bar',
+    data: { labels: vertLabels, datasets: [
+      { label: 'Atrasadas', data: vertLabels.map(v => foot[v].atrasados), backgroundColor: vertLabels.map(v => dim(COR_ATRASO, v)) },
+      { label: 'No prazo',  data: vertLabels.map(v => foot[v].no_prazo),  backgroundColor: vertLabels.map(v => dim(COR_PRAZO, v)) },
+      { label: 'Sem prazo', data: vertLabels.map(v => foot[v].sem_prazo), backgroundColor: vertLabels.map(v => dim(COR_SEM, v)) },
+    ] },
+    options: { indexAxis: 'y', maintainAspectRatio: false,
+      onClick: (e, els) => { if (els.length) _toggleImplVert(vertLabels[els[0].index]); },
+      scales: { x: { stacked: true, grid: { color: '#F1F5F9' }, ticks: { font: { size: 10 } } },
+                y: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } } },
+      plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
+        tooltip: { mode: 'index', intersect: false } } }
+  }));
+}
+
+function _toggleImplStatus(kind, key) {
+  const set = _implChartSel[kind];
+  set.has(key) ? set.delete(key) : set.add(key);
+  _implRefresh();
+}
+function _toggleImplVert(vert) {
+  const el = document.getElementById('impl-f-vert');
+  if (!el) return;
+  const opt = Array.from(el.options).find(o => o.value === vert);
+  if (opt) opt.selected = !opt.selected;
+  _implRefresh();
+}
+
+function renderImplantacoes() {
+  const container = document.getElementById('impl-content');
+  implCharts.forEach(c => c.destroy());
+  implCharts = [];
+
+  if (!state.implantacoes.length) {
+    unavailable(container, 'Dados de implantações indisponíveis. Verifique se a planilha Jira_Implantacoes está publicada.');
+    return;
+  }
+
+  // --- Agregação ---
+  const munMap = {};
+  state.implantacoes.forEach(r => {
+    const mu        = (r.municipio || 'Não informado').trim();
+    const v         = (r.vertical  || 'Não informado').trim();
+    const total     = parseInt(r.total)     || 0;
+    const atrasados = parseInt(r.atrasados) || 0;
+    const no_prazo  = parseInt(r.no_prazo)  || 0;
+    const sem_prazo = parseInt(r.sem_prazo) || 0;
+    const praz_min  = r.prazo_minimo || '';
+
+    if (!munMap[mu]) munMap[mu] = { total: 0, atrasados: 0, no_prazo: 0, sem_prazo: 0 };
+    munMap[mu][v] = { total, atrasados, no_prazo, sem_prazo, prazo_minimo: praz_min };
+    munMap[mu].total     += total;
+    munMap[mu].atrasados += atrasados;
+    munMap[mu].no_prazo  += no_prazo;
+    munMap[mu].sem_prazo += sem_prazo;
+  });
+
+  const municipios = Object.entries(munMap)
+    .sort((a, b) => (b[1].atrasados - a[1].atrasados) || (b[1].total - a[1].total))
+    .map(e => e[0]);
+
+  // Salva estado para uso pelos filtros
+  _implData = { munMap, municipios };
+
+  const totalGeral    = municipios.reduce((s, m) => s + munMap[m].total,     0);
+  const totalAtrasado = municipios.reduce((s, m) => s + munMap[m].atrasados, 0);
+  const totalNoPrazo  = municipios.reduce((s, m) => s + munMap[m].no_prazo,  0);
+  const totalSemPrazo = municipios.reduce((s, m) => s + munMap[m].sem_prazo, 0);
+
+  const munComAtraso = municipios.filter(m => munMap[m].atrasados > 0);
+  const munNoPrazo   = municipios.filter(m => munMap[m].atrasados === 0 && munMap[m].no_prazo > 0);
+  const munSemPrazo  = municipios.filter(m => munMap[m].atrasados === 0 && munMap[m].no_prazo === 0);
+
+  // Totais por vertical (para gráfico — sobre todos os dados)
+  const footTotais = {};
+  IMPL_VERTICAIS.forEach(v => {
+    footTotais[v] = { total: 0, atrasados: 0, no_prazo: 0, sem_prazo: 0 };
+    municipios.forEach(m => {
+      const c = munMap[m][v];
+      if (c) { footTotais[v].total += c.total; footTotais[v].atrasados += c.atrasados; footTotais[v].no_prazo += c.no_prazo; footTotais[v].sem_prazo += c.sem_prazo; }
+    });
+  });
+
+  // --- KPI Cards ---
+  const kpiHtml = `
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
+        <div style="font-size:1.7rem;font-weight:700;color:#2563EB;line-height:1">${totalGeral}</div>
+        <div style="font-size:.7rem;font-weight:600;color:#3B82F6;text-transform:uppercase;margin-top:4px">Total Issues</div>
+      </div>
+      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
+        <div style="font-size:1.7rem;font-weight:700;color:#DC2626;line-height:1">${totalAtrasado}</div>
+        <div style="font-size:.7rem;font-weight:600;color:#EF4444;text-transform:uppercase;margin-top:4px">Atrasadas</div>
+      </div>
+      <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
+        <div style="font-size:1.7rem;font-weight:700;color:#15803D;line-height:1">${totalNoPrazo}</div>
+        <div style="font-size:.7rem;font-weight:600;color:#16A34A;text-transform:uppercase;margin-top:4px">No Prazo</div>
+      </div>
+      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
+        <div style="font-size:1.7rem;font-weight:700;color:#64748B;line-height:1">${totalSemPrazo}</div>
+        <div style="font-size:.7rem;font-weight:600;color:#94A3B8;text-transform:uppercase;margin-top:4px">Sem Prazo</div>
+      </div>
+      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
+        <div style="font-size:1.7rem;font-weight:700;color:#DC2626;line-height:1">${munComAtraso.length}</div>
+        <div style="font-size:.7rem;font-weight:600;color:#EF4444;text-transform:uppercase;margin-top:4px">Mun. c/ Atraso</div>
+      </div>
+      <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
+        <div style="font-size:1.7rem;font-weight:700;color:#15803D;line-height:1">${municipios.length}</div>
+        <div style="font-size:.7rem;font-weight:600;color:#16A34A;text-transform:uppercase;margin-top:4px">Municípios</div>
+      </div>
+    </div>`;
+
+  // --- Gráficos ---
+  const chartsHtml = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:14px;margin-bottom:18px">
+      <div style="background:#fff;border-radius:8px;border:1px solid #E2E8F0;padding:12px">
+        <div style="font-size:.76rem;font-weight:600;color:#1E3A5F;margin-bottom:6px;text-align:center">Municípios por Status de Prazo</div>
+        <div style="height:190px;position:relative"><canvas id="impl-chart-mun"></canvas></div>
+      </div>
+      <div style="background:#fff;border-radius:8px;border:1px solid #E2E8F0;padding:12px">
+        <div style="font-size:.76rem;font-weight:600;color:#1E3A5F;margin-bottom:6px;text-align:center">Implantações por Status de Prazo</div>
+        <div style="height:190px;position:relative"><canvas id="impl-chart-issues"></canvas></div>
+      </div>
+      <div style="background:#fff;border-radius:8px;border:1px solid #E2E8F0;padding:12px">
+        <div style="font-size:.76rem;font-weight:600;color:#1E3A5F;margin-bottom:6px;text-align:center">Implantações por Vertical e Status</div>
+        <div style="height:190px;position:relative"><canvas id="impl-chart-vert"></canvas></div>
+      </div>
+    </div>`;
+
+  // --- Filtros ---
+  const vertOpts = IMPL_VERTICAIS.map(v => `<option value="${v}">${v}</option>`).join('');
+  const inputStyle = `padding:6px 10px;border:1px solid #CBD5E0;border-radius:6px;font-size:.82rem;color:#1A202C;background:#fff;outline:none`;
+  const modeBtn = (id) => `<button id="${id}" data-mode="include"
+    onclick="_toggleImplMode('${id}')"
+    title="Alternar entre 'Filtrar por' e 'Exceto estes'"
+    style="padding:3px 9px;border-radius:5px;border:1px solid #86EFAC;background:#F0FDF4;color:#15803D;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;line-height:1.4">= filtrar por</button>`;
+
+  const filterHtml = `
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.72rem;font-weight:600;color:#4A5568;text-transform:uppercase">Município</label>
+        <div style="display:flex;gap:5px;align-items:center">
+          <input id="impl-f-mun" type="text" placeholder="Ex: Joinville, Blumenau…" title="Separe múltiplos valores por vírgula" style="${inputStyle};min-width:200px"
+            oninput="_updateImplPivot()">
+          ${modeBtn('impl-f-mun-mode')}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.72rem;font-weight:600;color:#4A5568;text-transform:uppercase">Vertical <span style="font-size:.65rem;font-weight:400;color:#94A3B8">(Ctrl+clique p/ múltiplas)</span></label>
+        <div style="display:flex;gap:5px;align-items:flex-start">
+          <select id="impl-f-vert" multiple size="4" style="${inputStyle};min-width:160px;height:auto" onchange="_implRefresh()">
+            ${vertOpts}
+          </select>
+          ${modeBtn('impl-f-vert-mode')}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.72rem;font-weight:600;color:#4A5568;text-transform:uppercase">Produto</label>
+        <div style="display:flex;gap:5px;align-items:center">
+          <input id="impl-f-prod" type="text" placeholder="Ex: e-Nota (Cloud), e-Nota Fly…" title="Separe múltiplos valores por vírgula" style="${inputStyle};min-width:240px"
+            oninput="_updateImplPivot()">
+          ${modeBtn('impl-f-prod-mode')}
+        </div>
+      </div>
+      <button onclick="_clearImplFilters()" style="padding:6px 14px;border:1px solid #CBD5E0;border-radius:6px;background:#F7FAFC;font-size:.82rem;color:#4A5568;cursor:pointer;white-space:nowrap">✕ Limpar filtros</button>
+    </div>`;
+
+  const legendaHtml = `
+    <div style="display:flex;gap:16px;margin-top:12px;font-size:.73rem;color:var(--text-muted);flex-wrap:wrap;align-items:center">
+      <strong style="color:var(--text)">Legenda:</strong>
+      <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#FEE2E2;border:1px solid #FECACA"></span> Com atraso</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#DCFCE7;border:1px solid #86EFAC"></span> Dentro do prazo</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#EFF6FF;border:1px solid #BFDBFE"></span> Sem prazo definido</span>
+      <span style="color:#94A3B8;font-style:italic">Passe o mouse sobre a célula para ver detalhes</span>
+    </div>`;
+
+  container.innerHTML = kpiHtml + chartsHtml + filterHtml +
+    `<div id="impl-pivot-wrapper"></div>` + legendaHtml;
+
+  // --- Gráficos selecionáveis + pivot ---
+  _implChartSel = { status: new Set(), munClass: new Set() };
+  _implRefresh();
+}
+
+// Atualiza apenas o pivot de implantações com base nos filtros atuais
+function _updateImplPivot() {
+  const wrapper = document.getElementById('impl-pivot-wrapper');
+  if (!wrapper || !_implData) return;
+
+  const fMun      = (document.getElementById('impl-f-mun')       || {}).value || '';
+  const vertEl    =  document.getElementById('impl-f-vert');
+  const fProd     = (document.getElementById('impl-f-prod')      || {}).value || '';
+  const modeMun   = (document.getElementById('impl-f-mun-mode')  || {}).dataset?.mode  || 'include';
+  const modeVert  = (document.getElementById('impl-f-vert-mode') || {}).dataset?.mode  || 'include';
+  const modeProd  = (document.getElementById('impl-f-prod-mode') || {}).dataset?.mode  || 'include';
+
+  const munTerms  = fMun  ? fMun .toLowerCase().split(',').map(s => s.trim()).filter(Boolean) : [];
+  const prodTerms = fProd ? fProd.toLowerCase().split(',').map(s => s.trim()).filter(Boolean) : [];
+  const selectedVerts = vertEl ? Array.from(vertEl.selectedOptions).map(o => o.value).filter(Boolean) : [];
+
+  // Seleção vinda dos gráficos
+  const statusSel   = [..._implChartSel.status];     // subconjunto de ['atrasados','no_prazo','sem_prazo']
+  const munClassSel = [..._implChartSel.munClass];
+  const STATUS_LBL  = { atrasados: 'Atrasadas', no_prazo: 'No prazo', sem_prazo: 'Sem prazo' };
+
+  const { munMap, municipios } = _implData;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+
+  const verticais = selectedVerts.length
+    ? (modeVert === 'exclude'
+        ? IMPL_VERTICAIS.filter(v => !selectedVerts.includes(v))
+        : IMPL_VERTICAIS.filter(v => selectedVerts.includes(v)))
+    : IMPL_VERTICAIS;
+
+  // Classe agregada do município (mesma lógica da rosquinha "Municípios por Status")
+  const munClassOf = m => { const mm = munMap[m]; return mm.atrasados > 0 ? 'atrasados' : mm.no_prazo > 0 ? 'no_prazo' : 'sem_prazo'; };
+
+  const munFiltrados = municipios.filter(m => {
+    if (munTerms.length) {
+      const mL = m.toLowerCase();
+      const matchesAny = munTerms.some(t => mL.includes(t));
+      if (modeMun === 'exclude' ? matchesAny : !matchesAny) return false;
+    }
+    if (munClassSel.length && !munClassSel.includes(munClassOf(m))) return false;
+    return true;
+  });
+
+  // Filtro de produto: reconstrói células a partir das issues
+  let filteredMap = null;
+  if (prodTerms.length) {
+    filteredMap = {};
+    state.implantacoesIssues.forEach(r => {
+      const sumL = (r.summary || '').toLowerCase();
+      const matchesAny = prodTerms.some(t => sumL.includes(t));
+      const passes = modeProd === 'exclude' ? !matchesAny : matchesAny;
+      if (!passes) return;
+      const m = (r.municipio || '').trim();
+      const v = (r.vertical  || '').trim();
+      if (!filteredMap[m]) filteredMap[m] = {};
+      if (!filteredMap[m][v]) filteredMap[m][v] = { total: 0, atrasados: 0, no_prazo: 0, sem_prazo: 0 };
+      filteredMap[m][v].total++;
+      if (r.prazo) {
+        const d = new Date(r.prazo);
+        if (!isNaN(d.getTime())) { if (d < today) filteredMap[m][v].atrasados++; else filteredMap[m][v].no_prazo++; }
+        else filteredMap[m][v].sem_prazo++;
+      } else { filteredMap[m][v].sem_prazo++; }
+    });
+  }
+
+  const getCell = (m, v) => filteredMap
+    ? (filteredMap[m] && filteredMap[m][v] && filteredMap[m][v].total > 0 ? filteredMap[m][v] : null)
+    : (munMap[m] && munMap[m][v]);
+
+  // Projeção por status selecionado (recontagem) — devolve null se zera
+  const proj = cell => {
+    if (!cell || !cell.total) return null;
+    if (!statusSel.length) return cell;
+    const o = { total: 0, atrasados: 0, no_prazo: 0, sem_prazo: 0, prazo_minimo: cell.prazo_minimo };
+    statusSel.forEach(st => { o[st] = cell[st] || 0; o.total += cell[st] || 0; });
+    return o.total > 0 ? o : null;
+  };
+  const cellOf = (m, v) => proj(getCell(m, v));
+
+  // Totais por vertical (sobre células projetadas)
+  const footTotais = {};
+  verticais.forEach(v => {
+    footTotais[v] = { total: 0, atrasados: 0, no_prazo: 0, sem_prazo: 0 };
+    munFiltrados.forEach(m => {
+      const c = cellOf(m, v);
+      if (!c) return;
+      footTotais[v].total += c.total; footTotais[v].atrasados += c.atrasados; footTotais[v].no_prazo += c.no_prazo; footTotais[v].sem_prazo += c.sem_prazo;
+    });
+  });
+
+  // Esconde colunas vazias quando há recontagem (status/produto) e linhas sem nenhum total
+  const verticaisVis = (statusSel.length || prodTerms.length)
+    ? verticais.filter(v => footTotais[v].total > 0)
+    : verticais;
+  const linhasVis = munFiltrados.filter(m => verticaisVis.some(v => { const c = cellOf(m, v); return c && c.total > 0; }));
+  const totalGeral = verticaisVis.reduce((s, v) => s + footTotais[v].total, 0);
+
+  if (!linhasVis.length || !verticaisVis.length) {
+    wrapper.innerHTML = `<div style="padding:24px;text-align:center;color:#94A3B8;font-size:.85rem">Nenhum resultado para os filtros aplicados.</div>`;
+    return;
+  }
+
+  const thStyle = `padding:8px 8px;text-align:center;font-size:.72rem;font-weight:600;white-space:nowrap;border-right:1px solid rgba(255,255,255,0.15)`;
+  const thFirst = `padding:8px 12px;text-align:left;font-size:.72rem;font-weight:600;white-space:nowrap;border-right:1px solid rgba(255,255,255,0.15)`;
+  const cb      = `padding:5px 8px;text-align:center;font-size:.8rem;border-right:1px solid #EDF2F7`;
+
+  const headerCells = verticaisVis.map(v =>
+    `<th style="${thStyle}" title="${v}">${v.length > 9 ? v.slice(0,8)+'…' : v}</th>`).join('');
+
+  const bodyRows = linhasVis.map((m, ri) => {
+    const bg = ri % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
+    const cells = verticaisVis.map(v => {
+      const cell = cellOf(m, v);
+      if (!cell || cell.total === 0) return `<td style="${cb};color:#CBD5E0">—</td>`;
+      const sty = implCellStyle(cell);
+      const tipParts = [];
+      if (cell.atrasados > 0) tipParts.push(`Atrasadas: ${cell.atrasados}${cell.prazo_minimo ? ' (prazo: ' + fmtDate(cell.prazo_minimo) + ')' : ''}`);
+      if (cell.no_prazo  > 0) tipParts.push(`No prazo: ${cell.no_prazo}`);
+      if (cell.sem_prazo > 0) tipParts.push(`Sem prazo: ${cell.sem_prazo}`);
+      const munAttr  = m.replace(/"/g, '&quot;');
+      const vertAttr = v.replace(/"/g, '&quot;');
+      return `<td style="${cb};background:${sty.bg};color:${sty.text};font-weight:600;border:1px solid ${sty.border};cursor:pointer" title="${tipParts.join(' · ')}" data-mun="${munAttr}" data-vert="${vertAttr}" onclick="openImplModal(this)">${cell.total}</td>`;
+    }).join('');
+
+    const linhaTotal  = verticaisVis.reduce((s, v) => { const c = cellOf(m, v); return c ? s + c.total     : s; }, 0);
+    const linhaAtraso = verticaisVis.reduce((s, v) => { const c = cellOf(m, v); return c ? s + c.atrasados : s; }, 0);
+    const linhaPrazo  = verticaisVis.reduce((s, v) => { const c = cellOf(m, v); return c ? s + c.no_prazo  : s; }, 0);
+    const totalCor = linhaAtraso > 0 ? '#B91C1C' : linhaPrazo > 0 ? '#15803D' : '#475569';
+
+    return `<tr style="background:${bg};border-bottom:1px solid #EDF2F7">
+      <td style="padding:6px 12px;font-size:.8rem;font-weight:600;white-space:nowrap;border-right:1px solid #EDF2F7">${m}</td>
+      ${cells}
+      <td style="padding:6px 8px;text-align:center;font-size:.8rem;font-weight:700;border-left:1px solid #CBD5E0;color:${totalCor}">${linhaTotal || '—'}</td>
+    </tr>`;
+  }).join('');
+
+  // Classifica status de prazo de uma issue (para listas dos modais coerentes com o filtro)
+  const issueStatus = r => {
+    if (r.prazo) { const d = new Date(r.prazo); if (!isNaN(d.getTime())) return d < today ? 'atrasados' : 'no_prazo'; }
+    return 'sem_prazo';
+  };
+
+  _implTotalIssues = { __all__: [] };
+  verticaisVis.forEach(v => { _implTotalIssues[v] = []; });
+  state.implantacoesIssues.forEach(r => {
+    const m = (r.municipio || '').trim();
+    const v = (r.vertical  || '').trim();
+    if (!linhasVis.includes(m)) return;
+    if (!verticaisVis.includes(v)) return;
+    if (prodTerms.length) {
+      const sumL = (r.summary || '').toLowerCase();
+      const matchesAny = prodTerms.some(t => sumL.includes(t));
+      if (modeProd === 'exclude' ? matchesAny : !matchesAny) return;
+    }
+    if (statusSel.length && !statusSel.includes(issueStatus(r))) return;
+    _implTotalIssues[v].push(r);
+    _implTotalIssues.__all__.push(r);
+  });
+
+  const tdFoot = `padding:6px 8px;text-align:center;font-size:.78rem;border-right:1px solid #CBD5E0;cursor:pointer`;
+  const footCells = verticaisVis.map(v => {
+    const f = footTotais[v];
+    if (!f.total) return `<td style="${tdFoot};color:#94A3B8;background:#EDF2F7">—</td>`;
+    const cor = f.atrasados > 0 ? '#B91C1C' : f.no_prazo > 0 ? '#15803D' : '#3B82F6';
+    const vAttr = v.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    return `<td style="${tdFoot};font-weight:700;color:${cor};background:#EDF2F7" title="Ver lista · ${f.total} chamados" onclick="openImplTotalModal('${vAttr}')">${f.total}</td>`;
+  }).join('');
+
+  const selLabels = [...statusSel.map(x => STATUS_LBL[x]), ...munClassSel.map(x => 'Mun: ' + STATUS_LBL[x])];
+  const temFiltro = fMun || selectedVerts.length || fProd || statusSel.length || munClassSel.length;
+  const filtroInfo = temFiltro
+    ? `<div style="font-size:.73rem;color:#4A5568;margin-bottom:8px">🔍 ${linhasVis.length} município(s) de ${municipios.length}${selLabels.length ? ' · ' + selLabels.join(', ') : ''}</div>`
+    : '';
+
+  wrapper.innerHTML = filtroInfo + `
+    <div style="overflow-x:auto;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <table style="width:100%;border-collapse:collapse;font-family:inherit">
+        <thead>
+          <tr style="background:#1E3A5F;color:#fff">
+            <th style="${thFirst}">Município</th>
+            ${headerCells}
+            <th style="${thStyle}">T</th>
+          </tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+        <tfoot>
+          <tr style="background:#EDF2F7;border-top:2px solid #CBD5E0">
+            <td style="padding:6px 12px;font-size:.78rem;font-weight:700;color:#2D3748;border-right:1px solid #CBD5E0">TOTAL</td>
+            ${footCells}
+            <td style="padding:6px 8px;text-align:center;font-size:.78rem;font-weight:700;color:#1E3A5F;background:#E2E8F0;cursor:pointer" title="Ver lista completa · ${totalGeral} chamados" onclick="openImplTotalModal('__all__')">${totalGeral}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
+}
+
+function _toggleImplMode(btnId) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  const next = btn.dataset.mode === 'include' ? 'exclude' : 'include';
+  btn.dataset.mode = next;
+  if (next === 'exclude') {
+    btn.textContent = '≠ exceto';
+    btn.style.border = '1px solid #FCA5A5';
+    btn.style.background = '#FFF5F5';
+    btn.style.color = '#B91C1C';
+  } else {
+    btn.textContent = '= filtrar por';
+    btn.style.border = '1px solid #86EFAC';
+    btn.style.background = '#F0FDF4';
+    btn.style.color = '#15803D';
+  }
+  _updateImplPivot();
+}
+
+function _clearImplFilters() {
+  ['impl-f-mun','impl-f-prod'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  // Multi-select: desmarcar todas as opções
+  const vertEl = document.getElementById('impl-f-vert');
+  if (vertEl) Array.from(vertEl.options).forEach(o => { o.selected = false; });
+  ['impl-f-mun-mode','impl-f-vert-mode','impl-f-prod-mode'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.dataset.mode = 'include';
+    btn.textContent = '= filtrar por';
+    btn.style.border = '1px solid #86EFAC';
+    btn.style.background = '#F0FDF4';
+    btn.style.color = '#15803D';
+  });
+  _implChartSel = { status: new Set(), munClass: new Set() };
+  _implRefresh();
+}
+
+// ============================================================
+// UTILITÁRIOS
+// ============================================================
+function showLoading(show) {
+  document.getElementById('loading-overlay').classList.toggle('hidden', !show);
+}
+
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
+(function initDatePicker() {
+  const dp  = document.getElementById('date-picker');
+  const today = new Date().toISOString().slice(0, 10);
+  if (dp) { dp.max = today; dp.value = today; }
+})();
+loadAllData();
+</script>
+</body>
+</html>
