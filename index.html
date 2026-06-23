@@ -6,9 +6,6 @@
   <title>Jira Médias Contas — Dashboard Executivo</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <style>
     /* ===== Reset & Base ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -747,7 +744,7 @@
 
 <script>
 // ============================================================
-// FIREBASE FIRESTORE
+// FIREBASE — config (SDK carregado lazy só para Admin)
 // ============================================================
 const FIREBASE_CONFIG = {
   apiKey:            'AIzaSyDfdeamuZElziGrzkexDUU12OwaT-TTNoQ',
@@ -757,21 +754,82 @@ const FIREBASE_CONFIG = {
   messagingSenderId: '403708882905',
   appId:             '1:403708882905:web:ad8e706f9357d232cc73c8'
 };
-firebase.initializeApp(FIREBASE_CONFIG);
-const _db = firebase.firestore();
+const _FS_PROJECT = 'jira-medias-contas';
+const _FS_KEY     = 'AIzaSyDfdeamuZElziGrzkexDUU12OwaT-TTNoQ';
+const _FS_BASE    = 'https://firestore.googleapis.com/v1/projects/' + _FS_PROJECT + '/databases/(default)/documents';
+let _db = null; // inicializado lazy no Admin
 
-// Busca todos os docs de uma coleção do Firestore
-async function fetchFirestore(collectionName) {
-  const snapshot = await _db.collection(collectionName).get();
-  return snapshot.docs.map(d => d.data());
+// Converte campo Firestore REST → valor JS
+function _fsVal(v) {
+  if (!v) return '';
+  if (v.stringValue  !== undefined) return v.stringValue;
+  if (v.integerValue !== undefined) return parseInt(v.integerValue);
+  if (v.doubleValue  !== undefined) return v.doubleValue;
+  if (v.booleanValue !== undefined) return v.booleanValue;
+  if (v.nullValue    !== undefined) return null;
+  return '';
 }
 
-// Busca metadado de última atualização
+// Converte documento Firestore REST → objeto JS
+function _fsDoc(doc) {
+  const o = {};
+  if (doc.fields) Object.entries(doc.fields).forEach(([k, v]) => { o[k] = _fsVal(v); });
+  return o;
+}
+
+// Busca todos os docs de uma coleção via REST (sem SDK)
+async function fetchFirestore(col) {
+  const docs = [];
+  let pageToken = null;
+  do {
+    const url = _FS_BASE + '/' + col + '?key=' + _FS_KEY + '&pageSize=300' + (pageToken ? '&pageToken=' + pageToken : '');
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('Firestore HTTP ' + resp.status);
+    const data = await resp.json();
+    if (data.documents) data.documents.forEach(d => docs.push(_fsDoc(d)));
+    pageToken = data.nextPageToken || null;
+  } while (pageToken);
+  return docs;
+}
+
+// Busca metadado de última atualização via REST
 async function fetchFirestoreMeta() {
   try {
-    const doc = await _db.collection('_meta').doc('last_update').get();
-    return doc.exists ? doc.data() : null;
+    const url = _FS_BASE + '/_meta/last_update?key=' + _FS_KEY;
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    return _fsDoc(await resp.json());
   } catch(e) { return null; }
+}
+
+// Carrega Firebase SDK completo (lazy, só para Admin)
+let _sdkLoading = null;
+function _loadFirebaseSDK() {
+  if (_sdkLoading) return _sdkLoading;
+  _sdkLoading = new Promise((resolve, reject) => {
+    if (window.firebase && window.firebase.auth) { resolve(); return; }
+    const urls = [
+      'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
+      'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js',
+      'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
+    ];
+    let n = 0;
+    const loadNext = () => {
+      if (n >= urls.length) {
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        _db = firebase.firestore();
+        resolve();
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = urls[n++];
+      s.onload = loadNext;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    };
+    loadNext();
+  });
+  return _sdkLoading;
 }
 
 // ============================================================
@@ -3595,13 +3653,19 @@ const _ADMIN_ALLOWED = ['emanuel.melo87@gmail.com'];
 const _adminData = { collection: null, docs: [], filtered: [], docIds: [] };
 let _editDocId = null;
 
-function adminOpen() {
+async function adminOpen() {
   document.getElementById('admin-overlay').style.display = 'block';
   document.body.style.overflow = 'hidden';
-  firebase.auth().onAuthStateChanged(function(user) {
-    if (user) _adminShowPanel(user);
-    else _adminShowLogin();
-  });
+  try {
+    await _loadFirebaseSDK();
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) _adminShowPanel(user);
+      else _adminShowLogin();
+    });
+  } catch(e) {
+    console.error('Erro ao carregar Firebase SDK:', e);
+    _adminShowLogin();
+  }
 }
 
 function adminClose() {
@@ -3661,9 +3725,16 @@ async function adminLoadCollection(col) {
   document.getElementById('admin-table-title').textContent = col;
   document.getElementById('admin-main-tbody').innerHTML =
     '<tr><td colspan="99" style="color:rgba(255,255,255,.4);padding:24px;text-align:center">Carregando…</td></tr>';
-  const snap = await _db.collection(col).get();
-  _adminData.docs   = snap.docs.map(d => d.data());
-  _adminData.docIds = snap.docs.map(d => d.id);
+  // Usa SDK se disponível (para ter IDs dos docs para edição), senão REST
+  if (_db) {
+    const snap = await _db.collection(col).get();
+    _adminData.docs   = snap.docs.map(d => d.data());
+    _adminData.docIds = snap.docs.map(d => d.id);
+  } else {
+    const docs = await fetchFirestore(col);
+    _adminData.docs   = docs;
+    _adminData.docIds = docs.map((d, i) => d.key || String(i));
+  }
   _adminData.filtered = _adminData.docs.slice();
   _adminRenderTable();
 }
