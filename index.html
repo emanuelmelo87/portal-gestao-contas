@@ -1108,103 +1108,93 @@ async function loadAllData() {
   showLoading(true);
   if (btn) btn.disabled = true;
 
-  // ── FASE 1: carrega só jira_chamados (rápido ~415 docs) ──────────────────
-  const jiraRes = await Promise.allSettled([fetchFirestore('jira_chamados')]);
-  const jiraData = jiraRes[0];
-  if (jiraData.status === 'fulfilled') state.jira = jiraData.value;
-  else { console.warn('Jira:', jiraData.reason?.message); state.jira = []; }
+  // Timeout de segurança: força remoção do overlay em 10s
+  const safetyTimer = setTimeout(() => {
+    console.error('[loadAllData] timeout de segurança — removendo overlay');
+    showLoading(false);
+    if (btn) btn.disabled = false;
+  }, 10000);
 
-  // Atualiza KPIs e renderiza imediatamente com o que tem
-  updateKPIs();
-  renderActiveView();
-  showLoading(false);
-  if (btn) btn.disabled = false;
-
-  // Timestamp
-  fetchFirestoreMeta().then(meta => {
-    if (meta && meta.jira_chamados_at)
-      document.getElementById('sync-jira').textContent = new Date(meta.jira_chamados_at).toLocaleString('pt-BR');
-  }).catch(() => {});
-
-  // ── FASE 2: carrega o restante em paralelo (background) ──────────────────
-  const [riscoRes, npsRes, cndEstRes, cndFedRes, colabRes, implRes, implIssuesRes, chamadosIssuesRes, suporteRes, suporteIssuesRes] = await Promise.allSettled([
-    fetchSheet('Risco de Exclusão'),
-    fetchSheet('NPS_Calculado'),
-    fetchCNDEstadual(),
-    fetchCNDFederal(),
-    fetchSheet('Colaboradores'),
-    fetchSheet('Jira_Implantacoes'),
-    fetchSheet('Jira_Implantacoes_Issues'),
-    fetchFirestore('jira_chamados_issues'),
-    fetchSheet('Jira_Chamados_Suporte'),
-    fetchSheet('Jira_Chamados_Suporte_Issues'),
-  ]);
-  // Reaproveita estrutura original (jiraRes fake para compatibilidade)
-  const [jiraRes2] = [{ status: 'fulfilled', value: state.jira }];
-  _ = jiraRes2; // silencia lint
-
-  // jira já carregado na Fase 1
-  if (riscoRes.status === 'fulfilled') state.risco = riscoRes.value;
-  else { console.warn('Risco:', riscoRes.reason?.message); state.risco = []; }
-
-  if (npsRes.status === 'fulfilled')   state.nps   = npsRes.value;
-  else { console.warn('NPS:', npsRes.reason?.message); state.nps = []; }
-
-  if (cndEstRes.status === 'fulfilled') state.cndEstadual = cndEstRes.value;
-  else { console.warn('CND Estadual:', cndEstRes.reason?.message); state.cndEstadual = []; }
-
-  if (cndFedRes.status === 'fulfilled') state.cndFederal = cndFedRes.value;
-  else { console.warn('CND Federal:', cndFedRes.reason?.message); state.cndFederal = []; }
-
-  // Compatibilidade com KPIs legados (usa Estadual como referência geral)
-  state.cnd = state.cndEstadual;
-
-  if (colabRes.status === 'fulfilled') state.colaboradores = colabRes.value;
-  else { console.warn('Colaboradores:', colabRes.reason?.message); state.colaboradores = []; }
-
-  if (implRes.status === 'fulfilled')  state.implantacoes = implRes.value;
-  else { console.warn('Implantacoes:', implRes.reason?.message); state.implantacoes = []; }
-
-  if (implIssuesRes.status === 'fulfilled') state.implantacoesIssues = implIssuesRes.value;
-  else { console.warn('ImplantacoesIssues:', implIssuesRes.reason?.message); state.implantacoesIssues = []; }
-
-  if (chamadosIssuesRes.status === 'fulfilled') state.chamadosIssues = chamadosIssuesRes.value;
-  else { console.warn('ChamadosIssues:', chamadosIssuesRes.reason?.message); state.chamadosIssues = []; }
-
-  if (suporteRes.status === 'fulfilled') state.suporte = suporteRes.value;
-  else { console.warn('Suporte:', suporteRes.reason?.message); state.suporte = []; }
-
-  if (suporteIssuesRes.status === 'fulfilled') state.suporteIssues = suporteIssuesRes.value;
-  else { console.warn('SuporteIssues:', suporteIssuesRes.reason?.message); state.suporteIssues = []; }
-
-  // Timestamps
-  const now = new Date().toLocaleString('pt-BR');
-  document.getElementById('footer-date').textContent = now;
-
-  // Tenta pegar timestamp do metadado Firestore
-  fetchFirestoreMeta().then(meta => {
-    if (meta && meta.jira_chamados_at) {
-      document.getElementById('sync-jira').textContent = new Date(meta.jira_chamados_at).toLocaleString('pt-BR');
+  try {
+    // ── FASE 1: carrega só jira_chamados (rápido ~415 docs) ──────────────────
+    let jiraOk = false;
+    try {
+      const jiraRes = await Promise.allSettled([fetchFirestore('jira_chamados')]);
+      const jiraData = jiraRes[0];
+      if (jiraData.status === 'fulfilled') { state.jira = jiraData.value; jiraOk = true; }
+      else { console.error('[Fase1] Jira falhou:', jiraData.reason?.message || jiraData.reason); state.jira = []; }
+    } catch(e) {
+      console.error('[Fase1] Erro inesperado:', e);
+      state.jira = [];
     }
-  }).catch(() => {});
-  const jiraTS = state.jira.find(r => r.atualizado_em)?.atualizado_em;
-  document.getElementById('sync-jira').textContent = jiraTS
-    ? new Date(jiraTS).toLocaleString('pt-BR') : (state.jira.length ? now : 'Indisponível');
-  document.getElementById('sync-cnd').textContent = (state.cndEstadual.length || state.cndFederal.length) ? now : 'Indisponível';
-  const implTS = state.implantacoes.find(r => r.atualizado_em)?.atualizado_em;
-  document.getElementById('sync-impl').textContent = implTS
-    ? new Date(implTS).toLocaleString('pt-BR') : (state.implantacoes.length ? now : 'Indisponível');
 
-  updateKPIs();
-  renderActiveView();
-  showLoading(false);
-  document.getElementById('btn-refresh').disabled = false;
+    try { updateKPIs(); } catch(e) { console.error('[Fase1] updateKPIs:', e); }
+    try { renderActiveView(); } catch(e) { console.error('[Fase1] renderActiveView:', e); }
 
-  // Comparativo semanal roda em paralelo (não bloqueia a dashboard principal)
-  // Re-renderiza com todos os dados carregados
-  updateKPIs();
-  renderActiveView();
-  fetchWeeklyComparison().catch(e => console.warn('Comparativo semanal:', e.message));
+    clearTimeout(safetyTimer);
+    showLoading(false);
+    if (btn) btn.disabled = false;
+
+    if (!jiraOk) {
+      const el = document.getElementById('kpi-chamados-sub');
+      if (el) el.textContent = 'Erro ao conectar Firestore — abra o console (F12)';
+    }
+
+    fetchFirestoreMeta().then(meta => {
+      if (meta && meta.jira_chamados_at)
+        document.getElementById('sync-jira').textContent = new Date(meta.jira_chamados_at).toLocaleString('pt-BR');
+    }).catch(() => {});
+
+    // ── FASE 2: carrega restante em background (sem bloquear a UI) ────────────
+    // jira_chamados_issues removido: 5181 docs = ~18 chamadas HTTP, carrega sob demanda
+    const [riscoRes, npsRes, cndEstRes, cndFedRes, colabRes, implRes, implIssuesRes, suporteRes, suporteIssuesRes] = await Promise.allSettled([
+      fetchSheet('Risco de Exclusão'),
+      fetchSheet('NPS_Calculado'),
+      fetchCNDEstadual(),
+      fetchCNDFederal(),
+      fetchSheet('Colaboradores'),
+      fetchSheet('Jira_Implantacoes'),
+      fetchSheet('Jira_Implantacoes_Issues'),
+      fetchSheet('Jira_Chamados_Suporte'),
+      fetchSheet('Jira_Chamados_Suporte_Issues'),
+    ]);
+
+    if (riscoRes.status === 'fulfilled')      state.risco           = riscoRes.value;      else { console.warn('[Fase2] Risco:', riscoRes.reason?.message);               state.risco = []; }
+    if (npsRes.status === 'fulfilled')        state.nps             = npsRes.value;         else { console.warn('[Fase2] NPS:', npsRes.reason?.message);                   state.nps = []; }
+    if (cndEstRes.status === 'fulfilled')     state.cndEstadual     = cndEstRes.value;      else { console.warn('[Fase2] CND Est:', cndEstRes.reason?.message);             state.cndEstadual = []; }
+    if (cndFedRes.status === 'fulfilled')     state.cndFederal      = cndFedRes.value;      else { console.warn('[Fase2] CND Fed:', cndFedRes.reason?.message);             state.cndFederal = []; }
+    state.cnd = state.cndEstadual;
+    if (colabRes.status === 'fulfilled')      state.colaboradores   = colabRes.value;       else { console.warn('[Fase2] Colab:', colabRes.reason?.message);                state.colaboradores = []; }
+    if (implRes.status === 'fulfilled')       state.implantacoes    = implRes.value;        else { console.warn('[Fase2] Impl:', implRes.reason?.message);                  state.implantacoes = []; }
+    if (implIssuesRes.status === 'fulfilled') state.implantacoesIssues = implIssuesRes.value; else { console.warn('[Fase2] ImplIssues:', implIssuesRes.reason?.message);   state.implantacoesIssues = []; }
+    if (suporteRes.status === 'fulfilled')    state.suporte         = suporteRes.value;     else { console.warn('[Fase2] Suporte:', suporteRes.reason?.message);            state.suporte = []; }
+    if (suporteIssuesRes.status === 'fulfilled') state.suporteIssues = suporteIssuesRes.value; else { console.warn('[Fase2] SupIssues:', suporteIssuesRes.reason?.message); state.suporteIssues = []; }
+
+    const now = new Date().toLocaleString('pt-BR');
+    try { document.getElementById('footer-date').textContent = now; } catch(_) {}
+    fetchFirestoreMeta().then(meta => {
+      if (meta && meta.jira_chamados_at)
+        document.getElementById('sync-jira').textContent = new Date(meta.jira_chamados_at).toLocaleString('pt-BR');
+    }).catch(() => {});
+    try {
+      const jiraTS = state.jira.find(r => r.atualizado_em)?.atualizado_em;
+      document.getElementById('sync-jira').textContent = jiraTS
+        ? new Date(jiraTS).toLocaleString('pt-BR') : (state.jira.length ? now : 'Indisponível');
+      document.getElementById('sync-cnd').textContent = (state.cndEstadual.length || state.cndFederal.length) ? now : 'Indisponível';
+      const implTS = state.implantacoes.find(r => r.atualizado_em)?.atualizado_em;
+      document.getElementById('sync-impl').textContent = implTS
+        ? new Date(implTS).toLocaleString('pt-BR') : (state.implantacoes.length ? now : 'Indisponível');
+    } catch(_) {}
+
+    try { updateKPIs(); } catch(e) { console.error('[Fase2] updateKPIs:', e); }
+    try { renderActiveView(); } catch(e) { console.error('[Fase2] renderActiveView:', e); }
+    try { fetchWeeklyComparison().catch(e => console.warn('Comparativo semanal:', e.message)); } catch(_) {}
+
+  } finally {
+    clearTimeout(safetyTimer);
+    showLoading(false);
+    if (btn) btn.disabled = false;
+  }
 }
 
 // ============================================================
