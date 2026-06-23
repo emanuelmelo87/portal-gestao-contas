@@ -443,12 +443,14 @@
 <header>
   <div class="header-inner">
     <div class="header-title">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 148 36" width="148" height="36" aria-label="Betha Sistemas">
-        <!-- Ícone B arredondado -->
-        <rect x="0" y="0" width="36" height="36" rx="8" ry="8" fill="#0761FF"/>
-        <text x="18" y="27" font-family="DM Sans,sans-serif" font-size="26" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="-1">B</text>
-        <!-- Wordmark -->
-        <text x="46" y="27" font-family="DM Sans,sans-serif" font-size="24" font-weight="700" fill="#ffffff" letter-spacing="-0.5">betha</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="25" viewBox="0 0 166.641 35" aria-label="Betha Sistemas">
+        <g transform="translate(0.424 -17.137)">
+          <path d="M255.374,27.661c-.1-.637-.4-.96-.832-.96-.481,0-.615.344-.944.975L246.81,40.855h10.722Zm3.036,18.872h-14.5l-4.7,9.165h-8.114l14.918-28.659c2.7-5.194,5.853-5.968,9.488-5.968,3.611,0,6.736,1.394,7.487,5.968L267.709,55.7h-7.9Z" transform="translate(-101.492 -3.561)" fill="#ffffff"/>
+          <path d="M193.241,27.24H181.924l-5.035,28.49h-7.631l5.023-28.49H163.418l1-5.749h29.806Z" transform="translate(-96.154 -3.594)" fill="#ffffff"/>
+          <path d="M150.8,55.73H139.466q-5.351,0-8.185-2.047a6.477,6.477,0,0,1-2.818-5.547,13.076,13.076,0,0,1,.114-1.684l2.767-15.635a9.94,9.94,0,0,1,4.457-6.8,16.948,16.948,0,0,1,9.68-2.528h11.641l-.993,5.748H144.5a6.033,6.033,0,0,0-4.147,1.158,5.3,5.3,0,0,0-1.394,3.023l-.672,3.813H153.63l-.962,5.67h-15.31l-.9,5.064a8.509,8.509,0,0,0-.175,1.445c0,1.794,1.375,2.686,4.149,2.686h12.209l-.7,4.015-.162.943a.9.9,0,0,1-.979.672" transform="translate(-93.397 -3.594)" fill="#ffffff"/>
+          <path d="M113.308,44.313c0-2.5-1.516-3.752-4.51-3.752h-8.5L98.59,50.034h8.095a6.96,6.96,0,0,0,4.941-1.585,5.422,5.422,0,0,0,1.683-4.136m1.021-14.022c0-6.065-8.009-4.075-11.654-3.66l-1.409,8.456h7.244a6.121,6.121,0,0,0,4.133-1.451,4.258,4.258,0,0,0,1.687-3.346m-8.606,25.373H89.934l5.741-32.916A59.754,59.754,0,0,1,110.7,20.666c5.468,0,11.45,2.412,11.45,8.889,0,4.02-2.978,6.337-6.678,7.643l-.061.193q5.711,2.263,5.715,6.635a10.1,10.1,0,0,1-4.314,8.516c-3.008,2.208-6.832,3.124-11.087,3.124" transform="translate(-90.358 -3.529)" fill="#ffffff"/>
+          <path d="M206.772,35.233h13.133l2.416-13.741h7.7l-5.892,33.47a.912.912,0,0,1-1.033.767h-6.813L218.9,40.9H205.787l-2.6,14.826h-7.769l6.013-34.237h7.766Z" transform="translate(-98.678 -3.594)" fill="#ffffff"/>
+        </g>
       </svg>
       <span style="width:1px;height:28px;background:rgba(255,255,255,0.35);display:inline-block;margin:0 14px;vertical-align:middle;"></span><h1>Jira Médias Contas <span>Dashboard Executivo</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
     </div>
@@ -835,6 +837,7 @@ function getVerticalColor(v) {
 
 // Busca dados de uma aba da planilha via Apps Script web app
 function fetchSheet(sheetName) {
+  if (!CONFIG.APPS_SCRIPT_URL) return Promise.reject(new Error('APPS_SCRIPT_URL não configurado'));
   return new Promise((resolve, reject) => {
     const cbName = '_sheetCb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     const timeout = setTimeout(() => {
@@ -869,6 +872,7 @@ function fetchSheet(sheetName) {
 // ─── Comparativo Semanal ─────────────────────────────────────────
 // Variante de fetchSheet com data explícita (não usa state.selectedDate)
 function fetchSheetOnDate(sheetName, dateStr) {
+  if (!CONFIG.APPS_SCRIPT_URL) return Promise.reject(new Error('APPS_SCRIPT_URL não configurado'));
   return new Promise((resolve, reject) => {
     const cbName = '_wkCb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     const timeout = setTimeout(() => { delete window[cbName]; reject(new Error('timeout')); }, 20000);
@@ -1046,8 +1050,26 @@ async function loadAllData() {
   showLoading(true);
   if (btn) btn.disabled = true;
 
-  const [jiraRes, riscoRes, npsRes, cndEstRes, cndFedRes, colabRes, implRes, implIssuesRes, chamadosIssuesRes, suporteRes, suporteIssuesRes] = await Promise.allSettled([
-    fetchFirestore('jira_chamados'),
+  // ── FASE 1: carrega só jira_chamados (rápido ~415 docs) ──────────────────
+  const jiraRes = await Promise.allSettled([fetchFirestore('jira_chamados')]);
+  const jiraData = jiraRes[0];
+  if (jiraData.status === 'fulfilled') state.jira = jiraData.value;
+  else { console.warn('Jira:', jiraData.reason?.message); state.jira = []; }
+
+  // Atualiza KPIs e renderiza imediatamente com o que tem
+  updateKPIs();
+  renderActiveView();
+  showLoading(false);
+  if (btn) btn.disabled = false;
+
+  // Timestamp
+  fetchFirestoreMeta().then(meta => {
+    if (meta && meta.jira_chamados_at)
+      document.getElementById('sync-jira').textContent = new Date(meta.jira_chamados_at).toLocaleString('pt-BR');
+  }).catch(() => {});
+
+  // ── FASE 2: carrega o restante em paralelo (background) ──────────────────
+  const [riscoRes, npsRes, cndEstRes, cndFedRes, colabRes, implRes, implIssuesRes, chamadosIssuesRes, suporteRes, suporteIssuesRes] = await Promise.allSettled([
     fetchSheet('Risco de Exclusão'),
     fetchSheet('NPS_Calculado'),
     fetchCNDEstadual(),
@@ -1059,10 +1081,11 @@ async function loadAllData() {
     fetchSheet('Jira_Chamados_Suporte'),
     fetchSheet('Jira_Chamados_Suporte_Issues'),
   ]);
+  // Reaproveita estrutura original (jiraRes fake para compatibilidade)
+  const [jiraRes2] = [{ status: 'fulfilled', value: state.jira }];
+  _ = jiraRes2; // silencia lint
 
-  if (jiraRes.status === 'fulfilled')  state.jira  = jiraRes.value;
-  else { console.warn('Jira:', jiraRes.reason?.message); state.jira = []; }
-
+  // jira já carregado na Fase 1
   if (riscoRes.status === 'fulfilled') state.risco = riscoRes.value;
   else { console.warn('Risco:', riscoRes.reason?.message); state.risco = []; }
 
@@ -1120,6 +1143,9 @@ async function loadAllData() {
   document.getElementById('btn-refresh').disabled = false;
 
   // Comparativo semanal roda em paralelo (não bloqueia a dashboard principal)
+  // Re-renderiza com todos os dados carregados
+  updateKPIs();
+  renderActiveView();
   fetchWeeklyComparison().catch(e => console.warn('Comparativo semanal:', e.message));
 }
 
