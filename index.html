@@ -4,19 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jira Médias Contas — Dashboard Executivo</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
     /* ===== Reset & Base ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:           #F0F2F5;
+      --bg:           #F6F7FB;
       --surface:      #FFFFFF;
-      --border:       #E2E8F0;
-      --text:         #1A202C;
-      --text-muted:   #718096;
-      --header-bg:    #1E3A5F;
+      --border:       #E0E5F5;
+      --text:         #1C1A23;
+      --text-muted:   #6B7280;
+      --header-bg:    #1C1A23;
       --header-text:  #FFFFFF;
-      --accent:       #2B6CB0;
+      --accent:       #0761FF;
 
       --red:          #C53030;
       --red-light:    #FED7D7;
@@ -30,9 +33,9 @@
       --green-light:  #C6F6D5;
       --green-bg:     #F0FFF4;
 
-      --blue:         #2C5282;
-      --blue-light:   #BEE3F8;
-      --blue-bg:      #EBF8FF;
+      --blue:         #0761FF;
+      --blue-light:   #CDEEFF;
+      --blue-bg:      #EEF4FF;
 
       --yellow:       #B7791F;
       --yellow-light: #FEFCBF;
@@ -43,7 +46,7 @@
       --shadow-md:    0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -56,7 +59,8 @@
       background: var(--header-bg);
       color: var(--header-text);
       padding: 14px 24px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 12px rgba(7,97,255,0.25);
+      border-bottom: 3px solid #0761FF;
     }
     .header-inner {
       max-width: 1400px;
@@ -147,7 +151,7 @@
     .kpi-card.green  { border-top-color: var(--green); }
     .kpi-card.red    { border-top-color: var(--red); }
     .kpi-card.yellow { border-top-color: var(--yellow); }
-    .kpi-card.purple { border-top-color: #7C3AED; }
+    .kpi-card.purple { border-top-color: #ABB8FF; }
     .kpi-label {
       font-size: 0.75rem;
       font-weight: 600;
@@ -438,11 +442,10 @@
 <header>
   <div class="header-inner">
     <div class="header-title">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 36" width="100" height="36" aria-label="Betha Sistemas">
+        <text x="0" y="27" font-family="DM Sans, sans-serif" font-size="28" font-weight="700" fill="#ffffff" letter-spacing="-0.5">betha</text>
       </svg>
-      <h1>Jira Médias Contas <span>Dashboard Executivo</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
+      <span style="width:1px;height:28px;background:rgba(255,255,255,0.35);display:inline-block;margin:0 14px;vertical-align:middle;"></span><h1>Jira Médias Contas <span>Dashboard Executivo</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
     </div>
     <div class="header-meta">
       <div class="sync-info">
@@ -513,6 +516,7 @@
     <button class="tab-btn" onclick="switchTab(3)">⭐ NPS</button>
     <button class="tab-btn" onclick="switchTab(4)">🏛️ CND</button>
     <button class="tab-btn" onclick="switchTab(5)">👥 Colaboradores</button>
+    <button class="tab-btn" id="tab-btn-admin" onclick="switchTab(7)">🗄️ Admin</button>
   </div>
 
   <!-- Chart Panel -->
@@ -521,7 +525,7 @@
     <!-- View: Chamados de Suporte (default) -->
     <div class="view active" id="view-suporte">
       <div class="view-title">Chamados de Suporte</div>
-      <div class="view-subtitle">Equipes Suporte e Residente — monitoramento de SLO de Atendimento • Fonte: Jira</div>
+      <div class="view-subtitle">Todos os chamados abertos do portfólio — monitoramento de SLO de Atendimento • Fonte: Jira</div>
       <div id="suporte-content" style="margin-top:8px"></div>
     </div>
 
@@ -623,12 +627,56 @@
       <div id="colab-container" style="margin-top:8px"></div>
     </div>
 
+
+    <div class="view" id="view-admin">
+      <div class="view-title">Painel Admin — Banco de Dados</div>
+      <div class="view-subtitle">Dados diretamente do Firestore · Somente leitura</div>
+      <div id="admin-container" style="margin-top:12px">
+        <!-- Filtros -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:flex-end">
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Coleção</label>
+            <select id="admin-col-sel" onchange="adminApplyFilters()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text);min-width:200px">
+              <option value="jira_chamados">jira_chamados (agregado)</option>
+              <option value="jira_chamados_issues">jira_chamados_issues (individual)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Município</label>
+            <select id="admin-mun-sel" onchange="adminApplyFilters()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text);min-width:180px">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Vertical</label>
+            <select id="admin-vert-sel" onchange="adminApplyFilters()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text);min-width:140px">
+              <option value="">Todas</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Buscar</label>
+            <input id="admin-search" type="text" placeholder="Filtrar…" oninput="adminApplyFilters()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;width:180px">
+          </div>
+          <button onclick="adminExportCSV()" style="padding:7px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:.83rem;font-weight:600;cursor:pointer">⬇ CSV</button>
+          <span id="admin-count" style="font-size:.78rem;color:var(--text-muted);align-self:center"></span>
+        </div>
+        <!-- Tabela -->
+        <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
+          <table id="admin-table" style="width:100%;border-collapse:collapse;font-size:.82rem">
+            <thead id="admin-thead"></thead>
+            <tbody id="admin-tbody"></tbody>
+          </table>
+        </div>
+        <div id="admin-empty" style="display:none;text-align:center;padding:40px;color:var(--text-muted)">Nenhum dado encontrado.</div>
+      </div>
+    </div>
+
   </div>
 </main>
 
 <footer>
-  Jira Médias Contas — Dashboard Executivo &nbsp;|&nbsp;
-  Fontes: Jira (Betha) · Google Sheets · CND &nbsp;|&nbsp;
+  Jira Médias Contas — Dashboard Executivo &nbsp;|&nbsp; Betha Sistemas &nbsp;|&nbsp;
+  Fontes: Jira (Betha) · Firebase Firestore · CND &nbsp;|&nbsp;
   Gerado em: <span id="footer-date">—</span>
 </footer>
 
@@ -682,6 +730,34 @@
 </div>
 
 <script>
+// ============================================================
+// FIREBASE FIRESTORE
+// ============================================================
+const FIREBASE_CONFIG = {
+  apiKey:            'AIzaSyDfdeamuZElziGrzkexDUU12OwaT-TTNoQ',
+  authDomain:        'jira-medias-contas.firebaseapp.com',
+  projectId:         'jira-medias-contas',
+  storageBucket:     'jira-medias-contas.firebasestorage.app',
+  messagingSenderId: '403708882905',
+  appId:             '1:403708882905:web:ad8e706f9357d232cc73c8'
+};
+firebase.initializeApp(FIREBASE_CONFIG);
+const _db = firebase.firestore();
+
+// Busca todos os docs de uma coleção do Firestore
+async function fetchFirestore(collectionName) {
+  const snapshot = await _db.collection(collectionName).get();
+  return snapshot.docs.map(d => d.data());
+}
+
+// Busca metadado de última atualização
+async function fetchFirestoreMeta() {
+  try {
+    const doc = await _db.collection('_meta').doc('last_update').get();
+    return doc.exists ? doc.data() : null;
+  } catch(e) { return null; }
+}
+
 // ============================================================
 // CONFIGURAÇÃO
 // ============================================================
@@ -957,7 +1033,7 @@ async function loadAllData() {
   if (btn) btn.disabled = true;
 
   const [jiraRes, riscoRes, npsRes, cndEstRes, cndFedRes, colabRes, implRes, implIssuesRes, chamadosIssuesRes, suporteRes, suporteIssuesRes] = await Promise.allSettled([
-    fetchSheet('Jira_Chamados'),
+    fetchFirestore('jira_chamados'),
     fetchSheet('Risco de Exclusão'),
     fetchSheet('NPS_Calculado'),
     fetchCNDEstadual(),
@@ -965,7 +1041,7 @@ async function loadAllData() {
     fetchSheet('Colaboradores'),
     fetchSheet('Jira_Implantacoes'),
     fetchSheet('Jira_Implantacoes_Issues'),
-    fetchSheet('Jira_Chamados_Issues'),
+    fetchFirestore('jira_chamados_issues'),
     fetchSheet('Jira_Chamados_Suporte'),
     fetchSheet('Jira_Chamados_Suporte_Issues'),
   ]);
@@ -1010,6 +1086,12 @@ async function loadAllData() {
   const now = new Date().toLocaleString('pt-BR');
   document.getElementById('footer-date').textContent = now;
 
+  // Tenta pegar timestamp do metadado Firestore
+  fetchFirestoreMeta().then(meta => {
+    if (meta && meta.jira_chamados_at) {
+      document.getElementById('sync-jira').textContent = new Date(meta.jira_chamados_at).toLocaleString('pt-BR');
+    }
+  }).catch(() => {});
   const jiraTS = state.jira.find(r => r.atualizado_em)?.atualizado_em;
   document.getElementById('sync-jira').textContent = jiraTS
     ? new Date(jiraTS).toLocaleString('pt-BR') : (state.jira.length ? now : 'Indisponível');
@@ -1172,7 +1254,7 @@ function npsZone(score) {
 // TAB SWITCHING
 // ============================================================
 // Mapa índice → id da view (necessário pois os índices não são sequenciais no DOM)
-const TAB_VIEW_IDS = { 0: 'view-0', 6: 'view-suporte', 1: 'view-7', 2: 'view-3' };
+const TAB_VIEW_IDS = { 0: 'view-0', 6: 'view-suporte', 1: 'view-7', 2: 'view-3', 7: 'view-admin' };
 
 function switchTab(idx) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -1186,7 +1268,9 @@ function switchTab(idx) {
     const domIdx = [6,0,1,2,3,4,5].indexOf(idx); // ordem das tabs no nav
     document.querySelectorAll('.view')[domIdx]?.classList.add('active');
   }
-  document.querySelectorAll('.tab-btn')[([6,0,1,2,3,4,5].indexOf(idx))]?.classList.add('active');
+  const adminBtn = document.getElementById('tab-btn-admin');
+  if (idx === 7) { adminBtn?.classList.add('active'); renderAdminView(); }
+  else document.querySelectorAll('.tab-btn')[([6,0,1,2,3,4,5].indexOf(idx))]?.classList.add('active');
   activeTab = idx;
   renderView(idx);
 }
@@ -1202,6 +1286,7 @@ function renderView(idx) {
     case 3: renderNPSGeral(); renderNPSPorCliente(); break;
     case 4: renderCND(); break;
     case 5: renderColaboradores(); break;
+    case 7: renderAdminView(); break;
   }
 }
 
@@ -3355,6 +3440,116 @@ function showLoading(show) {
   if (dp) { dp.max = today; dp.value = today; }
 })();
 loadAllData();
+// ============================================================
+// ADMIN — Painel de dados Firestore
+// ============================================================
+const _adminState = { collection: 'jira_chamados', docs: [], filtered: [] };
+
+async function renderAdminView() {
+  const sel = document.getElementById('admin-col-sel');
+  const col = sel ? sel.value : 'jira_chamados';
+
+  // Só recarrega se mudou de coleção ou está vazio
+  if (_adminState.collection !== col || _adminState.docs.length === 0) {
+    _adminState.collection = col;
+    document.getElementById('admin-tbody').innerHTML = '<tr><td colspan="99" style="text-align:center;padding:20px;color:var(--text-muted)">Carregando…</td></tr>';
+    try {
+      _adminState.docs = await fetchFirestore(col);
+    } catch(e) {
+      document.getElementById('admin-tbody').innerHTML = '<tr><td colspan="99" style="text-align:center;padding:20px;color:var(--red)">Erro ao carregar: ' + e.message + '</td></tr>';
+      return;
+    }
+    _rebuildAdminFilters();
+  }
+  adminApplyFilters();
+}
+
+function _rebuildAdminFilters() {
+  const docs = _adminState.docs;
+  const muns  = [...new Set(docs.map(d => d.municipio).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt-BR'));
+  const verts = [...new Set(docs.map(d => d.vertical).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt-BR'));
+
+  const munSel  = document.getElementById('admin-mun-sel');
+  const vertSel = document.getElementById('admin-vert-sel');
+  if (munSel) {
+    munSel.innerHTML = '<option value="">Todos</option>' + muns.map(m => `<option value="${m}">${m}</option>`).join('');
+  }
+  if (vertSel) {
+    vertSel.innerHTML = '<option value="">Todas</option>' + verts.map(v => `<option value="${v}">${v}</option>`).join('');
+  }
+}
+
+function adminApplyFilters() {
+  const col    = document.getElementById('admin-col-sel')?.value || 'jira_chamados';
+  const mun    = document.getElementById('admin-mun-sel')?.value || '';
+  const vert   = document.getElementById('admin-vert-sel')?.value || '';
+  const search = (document.getElementById('admin-search')?.value || '').toLowerCase().trim();
+
+  // Se mudou de coleção, recarregar
+  if (_adminState.collection !== col) { renderAdminView(); return; }
+
+  let rows = _adminState.docs;
+  if (mun)    rows = rows.filter(d => d.municipio === mun);
+  if (vert)   rows = rows.filter(d => d.vertical === vert);
+  if (search) rows = rows.filter(d => JSON.stringify(d).toLowerCase().includes(search));
+  _adminState.filtered = rows;
+
+  document.getElementById('admin-count').textContent = rows.length + ' registros';
+
+  if (rows.length === 0) {
+    document.getElementById('admin-table').style.display = 'none';
+    document.getElementById('admin-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('admin-table').style.display = 'table';
+  document.getElementById('admin-empty').style.display = 'none';
+
+  // Cabeçalho dinâmico
+  const COLS_ORDER = col === 'jira_chamados'
+    ? ['municipio','vertical','total_chamados','slo_estourado','atualizado_em']
+    : ['key','municipio','vertical','status','slo_horas','responsavel','issuetype','summary','atualizado_em','url'];
+  const allKeys = COLS_ORDER.filter(k => rows.some(d => d[k] !== undefined && d[k] !== ''));
+  const thead = document.getElementById('admin-thead');
+  thead.innerHTML = '<tr>' + allKeys.map(k =>
+    `<th style="padding:9px 12px;background:#1C1A23;color:#fff;font-size:.78rem;font-weight:600;text-align:left;white-space:nowrap">${k}</th>`
+  ).join('') + '</tr>';
+
+  // Corpo
+  const tbody = document.getElementById('admin-tbody');
+  tbody.innerHTML = rows.map((d, i) =>
+    '<tr style="background:' + (i%2===0?'#fff':'#F9FAFB') + ';border-bottom:1px solid #E2E8F0">' +
+    allKeys.map(k => {
+      const val = d[k] !== undefined ? String(d[k]) : '—';
+      if (k === 'url' && val.startsWith('http')) {
+        return `<td style="padding:7px 12px;white-space:nowrap"><a href="${val}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:.78rem">🔗 Abrir</a></td>`;
+      }
+      if (k === 'atualizado_em' && val.length > 10) {
+        return `<td style="padding:7px 12px;white-space:nowrap;font-size:.78rem;color:var(--text-muted)">${new Date(val).toLocaleString('pt-BR')}</td>`;
+      }
+      if (k === 'slo_horas') {
+        const neg = val.startsWith('-');
+        return `<td style="padding:7px 12px;white-space:nowrap;font-weight:600;color:${neg?'var(--red)':'var(--green)'}">${val||'—'}</td>`;
+      }
+      return `<td style="padding:7px 12px;white-space:nowrap;max-width:320px;overflow:hidden;text-overflow:ellipsis" title="${val.replace(/"/g,'&quot;')}">${val}</td>`;
+    }).join('') +
+    '</tr>'
+  ).join('');
+}
+
+function adminExportCSV() {
+  const rows = _adminState.filtered;
+  if (!rows.length) return;
+  const keys = Object.keys(rows[0]);
+  const csv  = [keys.join(',')].concat(rows.map(r =>
+    keys.map(k => '"' + (r[k]||'').toString().replace(/"/g,'""') + '"').join(',')
+  )).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = _adminState.collection + '_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+
 </script>
 </body>
 </html>
