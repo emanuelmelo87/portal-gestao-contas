@@ -554,7 +554,6 @@
     <button class="tab-btn" onclick="switchTab(2)">⚠️ Risco de Churn</button>
     <button class="tab-btn" onclick="switchTab(3)">⭐ NPS</button>
     <button class="tab-btn" onclick="switchTab(4)">🏛️ eSfinge</button>
-    <button class="tab-btn" onclick="switchTab(8)">📋 Status de Envio</button>
     <button class="tab-btn" onclick="switchTab(5)">👥 Colaboradores</button>
   </div>
 
@@ -645,10 +644,13 @@
     <!-- View: CND (pos 4) -->
     <div class="view" id="view-2">
       <div class="view-header">
-        <div class="view-title">eSfinge — Situação CND do Portfólio</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <img src="https://virtual.tce.sc.gov.br/mf-auth/assets/images/logo-dark.png" alt="TCE-SC" style="height:28px;object-fit:contain" onerror="this.style.display='none'">
+          <div class="view-title">eSfinge — Portfólio Médias Contas</div>
+        </div>
         <button class="btn-refresh-tab" id="refresh-tab-btn-4" onclick="refreshTabData(4)">🔄 Atualizar</button>
       </div>
-      <div class="view-subtitle">Certidões Negativas de Débito • Fonte: TCE-SC Virtual (e-Sfinge SC)</div>
+      <div class="view-subtitle">Certidões Negativas de Débito e Status de Envio • Fonte: TCE-SC Virtual (e-Sfinge SC)</div>
 
       <!-- Filtro de Município CND -->
       <div style="margin:8px 0 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -659,15 +661,19 @@
           style="padding:5px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:.78rem;cursor:pointer;color:var(--text-muted)">✕ Limpar</button>
       </div>
 
-      <!-- Sub-abas Estadual / Federal (Federal oculto aguardando revisão) -->
-      <div style="display:flex;gap:8px;margin:12px 0 16px;border-bottom:2px solid #E2E8F0">
+      <!-- Sub-abas: Estadual / Federal / Status de Envio -->
+      <div style="display:flex;gap:0;margin:12px 0 0;border-bottom:2px solid #E2E8F0;flex-wrap:wrap">
         <button id="cnd-sub-estadual" class="cnd-sub-btn cnd-sub-active" onclick="switchCNDSubTab('estadual')"
-          style="padding:8px 18px;background:none;border:none;border-bottom:3px solid var(--accent);font-weight:700;font-size:.9rem;color:var(--accent);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
+          style="padding:9px 18px;background:none;border:none;border-bottom:3px solid var(--accent);font-weight:700;font-size:.88rem;color:var(--accent);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
           🏛️ Estadual (SC)
         </button>
         <button id="cnd-sub-federal" class="cnd-sub-btn" onclick="switchCNDSubTab('federal')"
-          style="display:none;padding:8px 18px;background:none;border:none;border-bottom:3px solid transparent;font-weight:700;font-size:.9rem;color:var(--text-muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
+          style="display:none;padding:9px 18px;background:none;border:none;border-bottom:3px solid transparent;font-weight:700;font-size:.88rem;color:var(--text-muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
           🇧🇷 Federal
+        </button>
+        <button id="cnd-sub-envio" class="cnd-sub-btn" onclick="switchCNDSubTab('envio')"
+          style="padding:9px 18px;background:none;border:none;border-bottom:3px solid transparent;font-weight:700;font-size:.88rem;color:var(--text-muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
+          📋 Status de Envio
         </button>
       </div>
 
@@ -684,6 +690,35 @@
         <div id="cnd-federal-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start"></div>
         <div id="cnd-federal-table" style="margin-top:24px"></div>
       </div>
+
+      <!-- Status de Envio: grid módulos × meses -->
+      <div id="cnd-pane-envio" style="display:none;margin-top:16px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Região</label>
+            <select id="envio-filter-regiao" onchange="renderStatusEnvio()"
+              style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+              <option value="">Todas</option>
+              <option value="Região Norte">Região Norte</option>
+              <option value="Região Sul">Região Sul</option>
+              <option value="Região Oeste">Região Oeste</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Município</label>
+            <input id="envio-filter-mun" type="text" placeholder="Buscar…" oninput="renderStatusEnvio()"
+              style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;width:200px;background:#fff;color:var(--text)">
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Ano</label>
+            <select id="envio-filter-ano" onchange="renderStatusEnvio()"
+              style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+              <option value="">Atual</option>
+            </select>
+          </div>
+        </div>
+        <div id="envio-container" style="overflow-x:auto"></div>
+      </div>
     </div>
 
     <!-- View: Colaboradores (pos 5) -->
@@ -697,40 +732,6 @@
     </div>
 
 
-    <!-- View: Status de Envio (pos 8) -->
-    <div class="view" id="view-8">
-      <div class="view-header">
-        <div class="view-title">Status de Envio eSfinge</div>
-        <button class="btn-refresh-tab" id="refresh-tab-btn-8" onclick="refreshTabData(8)">🔄 Atualizar</button>
-      </div>
-      <div class="view-subtitle">Situação de envio dos módulos eSfinge por município e mês</div>
-      <!-- Filtros -->
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:14px 0 10px">
-        <div>
-          <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Região</label>
-          <select id="envio-filter-regiao" onchange="renderStatusEnvio()"
-            style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-            <option value="">Todas</option>
-            <option value="Região Norte">Região Norte</option>
-            <option value="Região Sul">Região Sul</option>
-            <option value="Região Oeste">Região Oeste</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Município</label>
-          <input id="envio-filter-mun" type="text" placeholder="Buscar…" oninput="renderStatusEnvio()"
-            style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;width:200px;background:#fff;color:var(--text)">
-        </div>
-        <div>
-          <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Ano</label>
-          <select id="envio-filter-ano" onchange="renderStatusEnvio()"
-            style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-            <option value="">Atual</option>
-          </select>
-        </div>
-      </div>
-      <div id="envio-container" style="margin-top:4px;overflow-x:auto"></div>
-    </div>
 
     <div class="view" id="view-admin">
       <div class="view-title">Painel Admin — Banco de Dados</div>
@@ -782,7 +783,7 @@
   Portfólio Médias Contas — Dashboard Executivo &nbsp;|&nbsp; Betha Sistemas &nbsp;|&nbsp;
   Fontes: Jira (Betha) · Firebase Firestore · CND &nbsp;|&nbsp;
   Gerado em: <span id="footer-date">—</span> &nbsp;|&nbsp;
-  <span style="font-size:.78rem;font-weight:600;opacity:.7">🚀 24/06/2026 16:21</span>
+  <span style="font-size:.78rem;font-weight:600;opacity:.7">🚀 24/06/2026 16:28</span>
 </footer>
 
 <div id="loading-overlay">
@@ -1520,7 +1521,7 @@ function npsZone(score) {
 // TAB SWITCHING
 // ============================================================
 // Mapa índice → id da view (necessário pois os índices não são sequenciais no DOM)
-const TAB_VIEW_IDS = { 0: 'view-0', 6: 'view-suporte', 1: 'view-7', 2: 'view-3', 7: 'view-admin', 8: 'view-8' };
+const TAB_VIEW_IDS = { 0: 'view-0', 6: 'view-suporte', 1: 'view-7', 2: 'view-3', 7: 'view-admin' };
 
 function switchTab(idx) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -1534,7 +1535,7 @@ function switchTab(idx) {
     const domIdx = [6,0,1,2,3,4,5].indexOf(idx); // ordem das tabs no nav
     document.querySelectorAll('.view')[domIdx]?.classList.add('active');
   }
-  document.querySelectorAll('.tab-btn')[([6,0,1,2,3,4,8,5].indexOf(idx))]?.classList.add('active');
+  document.querySelectorAll('.tab-btn')[([6,0,1,2,3,4,5].indexOf(idx))]?.classList.add('active');
   activeTab = idx;
   renderView(idx);
 }
@@ -1567,24 +1568,20 @@ async function refreshTabData(tabIdx) {
       case 3: // NPS
         state.nps = await fetchSheet('NPS_Calculado').catch(() => []);
         break;
-      case 4: // CND
-        [state.cndEstadual, state.cndFederal] = await Promise.all([
+      case 4: // CND + eSfinge
+        _fsCacheClear('status_envio'); _fsCacheClear('municipios');
+        [state.cndEstadual, state.cndFederal, state.statusEnvio, state.municipios] = await Promise.all([
           fetchCNDEstadual().catch(() => []),
           fetchCNDFederal().catch(() => []),
+          fetchFirestore('status_envio', true).catch(() => []),
+          fetchFirestore('municipios', true).catch(() => []),
         ]);
         state.cnd = state.cndEstadual;
+        _munRegMap = {}; state.municipios.forEach(m => { if (m.municipio) _munRegMap[m.municipio] = m.regiao || ''; });
         break;
       case 5: // Colaboradores
         _fsCacheClear('colaboradores');
         state.colaboradores = await fetchFirestore('colaboradores', true).catch(() => []);
-        break;
-      case 8: // Status de Envio
-        _fsCacheClear('status_envio'); _fsCacheClear('municipios');
-        [state.statusEnvio, state.municipios] = await Promise.all([
-          fetchFirestore('status_envio', true).catch(() => []),
-          fetchFirestore('municipios', true).catch(() => []),
-        ]);
-        _munRegMap = {}; state.municipios.forEach(m => { if (m.municipio) _munRegMap[m.municipio] = m.regiao || ''; });
         break;
     }
     try { updateKPIs(); } catch(_) {}
@@ -1607,7 +1604,6 @@ function renderView(idx) {
     case 3: renderNPSGeral(); renderNPSPorCliente(); break;
     case 4: renderCND(); break;
     case 5: renderColaboradores(); break;
-    case 8: renderStatusEnvio(); break;
     case 7: renderAdminView(); break;
   }
 }
@@ -2519,19 +2515,23 @@ function renderCNDStatusFonte(containerId, dataFonte, nomeFonte) {
 // Alterna sub-aba CND (Estadual/Federal)
 function switchCNDSubTab(tab) {
   state.cndSubTab = tab;
-  const paneE = document.getElementById('cnd-pane-estadual');
-  const paneF = document.getElementById('cnd-pane-federal');
-  const btnE  = document.getElementById('cnd-sub-estadual');
-  const btnF  = document.getElementById('cnd-sub-federal');
-  if (tab === 'federal') {
-    paneE.style.display = 'none'; paneF.style.display = '';
-    btnF.style.color = 'var(--accent)';  btnF.style.borderBottomColor = 'var(--accent)';
-    btnE.style.color = 'var(--text-muted)'; btnE.style.borderBottomColor = 'transparent';
-  } else {
-    paneE.style.display = ''; paneF.style.display = 'none';
-    btnE.style.color = 'var(--accent)';  btnE.style.borderBottomColor = 'var(--accent)';
-    btnF.style.color = 'var(--text-muted)'; btnF.style.borderBottomColor = 'transparent';
-  }
+  const paneE   = document.getElementById('cnd-pane-estadual');
+  const paneF   = document.getElementById('cnd-pane-federal');
+  const paneEnv = document.getElementById('cnd-pane-envio');
+  const btnE    = document.getElementById('cnd-sub-estadual');
+  const btnF    = document.getElementById('cnd-sub-federal');
+  const btnEnv  = document.getElementById('cnd-sub-envio');
+  const active  = 'var(--accent)';
+  const muted   = 'var(--text-muted)';
+
+  if (paneE)   paneE.style.display   = tab === 'estadual' ? '' : 'none';
+  if (paneF)   paneF.style.display   = tab === 'federal'  ? '' : 'none';
+  if (paneEnv) paneEnv.style.display = tab === 'envio'    ? '' : 'none';
+
+  [btnE, btnF, btnEnv].forEach(b => { if (b) { b.style.color = muted; b.style.borderBottomColor = 'transparent'; } });
+  const activeBtn = tab === 'estadual' ? btnE : tab === 'federal' ? btnF : btnEnv;
+  if (activeBtn) { activeBtn.style.color = active; activeBtn.style.borderBottomColor = active; }
+
   renderCND();
 }
 
@@ -2553,6 +2553,7 @@ function renderCND() {
   }
 
   if (state.cndSubTab === 'federal') renderCNDFederal();
+  else if (state.cndSubTab === 'envio') renderStatusEnvio();
   else renderCNDEstadual();
 }
 
