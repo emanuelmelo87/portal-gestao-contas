@@ -475,7 +475,7 @@
         </g>
       </svg>
       <span style="width:1px;height:28px;background:rgba(255,255,255,0.35);display:inline-block;margin:0 14px;vertical-align:middle;"></span><h1>Portfólio Médias Contas <span>Dashboard Executivo</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
-      <span id="deploy-badge" style="font-size:.68rem;font-weight:600;color:rgba(255,255,255,.55);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:2px 9px;white-space:nowrap;margin-left:2px;vertical-align:middle">🚀 24/06/2026 14:51</span>
+      <span id="deploy-badge" style="font-size:.68rem;font-weight:600;color:rgba(255,255,255,.55);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:2px 9px;white-space:nowrap;margin-left:2px;vertical-align:middle">🚀 24/06/2026 14:58</span>
     </div>
     <div class="header-meta">
       <div class="sync-info">
@@ -735,7 +735,7 @@
 </main>
 
 <footer>
-  Portfólio Médias Contas — Dashboard Executivo &nbsp;|&nbsp; Betha Sistemas &nbsp;|&nbsp; Deploy: 24/06/2026 14:51 &nbsp;|&nbsp;
+  Portfólio Médias Contas — Dashboard Executivo &nbsp;|&nbsp; Betha Sistemas &nbsp;|&nbsp; Deploy: 24/06/2026 14:58 &nbsp;|&nbsp;
   Fontes: Jira (Betha) · Firebase Firestore · CND &nbsp;|&nbsp;
   Gerado em: <span id="footer-date">—</span>
 </footer>
@@ -825,12 +825,20 @@ function _fsDoc(doc) {
 }
 
 // Busca todos os docs de uma coleção via REST (sem SDK)
-// Retry automático com backoff exponencial em caso de 429 / 503
+// Throttle global: no máximo 1 req Firestore a cada 250ms
+// + Retry com backoff exponencial em 429/503
+let _fsQueue = Promise.resolve();
+function _fsThrottle(fn) {
+  _fsQueue = _fsQueue.then(() => new Promise(r => setTimeout(r, 250))).then(fn);
+  return _fsQueue;
+}
+
 async function _fetchFSPage(url, attempt = 0) {
   const resp = await fetch(url);
   if (resp.status === 429 || resp.status === 503) {
-    if (attempt >= 4) throw new Error('Firestore HTTP ' + resp.status + ' (após retries)');
-    const delay = (2 ** attempt) * 500 + Math.random() * 300; // 500ms, 1s, 2s, 4s…
+    if (attempt >= 5) throw new Error('Firestore HTTP ' + resp.status + ' (após retries)');
+    const delay = (2 ** attempt) * 1000 + Math.random() * 500; // 1s, 2s, 4s, 8s, 16s
+    console.warn('[Firestore] 429 — retry', attempt + 1, 'em', Math.round(delay) + 'ms');
     await new Promise(r => setTimeout(r, delay));
     return _fetchFSPage(url, attempt + 1);
   }
@@ -843,7 +851,7 @@ async function fetchFirestore(col) {
   let pageToken = null;
   do {
     const url = _FS_BASE + '/' + col + '?key=' + _FS_KEY + '&pageSize=300' + (pageToken ? '&pageToken=' + pageToken : '');
-    const data = await _fetchFSPage(url);
+    const data = await _fsThrottle(() => _fetchFSPage(url));
     if (data.documents) data.documents.forEach(d => docs.push(_fsDoc(d)));
     pageToken = data.nextPageToken || null;
   } while (pageToken);
