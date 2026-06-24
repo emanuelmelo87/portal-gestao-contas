@@ -295,6 +295,9 @@
     .colab-table tbody tr:hover { background: #f7faff; }
     .colab-vaga-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 600; }
     @media (max-width: 768px) { .colab-layout { grid-template-columns: 1fr; } }
+    /* Colaboradores filter chips */
+    ._cchip{background:#EBF4FF;color:#2B6CB0;padding:3px 10px;border-radius:20px;font-size:.78rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+    ._cchip:hover{background:#BEE3F8}
     .risk-main { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
     .risk-col-title {
       font-size: 0.78rem; font-weight: 700; color: var(--text-muted);
@@ -2930,104 +2933,110 @@ function renderNPSPorCliente() {
 function renderColaboradores() {
   ['chart-colab-cargo','chart-colab-area','chart-colab-equipe'].forEach(id => destroyChart(id));
   const container = document.getElementById('colab-container');
-  if (!state.colaboradores || !state.colaboradores.length) {
-    unavailable(container, 'Dados de colaboradores indisponíveis. Adicione colaboradores no painel Admin.');
-    return;
-  }
-  const colabs = state.colaboradores;
-  if (!window._colabFilter) window._colabFilter = { cargo: null, area: null, equipe: null };
-  const f = window._colabFilter;
+  try {
+    if (!state.colaboradores || !state.colaboradores.length) {
+      unavailable(container, 'Dados de colaboradores indisponíveis. Adicione colaboradores no painel Admin.');
+      return;
+    }
+    const colabs = state.colaboradores;
+    if (!window._colabFilter) window._colabFilter = { cargo: null, area: null, equipe: null };
+    const f = window._colabFilter;
 
-  const cargoMap = {}, areaMap = {}, equipeMap = {};
-  colabs.forEach(c => {
-    const cargo  = c.cargo              || 'Não informado';
-    const area   = c.area_atendimento   || 'Não informado';
-    const equipe = c.equipe_atendimento || 'Não informado';
-    cargoMap[cargo]   = (cargoMap[cargo]   || 0) + 1;
-    areaMap[area]     = (areaMap[area]     || 0) + 1;
-    equipeMap[equipe] = (equipeMap[equipe] || 0) + 1;
-  });
+    const cargoMap = {}, areaMap = {}, equipeMap = {};
+    colabs.forEach(c => {
+      const cargo  = String(c.cargo  || 'Não informado');
+      const area   = String(c.area_atendimento   || 'Não informado');
+      const equipe = String(c.equipe_atendimento || 'Não informado');
+      cargoMap[cargo]   = (cargoMap[cargo]   || 0) + 1;
+      areaMap[area]     = (areaMap[area]     || 0) + 1;
+      equipeMap[equipe] = (equipeMap[equipe] || 0) + 1;
+    });
 
-  const filtered = colabs.filter(c =>
-    (!f.cargo  || (c.cargo              || 'Não informado') === f.cargo)  &&
-    (!f.area   || (c.area_atendimento   || 'Não informado') === f.area)   &&
-    (!f.equipe || (c.equipe_atendimento || 'Não informado') === f.equipe)
-  ).sort((a,b) => (a.nome||'').localeCompare(b.nome||'','pt-BR'));
+    const filtered = colabs.filter(c =>
+      (!f.cargo  || String(c.cargo              || 'Não informado') === f.cargo)  &&
+      (!f.area   || String(c.area_atendimento   || 'Não informado') === f.area)   &&
+      (!f.equipe || String(c.equipe_atendimento || 'Não informado') === f.equipe)
+    ).sort((a,b) => String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
 
-  const PIE_COLORS = ['#0761FF','#38A169','#D69E2E','#805AD5','#E53E3E','#DD6B20','#0987A0','#C53030','#2B6CB0','#9F7AEA','#48BB78','#718096'];
+    const PIE_COLORS_C = ['#0761FF','#38A169','#D69E2E','#805AD5','#E53E3E','#DD6B20','#0987A0','#C53030','#2B6CB0','#9F7AEA','#48BB78','#718096'];
 
-  const chips = [
-    f.cargo  ? `<span class="_cchip" onclick="window._colabFilter.cargo=null;renderColaboradores()">${f.cargo} &#x2715;</span>`  : '',
-    f.area   ? `<span class="_cchip" onclick="window._colabFilter.area=null;renderColaboradores()">${f.area} &#x2715;</span>`    : '',
-    f.equipe ? `<span class="_cchip" onclick="window._colabFilter.equipe=null;renderColaboradores()">${f.equipe} &#x2715;</span>`: '',
-  ].filter(Boolean).join('');
+    const chips = [
+      f.cargo  ? `<span class="_cchip" onclick="window._colabFilter.cargo=null;renderColaboradores()">${f.cargo} &#x2715;</span>`  : '',
+      f.area   ? `<span class="_cchip" onclick="window._colabFilter.area=null;renderColaboradores()">${f.area} &#x2715;</span>`    : '',
+      f.equipe ? `<span class="_cchip" onclick="window._colabFilter.equipe=null;renderColaboradores()">${f.equipe} &#x2715;</span>`: '',
+    ].filter(Boolean).join('');
 
-  const tableRows = filtered.map((c,i) => {
-    const em = (c.email||'');
-    const emEsc = em.replace(/"/g,'&quot;');
-    const mailUrl = em ? 'https://mail.google.com/mail/?view=cm&to=' + encodeURIComponent(em) : '';
-    const bg = i%2===0 ? 'var(--bg)' : 'var(--surface)';
-    const contato = em
-      ? `<a href="${mailUrl}" target="_blank" title="E-mail: ${emEsc}" style="display:inline-flex;align-items:center;background:#EBF4FF;border-radius:6px;padding:5px 9px;text-decoration:none;font-size:.9rem;margin-right:4px">&#x2709;&#xFE0F;</a>`
-        + `<button onclick="_openGoogleChat('${emEsc}')" title="Google Chat: ${emEsc}" style="background:#E6F4EA;border:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:.9rem">&#x1F4AC;</button>`
-      : '&mdash;';
-    return `<tr style="background:${bg};border-bottom:1px solid var(--border)">
-      <td style="padding:9px 14px;font-weight:600">${c.nome||'&mdash;'}</td>
-      <td style="padding:9px 14px"><span style="background:#EBF4FF;color:#2B6CB0;padding:2px 8px;border-radius:12px;font-size:.76rem;white-space:nowrap">${c.cargo||'&mdash;'}</span></td>
-      <td style="padding:9px 14px;color:var(--text-muted)">${c.area_atuacao||'&mdash;'}</td>
-      <td style="padding:9px 14px">${c.equipe_atendimento||'&mdash;'}</td>
-      <td style="padding:9px 14px">${c.area_atendimento||'&mdash;'}</td>
-      <td style="padding:9px 14px;color:var(--text-muted)">${c.gestor||'&mdash;'}</td>
-      <td style="padding:9px 14px;text-align:center;white-space:nowrap">${contato}</td>
-    </tr>`;
-  }).join('');
+    const tableRows = filtered.map((c,i) => {
+      const em = String(c.email||'');
+      const emEsc = em.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      const mailUrl = em ? 'https://mail.google.com/mail/?view=cm&to=' + encodeURIComponent(em) : '';
+      const bg = i%2===0 ? '#F6F7FB' : '#FFFFFF';
+      const contato = em
+        ? `<a href="${mailUrl}" target="_blank" title="${emEsc}" style="display:inline-flex;align-items:center;background:#EBF4FF;border-radius:6px;padding:5px 9px;text-decoration:none;font-size:.9rem;margin-right:4px">✉️</a>`
+          + `<button onclick="_openGoogleChat('${emEsc}')" title="${emEsc}" style="background:#E6F4EA;border:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:.9rem">💬</button>`
+        : '—';
+      return `<tr style="background:${bg};border-bottom:1px solid #E0E5F5">
+        <td style="padding:9px 14px;font-weight:600">${String(c.nome||'—')}</td>
+        <td style="padding:9px 14px"><span style="background:#EBF4FF;color:#2B6CB0;padding:2px 8px;border-radius:12px;font-size:.76rem;white-space:nowrap">${String(c.cargo||'—')}</span></td>
+        <td style="padding:9px 14px;color:#6B7280">${String(c.area_atuacao||'—')}</td>
+        <td style="padding:9px 14px">${String(c.equipe_atendimento||'—')}</td>
+        <td style="padding:9px 14px">${String(c.area_atendimento||'—')}</td>
+        <td style="padding:9px 14px;color:#6B7280">${String(c.gestor||'—')}</td>
+        <td style="padding:9px 14px;text-align:center;white-space:nowrap">${contato}</td>
+      </tr>`;
+    }).join('');
 
-  const chipsHtml = chips
-    ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <span style="font-size:.8rem;color:var(--text-muted)">Filtros:</span>${chips}
-        <span onclick="window._colabFilter={cargo:null,area:null,equipe:null};renderColaboradores()" style="font-size:.78rem;color:var(--text-muted);cursor:pointer;text-decoration:underline;margin-left:4px">Limpar tudo</span>
-      </div>` : '';
+    const chipsHtml = chips
+      ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <span style="font-size:.8rem;color:#6B7280">Filtros:</span>${chips}
+          <span onclick="window._colabFilter={cargo:null,area:null,equipe:null};renderColaboradores()" style="font-size:.78rem;color:#6B7280;cursor:pointer;text-decoration:underline;margin-left:4px">Limpar tudo</span>
+        </div>` : '';
 
-  container.innerHTML = `
-    <style>._cchip{background:#EBF4FF;color:#2B6CB0;padding:3px 10px;border-radius:20px;font-size:.78rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px}._cchip:hover{background:#BEE3F8}</style>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-bottom:22px">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
-        <div style="font-size:.75rem;font-weight:700;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Cargo</div>
-        <canvas id="chart-colab-cargo" height="200"></canvas>
+    container.innerHTML =
+      `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-bottom:22px">
+        <div style="background:#FFFFFF;border:1px solid #E0E5F5;border-radius:10px;padding:16px">
+          <div style="font-size:.75rem;font-weight:700;color:#6B7280;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Cargo</div>
+          <div style="position:relative;height:220px"><canvas id="chart-colab-cargo"></canvas></div>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E0E5F5;border-radius:10px;padding:16px">
+          <div style="font-size:.75rem;font-weight:700;color:#6B7280;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Área de Atendimento</div>
+          <div style="position:relative;height:220px"><canvas id="chart-colab-area"></canvas></div>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E0E5F5;border-radius:10px;padding:16px">
+          <div style="font-size:.75rem;font-weight:700;color:#6B7280;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Equipe</div>
+          <div style="position:relative;height:220px"><canvas id="chart-colab-equipe"></canvas></div>
+        </div>
       </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
-        <div style="font-size:.75rem;font-weight:700;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por &Aacute;rea de Atendimento</div>
-        <canvas id="chart-colab-area" height="200"></canvas>
+      ${chipsHtml}
+      <div style="font-size:.85rem;color:#6B7280;margin-bottom:10px">
+        Equipe — <strong>${filtered.length}</strong> colaborador${filtered.length !== 1 ? 'es' : ''}${filtered.length !== colabs.length ? ' de ' + colabs.length : ''}
       </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
-        <div style="font-size:.75rem;font-weight:700;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Equipe</div>
-        <canvas id="chart-colab-equipe" height="200"></canvas>
-      </div>
-    </div>
-    ${chipsHtml}
-    <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:10px">
-      Equipe &mdash; <strong>${filtered.length}</strong> colaborador${filtered.length !== 1 ? 'es' : ''}${filtered.length !== colabs.length ? ` de ${colabs.length}` : ''}
-    </div>
-    <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px">
-      <table style="width:100%;border-collapse:collapse;font-size:.84rem">
-        <thead>
-          <tr style="background:var(--accent);color:#fff">
-            <th style="padding:10px 14px;text-align:left;white-space:nowrap">Nome</th>
-            <th style="padding:10px 14px;text-align:left;white-space:nowrap">Cargo</th>
-            <th style="padding:10px 14px;text-align:left;white-space:nowrap">&Aacute;rea de Atua&ccedil;&atilde;o</th>
-            <th style="padding:10px 14px;text-align:left;white-space:nowrap">Equipe</th>
-            <th style="padding:10px 14px;text-align:left;white-space:nowrap">&Aacute;rea de Atend.</th>
-            <th style="padding:10px 14px;text-align:left;white-space:nowrap">Gestor</th>
-            <th style="padding:10px 14px;text-align:center;white-space:nowrap">Contato</th>
-          </tr>
-        </thead>
-        <tbody>${tableRows}</tbody>
-      </table>
+      <div style="overflow-x:auto;border:1px solid #E0E5F5;border-radius:10px">
+        <table style="width:100%;border-collapse:collapse;font-size:.84rem">
+          <thead>
+            <tr style="background:#0761FF;color:#fff">
+              <th style="padding:10px 14px;text-align:left;white-space:nowrap">Nome</th>
+              <th style="padding:10px 14px;text-align:left;white-space:nowrap">Cargo</th>
+              <th style="padding:10px 14px;text-align:left;white-space:nowrap">Área de Atuação</th>
+              <th style="padding:10px 14px;text-align:left;white-space:nowrap">Equipe</th>
+              <th style="padding:10px 14px;text-align:left;white-space:nowrap">Área de Atend.</th>
+              <th style="padding:10px 14px;text-align:left;white-space:nowrap">Gestor</th>
+              <th style="padding:10px 14px;text-align:center;white-space:nowrap">Contato</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>`;
+
+    _drawColabPie('chart-colab-cargo',  cargoMap,  PIE_COLORS_C, v => { window._colabFilter.cargo  = v; renderColaboradores(); });
+    _drawColabPie('chart-colab-area',   areaMap,   PIE_COLORS_C, v => { window._colabFilter.area   = v; renderColaboradores(); });
+    _drawColabPie('chart-colab-equipe', equipeMap, PIE_COLORS_C, v => { window._colabFilter.equipe = v; renderColaboradores(); });
+  } catch(e) {
+    console.error('[renderColaboradores] ERRO:', e);
+    if (container) container.innerHTML = `<div style="color:#E53E3E;padding:24px;text-align:center">
+      Erro ao renderizar colaboradores: <strong>${e.message}</strong><br><small>Veja o console (F12) para detalhes.</small>
     </div>`;
-
-  _drawColabPie('chart-colab-cargo',  cargoMap,  PIE_COLORS, v => { window._colabFilter.cargo  = v; renderColaboradores(); });
-  _drawColabPie('chart-colab-area',   areaMap,   PIE_COLORS, v => { window._colabFilter.area   = v; renderColaboradores(); });
-  _drawColabPie('chart-colab-equipe', equipeMap, PIE_COLORS, v => { window._colabFilter.equipe = v; renderColaboradores(); });
+  }
 }
 
 function _drawColabPie(canvasId, dataMap, colors, onClickCb) {
