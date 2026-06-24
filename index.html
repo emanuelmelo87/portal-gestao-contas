@@ -1165,7 +1165,7 @@ async function loadAllData() {
       fetchSheet('NPS_Calculado'),
       fetchCNDEstadual(),
       fetchCNDFederal(),
-      fetchSheet('Colaboradores'),
+      fetchFirestore('colaboradores'), // Colaboradores no Firestore
       fetchSheet('Jira_Implantacoes'),
       fetchSheet('Jira_Implantacoes_Issues'),
       fetchSheet('Jira_Chamados_Suporte'),
@@ -2928,108 +2928,138 @@ function renderNPSPorCliente() {
 // VIEW 7 — Colaboradores
 // ============================================================
 function renderColaboradores() {
-  destroyChart('chart-6');
-  destroyChart('chart-7');
+  ['chart-colab-cargo','chart-colab-area','chart-colab-equipe'].forEach(id => destroyChart(id));
   const container = document.getElementById('colab-container');
-
-  if (!state.colaboradores.length) {
-    unavailable(container, 'Dados de colaboradores indisponíveis. Verifique se a planilha está publicada.');
+  if (!state.colaboradores || !state.colaboradores.length) {
+    unavailable(container, 'Dados de colaboradores indisponíveis. Adicione colaboradores no painel Admin.');
     return;
   }
+  const colabs = state.colaboradores;
+  if (!window._colabFilter) window._colabFilter = { cargo: null, area: null, equipe: null };
+  const f = window._colabFilter;
 
-  const COLAB_COLORS = [
-    '#2B6CB0','#276749','#C05621','#805AD5','#0987A0',
-    '#C53030','#DD6B20','#B7791F','#2C7A7B','#553C9A',
-    '#2F855A','#9B2C2C','#2A4365','#744210','#1A365D',
-  ];
-  const ATEND_COLORS = [
-    '#0987A0','#C05621','#276749','#805AD5','#2B6CB0',
-    '#B7791F','#C53030','#2C7A7B','#DD6B20','#553C9A',
-  ];
-
-  // ── Agrupar por Vaga ──────────────────────────────────────
-  const vagaMap = {};
-  state.colaboradores.forEach(r => {
-    const v = (r.vaga || 'Sem vaga').trim();
-    vagaMap[v] = (vagaMap[v] || 0) + 1;
+  const cargoMap = {}, areaMap = {}, equipeMap = {};
+  colabs.forEach(c => {
+    const cargo  = c.cargo              || 'Não informado';
+    const area   = c.area_atendimento   || 'Não informado';
+    const equipe = c.equipe_atendimento || 'Não informado';
+    cargoMap[cargo]   = (cargoMap[cargo]   || 0) + 1;
+    areaMap[area]     = (areaMap[area]     || 0) + 1;
+    equipeMap[equipe] = (equipeMap[equipe] || 0) + 1;
   });
-  const vagaEntries = Object.entries(vagaMap).sort((a, b) => b[1] - a[1]);
-  const vagaLabels  = vagaEntries.map(e => e[0]);
-  const vagaCounts  = vagaEntries.map(e => e[1]);
-  const vagaColors  = vagaLabels.map((_, i) => COLAB_COLORS[i % COLAB_COLORS.length]);
-  const colorByVaga = {};
-  vagaLabels.forEach((v, i) => { colorByVaga[v] = COLAB_COLORS[i % COLAB_COLORS.length]; });
 
-  // ── Agrupar por Área de Atendimento ───────────────────────
-  const atendMap = {};
-  state.colaboradores.forEach(r => {
-    const a = (r.area_de_atendimento || 'Não informado').trim();
-    atendMap[a] = (atendMap[a] || 0) + 1;
-  });
-  const atendEntries = Object.entries(atendMap).sort((a, b) => b[1] - a[1]);
-  const atendLabels  = atendEntries.map(e => e[0]);
-  const atendCounts  = atendEntries.map(e => e[1]);
-  const atendColors  = atendLabels.map((_, i) => ATEND_COLORS[i % ATEND_COLORS.length]);
+  const filtered = colabs.filter(c =>
+    (!f.cargo  || (c.cargo              || 'Não informado') === f.cargo)  &&
+    (!f.area   || (c.area_atendimento   || 'Não informado') === f.area)   &&
+    (!f.equipe || (c.equipe_atendimento || 'Não informado') === f.equipe)
+  ).sort((a,b) => (a.nome||'').localeCompare(b.nome||'','pt-BR'));
 
-  // ── Linhas da tabela ──────────────────────────────────────
-  const tableRows = state.colaboradores.map(r => {
-    const vaga = (r.vaga || '').trim();
-    const cor  = colorByVaga[vaga] || '#718096';
-    return `<tr>
-      <td>${r.analista || '—'}</td>
-      <td><span class="colab-vaga-badge" style="background:${cor}20;color:${cor};border:1px solid ${cor}40">${vaga || '—'}</span></td>
-      <td>${r.area_de_atuacao || '—'}</td>
-      <td>${r.regiao || '—'}</td>
-      <td>${r.area_de_atendimento || '—'}</td>
+  const PIE_COLORS = ['#0761FF','#38A169','#D69E2E','#805AD5','#E53E3E','#DD6B20','#0987A0','#C53030','#2B6CB0','#9F7AEA','#48BB78','#718096'];
+
+  const chips = [
+    f.cargo  ? `<span class="_cchip" onclick="window._colabFilter.cargo=null;renderColaboradores()">${f.cargo} &#x2715;</span>`  : '',
+    f.area   ? `<span class="_cchip" onclick="window._colabFilter.area=null;renderColaboradores()">${f.area} &#x2715;</span>`    : '',
+    f.equipe ? `<span class="_cchip" onclick="window._colabFilter.equipe=null;renderColaboradores()">${f.equipe} &#x2715;</span>`: '',
+  ].filter(Boolean).join('');
+
+  const tableRows = filtered.map((c,i) => {
+    const em = (c.email||'');
+    const emEsc = em.replace(/"/g,'&quot;');
+    const mailUrl = em ? 'https://mail.google.com/mail/?view=cm&to=' + encodeURIComponent(em) : '';
+    const bg = i%2===0 ? 'var(--bg)' : 'var(--surface)';
+    const contato = em
+      ? `<a href="${mailUrl}" target="_blank" title="E-mail: ${emEsc}" style="display:inline-flex;align-items:center;background:#EBF4FF;border-radius:6px;padding:5px 9px;text-decoration:none;font-size:.9rem;margin-right:4px">&#x2709;&#xFE0F;</a>`
+        + `<button onclick="_openGoogleChat('${emEsc}')" title="Google Chat: ${emEsc}" style="background:#E6F4EA;border:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:.9rem">&#x1F4AC;</button>`
+      : '&mdash;';
+    return `<tr style="background:${bg};border-bottom:1px solid var(--border)">
+      <td style="padding:9px 14px;font-weight:600">${c.nome||'&mdash;'}</td>
+      <td style="padding:9px 14px"><span style="background:#EBF4FF;color:#2B6CB0;padding:2px 8px;border-radius:12px;font-size:.76rem;white-space:nowrap">${c.cargo||'&mdash;'}</span></td>
+      <td style="padding:9px 14px;color:var(--text-muted)">${c.area_atuacao||'&mdash;'}</td>
+      <td style="padding:9px 14px">${c.equipe_atendimento||'&mdash;'}</td>
+      <td style="padding:9px 14px">${c.area_atendimento||'&mdash;'}</td>
+      <td style="padding:9px 14px;color:var(--text-muted)">${c.gestor||'&mdash;'}</td>
+      <td style="padding:9px 14px;text-align:center;white-space:nowrap">${contato}</td>
     </tr>`;
   }).join('');
 
+  const chipsHtml = chips
+    ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <span style="font-size:.8rem;color:var(--text-muted)">Filtros:</span>${chips}
+        <span onclick="window._colabFilter={cargo:null,area:null,equipe:null};renderColaboradores()" style="font-size:.78rem;color:var(--text-muted);cursor:pointer;text-decoration:underline;margin-left:4px">Limpar tudo</span>
+      </div>` : '';
+
   container.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
-      <div>
-        <div class="risk-col-title">Distribuição por Vaga</div>
-        <div style="height:300px"><canvas id="chart-6"></canvas></div>
+    <style>._cchip{background:#EBF4FF;color:#2B6CB0;padding:3px 10px;border-radius:20px;font-size:.78rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px}._cchip:hover{background:#BEE3F8}</style>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-bottom:22px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
+        <div style="font-size:.75rem;font-weight:700;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Cargo</div>
+        <canvas id="chart-colab-cargo" height="200"></canvas>
       </div>
-      <div>
-        <div class="risk-col-title">Distribuição por Área de Atendimento</div>
-        <div style="height:300px"><canvas id="chart-7"></canvas></div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
+        <div style="font-size:.75rem;font-weight:700;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por &Aacute;rea de Atendimento</div>
+        <canvas id="chart-colab-area" height="200"></canvas>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
+        <div style="font-size:.75rem;font-weight:700;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Equipe</div>
+        <canvas id="chart-colab-equipe" height="200"></canvas>
       </div>
     </div>
-    <div>
-      <div class="risk-col-title">Equipe — ${state.colaboradores.length} colaboradores</div>
-      <table class="colab-table">
-        <thead><tr>
-          <th>Analista</th><th>Vaga</th><th>Área de Atuação</th><th>Região</th><th>Área de Atendimento</th>
-        </tr></thead>
+    ${chipsHtml}
+    <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:10px">
+      Equipe &mdash; <strong>${filtered.length}</strong> colaborador${filtered.length !== 1 ? 'es' : ''}${filtered.length !== colabs.length ? ` de ${colabs.length}` : ''}
+    </div>
+    <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px">
+      <table style="width:100%;border-collapse:collapse;font-size:.84rem">
+        <thead>
+          <tr style="background:var(--accent);color:#fff">
+            <th style="padding:10px 14px;text-align:left;white-space:nowrap">Nome</th>
+            <th style="padding:10px 14px;text-align:left;white-space:nowrap">Cargo</th>
+            <th style="padding:10px 14px;text-align:left;white-space:nowrap">&Aacute;rea de Atua&ccedil;&atilde;o</th>
+            <th style="padding:10px 14px;text-align:left;white-space:nowrap">Equipe</th>
+            <th style="padding:10px 14px;text-align:left;white-space:nowrap">&Aacute;rea de Atend.</th>
+            <th style="padding:10px 14px;text-align:left;white-space:nowrap">Gestor</th>
+            <th style="padding:10px 14px;text-align:center;white-space:nowrap">Contato</th>
+          </tr>
+        </thead>
         <tbody>${tableRows}</tbody>
       </table>
     </div>`;
 
-  const pieOptions = (label) => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12, padding: 8 } },
-      tooltip: { callbacks: {
-        label: ctx => ` ${ctx.label}: ${ctx.parsed} colaborador${ctx.parsed !== 1 ? 'es' : ''}`
-      }}
+  _drawColabPie('chart-colab-cargo',  cargoMap,  PIE_COLORS, v => { window._colabFilter.cargo  = v; renderColaboradores(); });
+  _drawColabPie('chart-colab-area',   areaMap,   PIE_COLORS, v => { window._colabFilter.area   = v; renderColaboradores(); });
+  _drawColabPie('chart-colab-equipe', equipeMap, PIE_COLORS, v => { window._colabFilter.equipe = v; renderColaboradores(); });
+}
+
+function _drawColabPie(canvasId, dataMap, colors, onClickCb) {
+  const entries = Object.entries(dataMap).sort((a,b) => b[1]-a[1]);
+  const labels  = entries.map(e => e[0]);
+  const data    = entries.map(e => e[1]);
+  charts[canvasId] = new Chart(document.getElementById(canvasId), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length), borderWidth: 2, borderColor: '#fff' }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.parsed } }
+      },
+      onClick: (_e, items) => { if (items.length > 0) onClickCb(labels[items[0].index]); }
     }
-  });
-
-  charts['chart-6'] = new Chart(document.getElementById('chart-6'), {
-    type: 'pie',
-    data: { labels: vagaLabels, datasets: [{ data: vagaCounts, backgroundColor: vagaColors, borderWidth: 2, borderColor: '#fff' }] },
-    options: pieOptions('vaga'),
-  });
-
-  charts['chart-7'] = new Chart(document.getElementById('chart-7'), {
-    type: 'pie',
-    data: { labels: atendLabels, datasets: [{ data: atendCounts, backgroundColor: atendColors, borderWidth: 2, borderColor: '#fff' }] },
-    options: pieOptions('atendimento'),
   });
 }
 
-// ============================================================
+function _openGoogleChat(email) {
+  if (navigator.clipboard) navigator.clipboard.writeText(email).catch(()=>{});
+  window.open('https://chat.google.com/', '_blank');
+  const tip = document.createElement('div');
+  tip.textContent = '&#x1F4AC; Email copiado! Cole no buscador do Google Chat';
+  Object.assign(tip.style, { position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+    background:'#1C1A23', color:'#fff', padding:'10px 20px', borderRadius:'8px', zIndex:'99999',
+    fontSize:'.85rem', boxShadow:'0 4px 16px rgba(0,0,0,.3)', pointerEvents:'none' });
+  document.body.appendChild(tip);
+  setTimeout(() => tip.remove(), 3000);
+}
+
 // VIEW 7 — Implantações por Município × Vertical (Pivot + Gráficos)
 // ============================================================
 const IMPL_VERTICAIS = ['Arrecadação','Atendimento','Contratos','Contábil','Educação','ISS','Parceiros','Pessoal','Plataforma','Saúde'];
@@ -3713,7 +3743,7 @@ function adminSignOut() {
 }
 
 async function _adminLoadCounts() {
-  for (const col of ['jira_chamados','jira_chamados_issues','_meta']) {
+  for (const col of ['jira_chamados','jira_chamados_issues','_meta','colaboradores']) {
     try {
       const snap = await _db.collection(col).get();
       const el = document.getElementById('card-count-' + col);
@@ -3739,6 +3769,9 @@ async function adminLoadCollection(col) {
     _adminData.docIds = docs.map((d, i) => d.key || String(i));
   }
   _adminData.filtered = _adminData.docs.slice();
+  // Mostra/oculta botões de gestão de colaboradores
+  const colabActions = document.getElementById('admin-colab-actions');
+  if (colabActions) colabActions.style.display = (col === 'colaboradores') ? 'flex' : 'none';
   _adminRenderTable();
 }
 
@@ -3757,6 +3790,8 @@ function _adminRenderTable() {
     ? ['municipio','vertical','total_chamados','slo_estourado','atualizado_em']
     : _adminData.collection === 'jira_chamados_issues'
     ? ['key','municipio','vertical','status','slo_horas','responsavel','issuetype','summary','atualizado_em']
+    : _adminData.collection === 'colaboradores'
+    ? ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','gestor']
     : Object.keys(rows[0] || {});
   const keys = COL_ORDER.filter(k => rows.some(d => d[k] !== undefined && d[k] !== ''));
   if (!keys.length && rows.length) keys.push(...Object.keys(rows[0]));
@@ -3780,7 +3815,10 @@ function _adminRenderTable() {
         }
         return `<td style="padding:8px 14px;color:#E2E8F0;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${val.replace(/"/g,'&quot;')}">${val}</td>`;
       }).join('') +
-      `<td style="padding:8px 14px"><button onclick="adminOpenEdit('${docId}')" style="padding:4px 12px;background:#0761FF;border:none;color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;font-weight:600">Editar</button></td></tr>`;
+      (`<td style="padding:8px 14px;white-space:nowrap">` +
+      `<button onclick="adminOpenEdit('${docId}')" style="padding:4px 12px;background:#0761FF;border:none;color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;font-weight:600;margin-right:4px">Editar</button>` +
+      (_adminData.collection === 'colaboradores' ? `<button onclick="adminColabDelete('${docId}')" style="padding:4px 10px;background:#E53E3E;border:none;color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;font-weight:600">&#x1F5D1;</button>` : '') +
+      `</td></tr>`);
   }).join('');
 }
 
@@ -3815,9 +3853,22 @@ async function adminSaveEdit() {
   statusEl.style.color = 'rgba(255,255,255,.5)';
   statusEl.textContent = 'Salvando…';
   try {
-    await _db.collection(_adminData.collection).doc(_editDocId).update(updates);
-    const idx = _adminData.docIds.indexOf(_editDocId);
-    if (idx >= 0) Object.assign(_adminData.docs[idx], updates);
+    if (_editDocId) {
+      // Edição de doc existente
+      await _db.collection(_adminData.collection).doc(_editDocId).update(updates);
+      const idx = _adminData.docIds.indexOf(_editDocId);
+      if (idx >= 0) Object.assign(_adminData.docs[idx], updates);
+    } else {
+      // Novo colaborador
+      const docId = (updates.nome||Date.now().toString()).toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+      await _db.collection(_adminData.collection).doc(docId).set(updates);
+      _adminData.docs.push(updates);
+      _adminData.docIds.push(docId);
+      _adminData.filtered = _adminData.docs.slice();
+      const cc = document.getElementById('card-count-colaboradores');
+      if (cc) cc.textContent = _adminData.docs.length + ' docs';
+    }
     statusEl.style.color = '#68D391';
     statusEl.textContent = '✅ Salvo!';
     setTimeout(() => { adminCloseEdit(); _adminRenderTable(); }, 800);
@@ -3839,6 +3890,75 @@ function adminExportCollectionCSV() {
   a.download = (_adminData.collection||'data') + '_' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
 }
+
+// ── Admin: Colaboradores CRUD ─────────────────────────────────────────────
+
+function adminColabAdd() {
+  _editDocId = null;
+  document.getElementById('admin-edit-title').textContent = 'Novo Colaborador';
+  document.getElementById('admin-edit-status').textContent = '';
+  const fields = ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','gestor'];
+  const labels = {
+    nome:'Nome', cargo:'Cargo', area_atuacao:'Área de Atuação',
+    area_atendimento:'Área de Atendimento', equipe_atendimento:'Equipe de Atendimento',
+    email:'E-mail', gestor:'Gestor'
+  };
+  document.getElementById('admin-edit-fields').innerHTML = fields.map(k =>
+    `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${labels[k]||k}</label><input data-field="${k}" value="" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`
+  ).join('');
+  document.getElementById('admin-edit-modal').style.display = 'flex';
+}
+
+async function adminColabDelete(docId) {
+  if (!confirm('Excluir colaborador "' + docId + '"?')) return;
+  try {
+    await _db.collection('colaboradores').doc(docId).delete();
+    const idx = _adminData.docIds.indexOf(docId);
+    if (idx >= 0) { _adminData.docs.splice(idx,1); _adminData.docIds.splice(idx,1); }
+    _adminData.filtered = _adminData.docs.slice();
+    document.getElementById('card-count-colaboradores').textContent = _adminData.docs.length + ' docs';
+    _adminRenderTable();
+  } catch(e) { alert('Erro ao excluir: ' + e.message); }
+}
+
+function adminColabImportCSV() {
+  document.getElementById('admin-csv-input').value = '';
+  document.getElementById('admin-csv-input').click();
+}
+
+async function adminColabProcessCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const text = await file.text();
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { alert('CSV vazio ou sem dados.'); return; }
+  const SEP = lines[0].includes(';') ? ';' : ',';
+  const headers = lines[0].split(SEP).map(h => h.trim().replace(/^"+|"+$/g,'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''));
+  const MAP = { area_de_atuacao:'area_atuacao', area_de_atendimento:'area_atendimento',
+    equipe_de_atendimento:'equipe_atendimento', e_mail:'email', email:'email' };
+  const normHeaders = headers.map(h => MAP[h] || h);
+  const rows = lines.slice(1).map(line => {
+    const vals = line.split(SEP).map(v => v.trim().replace(/^"+|"+$/g,''));
+    const obj = {};
+    normHeaders.forEach((h, i) => { if (h && vals[i]) obj[h] = vals[i]; });
+    obj.atualizado_em = new Date().toISOString();
+    return obj;
+  }).filter(r => r.nome);
+  if (!rows.length) { alert('Nenhuma linha válida no CSV (verifique se há coluna "Nome").'); return; }
+  if (!confirm('Importar ' + rows.length + ' colaboradores? Registros existentes com mesmo nome serão sobrescritos.')) return;
+  let ok = 0, err = 0;
+  for (const r of rows) {
+    try {
+      const docId = (r.nome||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+      await _db.collection('colaboradores').doc(docId).set(r, { merge: true });
+      ok++;
+    } catch(e) { err++; console.error('CSV import err:', e); }
+  }
+  alert('Importação concluída: ' + ok + ' ok, ' + err + ' erros.');
+  adminLoadCollection('colaboradores');
+}
+
 
 </script>
 
@@ -3902,6 +4022,12 @@ function adminExportCollectionCSV() {
         <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">_meta</div>
         <div id="card-count-_meta" style="color:#0761FF;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
       </div>
+      <div onclick="adminLoadCollection('colaboradores')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:10px;padding:20px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#38A169'" onmouseout="this.style.borderColor='#2D3748'">
+        <div style="font-size:1.6rem;margin-bottom:8px">👥</div>
+        <div style="color:#fff;font-weight:700;font-size:1rem">Colaboradores</div>
+        <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">colaboradores</div>
+        <div id="card-count-colaboradores" style="color:#38A169;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
+      </div>
     </div>
 
     <!-- Área da tabela -->
@@ -3911,6 +4037,11 @@ function adminExportCollectionCSV() {
         <span id="admin-table-title" style="color:#fff;font-weight:700;font-size:1rem"></span>
         <input id="admin-table-search" type="text" placeholder="Filtrar…" oninput="adminTableFilter()" style="padding:6px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.83rem;width:200px">
         <button onclick="adminExportCollectionCSV()" style="padding:6px 14px;background:#0761FF;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">⬇ CSV</button>
+        <span id="admin-colab-actions" style="display:none;gap:8px">
+          <button onclick="adminColabAdd()" style="padding:6px 14px;background:#38A169;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">+ Adicionar</button>
+          <button onclick="adminColabImportCSV()" style="padding:6px 14px;background:#805AD5;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">&#x1F4C2; Importar CSV</button>
+          <input id="admin-csv-input" type="file" accept=".csv" style="display:none" onchange="adminColabProcessCSV(this)">
+        </span>
         <span id="admin-table-count" style="color:rgba(255,255,255,.4);font-size:.78rem;margin-left:auto"></span>
       </div>
       <!-- Tabela -->
