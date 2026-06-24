@@ -639,7 +639,7 @@
     <!-- View: Colaboradores (pos 5) -->
     <div class="view" id="view-6">
       <div class="view-title">Colaboradores</div>
-      <div class="view-subtitle">Distribuição e listagem da equipe por vaga • Fonte: Google Sheets</div>
+      <div class="view-subtitle">Distribuição e listagem da equipe</div>
       <div id="colab-container" style="margin-top:8px"></div>
     </div>
 
@@ -2931,7 +2931,7 @@ function renderNPSPorCliente() {
 // VIEW 7 — Colaboradores
 // ============================================================
 function renderColaboradores() {
-  ['chart-colab-cargo','chart-colab-area','chart-colab-equipe'].forEach(id => destroyChart(id));
+  ['chart-colab-cargo','chart-colab-area','chart-colab-equipe','chart-colab-gestor'].forEach(id => destroyChart(id));
   const container = document.getElementById('colab-container');
   try {
     if (!state.colaboradores || !state.colaboradores.length) {
@@ -2939,23 +2939,26 @@ function renderColaboradores() {
       return;
     }
     const colabs = state.colaboradores;
-    if (!window._colabFilter) window._colabFilter = { cargo: null, area: null, equipe: null };
+    if (!window._colabFilter) window._colabFilter = { cargo: null, area: null, equipe: null, gestor: null };
     const f = window._colabFilter;
 
-    const cargoMap = {}, areaMap = {}, equipeMap = {};
+    const cargoMap = {}, areaMap = {}, equipeMap = {}, gestorMap = {};
     colabs.forEach(c => {
       const cargo  = String(c.cargo  || 'Não informado');
       const area   = String(c.area_atendimento   || 'Não informado');
       const equipe = String(c.equipe_atendimento || 'Não informado');
+      const gestor = String(c.gestor || 'Não informado');
       cargoMap[cargo]   = (cargoMap[cargo]   || 0) + 1;
       areaMap[area]     = (areaMap[area]     || 0) + 1;
       equipeMap[equipe] = (equipeMap[equipe] || 0) + 1;
+      gestorMap[gestor] = (gestorMap[gestor] || 0) + 1;
     });
 
     const filtered = colabs.filter(c =>
       (!f.cargo  || String(c.cargo              || 'Não informado') === f.cargo)  &&
       (!f.area   || String(c.area_atendimento   || 'Não informado') === f.area)   &&
-      (!f.equipe || String(c.equipe_atendimento || 'Não informado') === f.equipe)
+      (!f.equipe || String(c.equipe_atendimento || 'Não informado') === f.equipe) &&
+      (!f.gestor || String(c.gestor || 'Não informado') === f.gestor)
     ).sort((a,b) => String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
 
     const PIE_COLORS_C = ['#0761FF','#38A169','#D69E2E','#805AD5','#E53E3E','#DD6B20','#0987A0','#C53030','#2B6CB0','#9F7AEA','#48BB78','#718096'];
@@ -2964,17 +2967,21 @@ function renderColaboradores() {
       f.cargo  ? `<span class="_cchip" onclick="window._colabFilter.cargo=null;renderColaboradores()">${f.cargo} &#x2715;</span>`  : '',
       f.area   ? `<span class="_cchip" onclick="window._colabFilter.area=null;renderColaboradores()">${f.area} &#x2715;</span>`    : '',
       f.equipe ? `<span class="_cchip" onclick="window._colabFilter.equipe=null;renderColaboradores()">${f.equipe} &#x2715;</span>`: '',
+      f.gestor ? `<span class="_cchip" onclick="window._colabFilter.gestor=null;renderColaboradores()">${f.gestor} &#x2715;</span>`: '',
     ].filter(Boolean).join('');
 
     const tableRows = filtered.map((c,i) => {
       const em = String(c.email||'');
       const emEsc = em.replace(/'/g,"\\'").replace(/"/g,'&quot;');
       const mailUrl = em ? 'https://mail.google.com/mail/?view=cm&to=' + encodeURIComponent(em) : '';
+      const wa = String(c.whatsapp||'').replace(/\D/g,'');
+      const waUrl = wa ? 'https://wa.me/' + (wa.startsWith('55') ? wa : '55' + wa) : '';
       const bg = i%2===0 ? '#F6F7FB' : '#FFFFFF';
-      const contato = em
-        ? `<a href="${mailUrl}" target="_blank" title="${emEsc}" style="display:inline-flex;align-items:center;background:#EBF4FF;border-radius:6px;padding:5px 9px;text-decoration:none;font-size:.9rem;margin-right:4px">✉️</a>`
-          + `<button onclick="_openGoogleChat('${emEsc}')" title="${emEsc}" style="background:#E6F4EA;border:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:.9rem">💬</button>`
-        : '—';
+      const contato =
+        (em ? `<a href="${mailUrl}" target="_blank" title="E-mail: ${emEsc}" style="display:inline-flex;align-items:center;background:#EBF4FF;border-radius:6px;padding:5px 9px;text-decoration:none;font-size:.9rem;margin-right:4px">✉️</a>` : '') +
+        (em ? `<button onclick="_openGoogleChat('${emEsc}')" title="Chat: ${emEsc}" style="background:#E6F4EA;border:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:.9rem;margin-right:4px">💬</button>` : '') +
+        (waUrl ? `<a href="${waUrl}" target="_blank" title="WhatsApp: ${wa}" style="display:inline-flex;align-items:center;background:#E6F4EA;border-radius:6px;padding:5px 9px;text-decoration:none;font-size:.9rem"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#25D366"/><path d="M23.5 8.5C21.7 6.7 19.3 5.7 16.7 5.7c-5.3 0-9.6 4.3-9.6 9.6 0 1.7.4 3.3 1.2 4.7L7 26l6.2-1.6c1.4.8 2.9 1.2 4.5 1.2 5.3 0 9.6-4.3 9.6-9.6 0-2.6-1-5-2.8-6.5zm-6.8 14.7c-1.4 0-2.8-.4-4-1.1l-.3-.2-3.1.8.8-3-.2-.3c-.8-1.2-1.2-2.6-1.2-4 0-4.3 3.5-7.8 7.8-7.8 2.1 0 4 .8 5.5 2.3 1.5 1.5 2.3 3.4 2.3 5.5 0 4.4-3.5 7.8-7.6 7.8zm4.3-5.8c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1-.2.2-.7.8-.8 1-.2.2-.3.2-.5.1-1.4-.7-2.3-1.2-3.3-2.8-.2-.4.2-.4.7-1.3.1-.2 0-.4 0-.5-.1-.1-.5-1.3-.7-1.8-.2-.5-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9s.8 2.2.9 2.4c.1.1 1.6 2.5 3.9 3.4.5.2.9.4 1.3.5.5.2 1 .1 1.4.1.4-.1 1.3-.5 1.5-1 .2-.5.2-.9.1-1-.1-.1-.2-.2-.4-.3z" fill="white"/></svg></a>` : '') ||
+        '—';
       return `<tr style="background:${bg};border-bottom:1px solid #E0E5F5">
         <td style="padding:9px 14px;font-weight:600">${String(c.nome||'—')}</td>
         <td style="padding:9px 14px"><span style="background:#EBF4FF;color:#2B6CB0;padding:2px 8px;border-radius:12px;font-size:.76rem;white-space:nowrap">${String(c.cargo||'—')}</span></td>
@@ -2989,7 +2996,7 @@ function renderColaboradores() {
     const chipsHtml = chips
       ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
           <span style="font-size:.8rem;color:#6B7280">Filtros:</span>${chips}
-          <span onclick="window._colabFilter={cargo:null,area:null,equipe:null};renderColaboradores()" style="font-size:.78rem;color:#6B7280;cursor:pointer;text-decoration:underline;margin-left:4px">Limpar tudo</span>
+          <span onclick="window._colabFilter={cargo:null,area:null,equipe:null,gestor:null};renderColaboradores()" style="font-size:.78rem;color:#6B7280;cursor:pointer;text-decoration:underline;margin-left:4px">Limpar tudo</span>
         </div>` : '';
 
     container.innerHTML =
@@ -3005,6 +3012,10 @@ function renderColaboradores() {
         <div style="background:#FFFFFF;border:1px solid #E0E5F5;border-radius:10px;padding:16px">
           <div style="font-size:.75rem;font-weight:700;color:#6B7280;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Equipe</div>
           <div style="position:relative;height:220px"><canvas id="chart-colab-equipe"></canvas></div>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E0E5F5;border-radius:10px;padding:16px">
+          <div style="font-size:.75rem;font-weight:700;color:#6B7280;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Gestor</div>
+          <div style="position:relative;height:220px"><canvas id="chart-colab-gestor"></canvas></div>
         </div>
       </div>
       ${chipsHtml}
@@ -3031,6 +3042,7 @@ function renderColaboradores() {
     _drawColabPie('chart-colab-cargo',  cargoMap,  PIE_COLORS_C, v => { window._colabFilter.cargo  = v; renderColaboradores(); });
     _drawColabPie('chart-colab-area',   areaMap,   PIE_COLORS_C, v => { window._colabFilter.area   = v; renderColaboradores(); });
     _drawColabPie('chart-colab-equipe', equipeMap, PIE_COLORS_C, v => { window._colabFilter.equipe = v; renderColaboradores(); });
+    _drawColabPie('chart-colab-gestor',  gestorMap, PIE_COLORS_C, v => { window._colabFilter.gestor  = v; renderColaboradores(); });
   } catch(e) {
     console.error('[renderColaboradores] ERRO:', e);
     if (container) container.innerHTML = `<div style="color:#E53E3E;padding:24px;text-align:center">
@@ -3800,7 +3812,7 @@ function _adminRenderTable() {
     : _adminData.collection === 'jira_chamados_issues'
     ? ['key','municipio','vertical','status','slo_horas','responsavel','issuetype','summary','atualizado_em']
     : _adminData.collection === 'colaboradores'
-    ? ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','gestor']
+    ? ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','gestor']
     : Object.keys(rows[0] || {});
   const keys = COL_ORDER.filter(k => rows.some(d => d[k] !== undefined && d[k] !== ''));
   if (!keys.length && rows.length) keys.push(...Object.keys(rows[0]));
@@ -3906,11 +3918,11 @@ function adminColabAdd() {
   _editDocId = null;
   document.getElementById('admin-edit-title').textContent = 'Novo Colaborador';
   document.getElementById('admin-edit-status').textContent = '';
-  const fields = ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','gestor'];
+  const fields = ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','gestor'];
   const labels = {
     nome:'Nome', cargo:'Cargo', area_atuacao:'Área de Atuação',
     area_atendimento:'Área de Atendimento', equipe_atendimento:'Equipe de Atendimento',
-    email:'E-mail', gestor:'Gestor'
+    email:'E-mail', whatsapp:'WhatsApp (ex: 47991234567)', gestor:'Gestor'
   };
   document.getElementById('admin-edit-fields').innerHTML = fields.map(k =>
     `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${labels[k]||k}</label><input data-field="${k}" value="" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`
@@ -3945,7 +3957,8 @@ async function adminColabProcessCSV(input) {
   const headers = lines[0].split(SEP).map(h => h.trim().replace(/^"+|"+$/g,'').toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''));
   const MAP = { area_de_atuacao:'area_atuacao', area_de_atendimento:'area_atendimento',
-    equipe_de_atendimento:'equipe_atendimento', e_mail:'email', email:'email' };
+    equipe_de_atendimento:'equipe_atendimento', e_mail:'email', email:'email',
+    whatsapp:'whatsapp', celular:'whatsapp', telefone:'whatsapp', fone:'whatsapp' };
   const normHeaders = headers.map(h => MAP[h] || h);
   const rows = lines.slice(1).map(line => {
     const vals = line.split(SEP).map(v => v.trim().replace(/^"+|"+$/g,''));
