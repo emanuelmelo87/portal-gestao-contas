@@ -453,7 +453,7 @@
         </g>
       </svg>
       <span style="width:1px;height:28px;background:rgba(255,255,255,0.35);display:inline-block;margin:0 14px;vertical-align:middle;"></span><h1>Portfólio Médias Contas <span>Dashboard Executivo</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
-      <span id="deploy-badge" style="font-size:.68rem;font-weight:600;color:rgba(255,255,255,.55);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:2px 9px;white-space:nowrap;margin-left:2px;vertical-align:middle">🚀 24/06/2026 10:28</span>
+      <span id="deploy-badge" style="font-size:.68rem;font-weight:600;color:rgba(255,255,255,.55);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:2px 9px;white-space:nowrap;margin-left:2px;vertical-align:middle">🚀 24/06/2026 10:57</span>
     </div>
     <div class="header-meta">
       <div class="sync-info">
@@ -692,7 +692,7 @@
 </main>
 
 <footer>
-  Portfólio Médias Contas — Dashboard Executivo &nbsp;|&nbsp; Betha Sistemas &nbsp;|&nbsp; Deploy: 24/06/2026 10:28 &nbsp;|&nbsp;
+  Portfólio Médias Contas — Dashboard Executivo &nbsp;|&nbsp; Betha Sistemas &nbsp;|&nbsp; Deploy: 24/06/2026 10:57 &nbsp;|&nbsp;
   Fontes: Jira (Betha) · Firebase Firestore · CND &nbsp;|&nbsp;
   Gerado em: <span id="footer-date">—</span>
 </footer>
@@ -2936,7 +2936,10 @@ function renderColaboradores() {
   const container = document.getElementById('colab-container');
   try {
     if (!state.colaboradores || !state.colaboradores.length) {
-      unavailable(container, 'Dados de colaboradores indisponíveis. Adicione colaboradores no painel Admin.');
+      container.innerHTML = '<div class="unavailable"><div class="unavailable-icon">👥</div>' +
+        '<div class="unavailable-text">Nenhum colaborador cadastrado</div>' +
+        '<button onclick="adminOpen()" style="margin-top:14px;padding:8px 20px;background:#0761FF;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600">+ Abrir Admin para cadastrar</button>' +
+        '</div>';
       return;
     }
     const colabs = state.colaboradores;
@@ -2975,13 +2978,16 @@ function renderColaboradores() {
       const em = String(c.email||'');
       const emEsc = em.replace(/'/g,"\\'").replace(/"/g,'&quot;');
       const mailUrl = em ? 'https://mail.google.com/mail/?view=cm&to=' + encodeURIComponent(em) : '';
-      const wa = String(c.whatsapp||'').replace(/\D/g,'');
-      const waUrl = wa ? 'https://wa.me/' + (wa.startsWith('55') ? wa : '55' + wa) : '';
+      const wa  = String(c.whatsapp||'').replace(/\D/g,'');
+      const wap = String(c.whatsapp_prof||'').replace(/\D/g,'');
+      const waUrl  = wa  ? 'https://wa.me/' + (wa.startsWith('55')  ? wa  : '55' + wa)  : '';
+      const wapUrl = wap ? 'https://wa.me/' + (wap.startsWith('55') ? wap : '55' + wap) : '';
       const bg = i%2===0 ? '#F6F7FB' : '#FFFFFF';
       const btns = [];
-      if (em) btns.push('<a href="' + mailUrl + '" target="_blank" title="' + emEsc + '" style="display:inline-flex;align-items:center;background:#EBF4FF;border-radius:6px;padding:4px 8px;text-decoration:none;font-size:.85rem;margin-right:3px">✉️</a>');
-      if (em) btns.push('<button onclick="_openGoogleChat(\'' + emEsc + '\')" style="background:#E6F4EA;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:.85rem;margin-right:3px">💬</button>');
-      if (waUrl) btns.push('<a href="' + waUrl + '" target="_blank" title="WhatsApp: ' + wa + '" style="display:inline-flex;align-items:center;background:#DCFCE7;border-radius:6px;padding:4px 8px;text-decoration:none;font-size:.85rem;color:#166534;font-weight:600">📱 WA</a>');
+      if (em)     btns.push('<a href="' + mailUrl + '" target="_blank" title="E-mail: ' + emEsc + '" style="display:inline-flex;align-items:center;background:#EBF4FF;border-radius:6px;padding:4px 8px;text-decoration:none;font-size:.85rem;margin-right:3px">✉️</a>');
+      if (em)     btns.push('<button onclick="_openGoogleChat(\'' + emEsc + '\')" style="background:#E6F4EA;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:.85rem;margin-right:3px">💬</button>');
+      if (waUrl)  btns.push('<a href="' + waUrl  + '" target="_blank" title="WA pessoal: '  + wa  + '" style="display:inline-flex;align-items:center;background:#DCFCE7;border-radius:6px;padding:4px 8px;text-decoration:none;font-size:.85rem;color:#166534;font-weight:600;margin-right:3px">📱 Pessoal</a>');
+      if (wapUrl) btns.push('<a href="' + wapUrl + '" target="_blank" title="WA profissional: ' + wap + '" style="display:inline-flex;align-items:center;background:#FEF9C3;border-radius:6px;padding:4px 8px;text-decoration:none;font-size:.85rem;color:#854D0E;font-weight:600">📱 Prof.</a>');
       const contato = btns.length ? btns.join('') : '—';
       return `<tr style="background:${bg};border-bottom:1px solid #E0E5F5">
         <td style="padding:9px 14px;font-weight:600">${String(c.nome||'—')}</td>
@@ -2990,7 +2996,11 @@ function renderColaboradores() {
         <td style="padding:9px 14px">${String(c.equipe_atendimento||'—')}</td>
         <td style="padding:9px 14px">${String(c.area_atendimento||'—')}</td>
         <td style="padding:9px 14px;color:#6B7280">${String(c.gestor||'—')}</td>
-        <td style="padding:9px 14px;color:#6B7280;white-space:nowrap">${wa ? '<span style="font-size:.82rem">' + wa + '</span>' : '—'}</td>
+        <td style="padding:9px 14px;white-space:nowrap">
+          ${wa  ? '<div style="font-size:.78rem;color:#166534">📱 ' + wa  + '</div>' : ''}
+          ${wap ? '<div style="font-size:.78rem;color:#854D0E">📱 ' + wap + ' <span style=\"font-size:.7rem;background:#FEF9C3;padding:1px 5px;border-radius:8px\">Prof</span></div>' : ''}
+          ${!wa && !wap ? '—' : ''}
+        </td>
         <td style="padding:9px 14px;text-align:center;white-space:nowrap">${contato}</td>
       </tr>`;
     }).join('');
@@ -3034,7 +3044,7 @@ function renderColaboradores() {
               <th style="padding:10px 14px;text-align:left;white-space:nowrap">Equipe</th>
               <th style="padding:10px 14px;text-align:left;white-space:nowrap">Área de Atend.</th>
               <th style="padding:10px 14px;text-align:left;white-space:nowrap">Gestor</th>
-              <th style="padding:10px 14px;text-align:left;white-space:nowrap">WhatsApp</th>
+              <th style="padding:10px 14px;text-align:left;white-space:nowrap">WhatsApp(s)</th>
               <th style="padding:10px 14px;text-align:center;white-space:nowrap">Contato</th>
             </tr>
           </thead>
@@ -3815,7 +3825,7 @@ function _adminRenderTable() {
     : _adminData.collection === 'jira_chamados_issues'
     ? ['key','municipio','vertical','status','slo_horas','responsavel','issuetype','summary','atualizado_em']
     : _adminData.collection === 'colaboradores'
-    ? ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','gestor']
+    ? ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','whatsapp_prof','gestor']
     : Object.keys(rows[0] || {});
   const keys = COL_ORDER.filter(k => rows.some(d => d[k] !== undefined && d[k] !== ''));
   if (!keys.length && rows.length) keys.push(...Object.keys(rows[0]));
@@ -3856,11 +3866,11 @@ function adminOpenEdit(docId) {
   let fieldsHtml;
   if (_adminData.collection === 'colaboradores') {
     // Sempre mostrar todos os campos padrão de colaboradores
-    const COLAB_FIELDS = ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','gestor'];
+    const COLAB_FIELDS = ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','whatsapp_prof','gestor'];
     const COLAB_LABELS = {
       nome:'Nome', cargo:'Cargo', area_atuacao:'Área de Atuação',
       area_atendimento:'Área de Atendimento', equipe_atendimento:'Equipe de Atendimento',
-      email:'E-mail', whatsapp:'WhatsApp (ex: 47991234567)', gestor:'Gestor'
+      email:'E-mail', whatsapp:'WhatsApp Pessoal (ex: 47991234567)', whatsapp_prof:'WhatsApp Prof. (ex: 47991234567)', gestor:'Gestor'
     };
     fieldsHtml = COLAB_FIELDS.map(k => {
       const v = data[k] !== undefined ? String(data[k]) : '';
@@ -3937,11 +3947,11 @@ function adminColabAdd() {
   _editDocId = null;
   document.getElementById('admin-edit-title').textContent = 'Novo Colaborador';
   document.getElementById('admin-edit-status').textContent = '';
-  const fields = ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','gestor'];
+  const fields = ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','whatsapp_prof','gestor'];
   const labels = {
     nome:'Nome', cargo:'Cargo', area_atuacao:'Área de Atuação',
     area_atendimento:'Área de Atendimento', equipe_atendimento:'Equipe de Atendimento',
-    email:'E-mail', whatsapp:'WhatsApp (ex: 47991234567)', gestor:'Gestor'
+    email:'E-mail', whatsapp:'WhatsApp Pessoal (ex: 47991234567)', whatsapp_prof:'WhatsApp Prof. (ex: 47991234567)', gestor:'Gestor'
   };
   document.getElementById('admin-edit-fields').innerHTML = fields.map(k =>
     `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${labels[k]||k}</label><input data-field="${k}" value="" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`
@@ -3977,7 +3987,8 @@ async function adminColabProcessCSV(input) {
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''));
   const MAP = { area_de_atuacao:'area_atuacao', area_de_atendimento:'area_atendimento',
     equipe_de_atendimento:'equipe_atendimento', e_mail:'email', email:'email',
-    whatsapp:'whatsapp', celular:'whatsapp', telefone:'whatsapp', fone:'whatsapp' };
+    whatsapp:'whatsapp', celular:'whatsapp', telefone:'whatsapp', fone:'whatsapp',
+    whatsapp_prof:'whatsapp_prof', whatsapp_profissional:'whatsapp_prof', cel_prof:'whatsapp_prof', fone_prof:'whatsapp_prof' };
   const normHeaders = headers.map(h => MAP[h] || h);
   const rows = lines.slice(1).map(line => {
     const vals = line.split(SEP).map(v => v.trim().replace(/^"+|"+$/g,''));
