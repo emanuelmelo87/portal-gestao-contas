@@ -2989,6 +2989,8 @@ function renderColaboradores() {
         <td style="padding:9px 14px">${String(c.equipe_atendimento||'—')}</td>
         <td style="padding:9px 14px">${String(c.area_atendimento||'—')}</td>
         <td style="padding:9px 14px;color:#6B7280">${String(c.gestor||'—')}</td>
+        <td style="padding:9px 14px;color:#6B7280;white-space:nowrap">${wa ? '<span style="font-size:.82rem">' + wa + '</span>' : '—'}</td>
+        <td style="padding:9px 14px;color:#6B7280;white-space:nowrap">${wa ? '<span style="font-size:.82rem">' + wa + '</span>' : '—'}</td>
         <td style="padding:9px 14px;text-align:center;white-space:nowrap">${contato}</td>
       </tr>`;
     }).join('');
@@ -3032,6 +3034,7 @@ function renderColaboradores() {
               <th style="padding:10px 14px;text-align:left;white-space:nowrap">Equipe</th>
               <th style="padding:10px 14px;text-align:left;white-space:nowrap">Área de Atend.</th>
               <th style="padding:10px 14px;text-align:left;white-space:nowrap">Gestor</th>
+              <th style="padding:10px 14px;text-align:left;white-space:nowrap">WhatsApp</th>
               <th style="padding:10px 14px;text-align:center;white-space:nowrap">Contato</th>
             </tr>
           </thead>
@@ -3850,9 +3853,25 @@ function adminOpenEdit(docId) {
   document.getElementById('admin-edit-title').textContent = 'Editar: ' + docId;
   document.getElementById('admin-edit-status').textContent = '';
   const SKIP = ['atualizado_em','key','url'];
-  document.getElementById('admin-edit-fields').innerHTML = Object.entries(data)
-    .filter(([k]) => !SKIP.includes(k))
-    .map(([k,v]) => `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${k}</label><input data-field="${k}" value="${String(v).replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`).join('');
+  let fieldsHtml;
+  if (_adminData.collection === 'colaboradores') {
+    // Sempre mostrar todos os campos padrão de colaboradores
+    const COLAB_FIELDS = ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','gestor'];
+    const COLAB_LABELS = {
+      nome:'Nome', cargo:'Cargo', area_atuacao:'Área de Atuação',
+      area_atendimento:'Área de Atendimento', equipe_atendimento:'Equipe de Atendimento',
+      email:'E-mail', whatsapp:'WhatsApp (ex: 47991234567)', gestor:'Gestor'
+    };
+    fieldsHtml = COLAB_FIELDS.map(k => {
+      const v = data[k] !== undefined ? String(data[k]) : '';
+      return `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${COLAB_LABELS[k]||k}</label><input data-field="${k}" value="${v.replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`;
+    }).join('');
+  } else {
+    fieldsHtml = Object.entries(data)
+      .filter(([k]) => !SKIP.includes(k))
+      .map(([k,v]) => `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${k}</label><input data-field="${k}" value="${String(v).replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`).join('');
+  }
+  document.getElementById('admin-edit-fields').innerHTML = fieldsHtml;
   document.getElementById('admin-edit-modal').style.display = 'flex';
 }
 
