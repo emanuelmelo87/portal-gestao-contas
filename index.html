@@ -475,7 +475,7 @@
         </g>
       </svg>
       <span style="width:1px;height:28px;background:rgba(255,255,255,0.35);display:inline-block;margin:0 14px;vertical-align:middle;"></span><h1>Portfólio Médias Contas <span>Dashboard Executivo</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
-      <span id="deploy-badge" style="font-size:.68rem;font-weight:600;color:rgba(255,255,255,.55);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:2px 9px;white-space:nowrap;margin-left:2px;vertical-align:middle">🚀 24/06/2026 11:37</span>
+      <span id="deploy-badge" style="font-size:.68rem;font-weight:600;color:rgba(255,255,255,.55);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:2px 9px;white-space:nowrap;margin-left:2px;vertical-align:middle">🚀 24/06/2026 14:51</span>
     </div>
     <div class="header-meta">
       <div class="sync-info">
@@ -735,7 +735,7 @@
 </main>
 
 <footer>
-  Portfólio Médias Contas — Dashboard Executivo &nbsp;|&nbsp; Betha Sistemas &nbsp;|&nbsp; Deploy: 24/06/2026 11:37 &nbsp;|&nbsp;
+  Portfólio Médias Contas — Dashboard Executivo &nbsp;|&nbsp; Betha Sistemas &nbsp;|&nbsp; Deploy: 24/06/2026 14:51 &nbsp;|&nbsp;
   Fontes: Jira (Betha) · Firebase Firestore · CND &nbsp;|&nbsp;
   Gerado em: <span id="footer-date">—</span>
 </footer>
@@ -825,14 +825,25 @@ function _fsDoc(doc) {
 }
 
 // Busca todos os docs de uma coleção via REST (sem SDK)
+// Retry automático com backoff exponencial em caso de 429 / 503
+async function _fetchFSPage(url, attempt = 0) {
+  const resp = await fetch(url);
+  if (resp.status === 429 || resp.status === 503) {
+    if (attempt >= 4) throw new Error('Firestore HTTP ' + resp.status + ' (após retries)');
+    const delay = (2 ** attempt) * 500 + Math.random() * 300; // 500ms, 1s, 2s, 4s…
+    await new Promise(r => setTimeout(r, delay));
+    return _fetchFSPage(url, attempt + 1);
+  }
+  if (!resp.ok) throw new Error('Firestore HTTP ' + resp.status);
+  return resp.json();
+}
+
 async function fetchFirestore(col) {
   const docs = [];
   let pageToken = null;
   do {
     const url = _FS_BASE + '/' + col + '?key=' + _FS_KEY + '&pageSize=300' + (pageToken ? '&pageToken=' + pageToken : '');
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error('Firestore HTTP ' + resp.status);
-    const data = await resp.json();
+    const data = await _fetchFSPage(url);
     if (data.documents) data.documents.forEach(d => docs.push(_fsDoc(d)));
     pageToken = data.nextPageToken || null;
   } while (pageToken);
@@ -1206,13 +1217,23 @@ async function loadAllData() {
     }).catch(() => {});
 
     // ── FASE 2: carrega restante em background (sem bloquear a UI) ────────────
-    // jira_chamados_issues removido: 5181 docs = ~18 chamadas HTTP, carrega sob demanda
-    const [riscoRes, npsRes, cndEstRes, cndFedRes, colabRes, implRes, implIssuesRes, suporteRes, suporteIssuesRes] = await Promise.allSettled([
+    // Escalonado em dois grupos para evitar 429 no Firestore REST
+    const _delay = ms => new Promise(r => setTimeout(r, ms));
+
+    // Grupo A: Firestore (colaboradores) + Sheets que não competem
+    const [colabRes, riscoRes, npsRes] = await Promise.allSettled([
+      fetchFirestore('colaboradores'),
       fetchSheet('Risco de Exclusão'),
       fetchSheet('NPS_Calculado'),
+    ]);
+
+    // Pequena pausa antes do próximo grupo
+    await _delay(300);
+
+    // Grupo B: CND + Implantações + Suporte
+    const [cndEstRes, cndFedRes, implRes, implIssuesRes, suporteRes, suporteIssuesRes] = await Promise.allSettled([
       fetchCNDEstadual(),
       fetchCNDFederal(),
-      fetchFirestore('colaboradores'), // Colaboradores no Firestore
       fetchSheet('Jira_Implantacoes'),
       fetchSheet('Jira_Implantacoes_Issues'),
       fetchSheet('Jira_Chamados_Suporte'),
