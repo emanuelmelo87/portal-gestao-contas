@@ -3803,7 +3803,7 @@ function adminApplyFilters() {
     : ['key','municipio','vertical','status','slo_horas','responsavel','issuetype','summary','atualizado_em','url'];
   const allKeys = COLS_ORDER.filter(k => rows.some(d => d[k] !== undefined && d[k] !== ''));
   const thead = document.getElementById('admin-thead');
-  const acaoTh = _adminUser ? '<th style="padding:9px 12px;background:#1C1A23;color:#fff;font-size:.78rem;font-weight:600;text-align:left;white-space:nowrap">Ações</th>' : '';
+  const acaoTh = _adminUser && ['status_envio'].includes(col) ? '<th style="padding:9px 12px;background:#1C1A23;color:#fff;font-size:.78rem;font-weight:600;text-align:left;white-space:nowrap">Ações</th>' : '';
   thead.innerHTML = '<tr>' + allKeys.map(k =>
     `<th style="padding:9px 12px;background:#1C1A23;color:#fff;font-size:.78rem;font-weight:600;text-align:left;white-space:nowrap">${k}</th>`
   ).join('') + acaoTh + '</tr>';
@@ -3821,7 +3821,8 @@ function adminApplyFilters() {
       return `<td style="padding:7px 12px;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis;font-size:.82rem">${val}</td>`;
     }).join('');
     const actCol = col;
-    const actionBtns = _adminUser && d._id ? (
+    const colWritable = ['status_envio'].includes(col);
+    const actionBtns = _adminUser && d._id && colWritable ? (
       `<td style="padding:4px 8px;white-space:nowrap">` +
       `<button onclick='adminEditDoc("${actCol}", ${JSON.stringify(d).replace(/'/g, "&#39;")})' ` +
         `style="padding:3px 10px;background:#4F46E5;color:#fff;border:none;border-radius:5px;font-size:.75rem;cursor:pointer;margin-right:4px">✏️</button>` +
