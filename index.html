@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <style>
     /* ===== Reset & Base ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -637,43 +638,58 @@
       <!-- Painel: Status de Envio -->
       <div id="tce-pane-envio" style="display:none;padding-top:16px">
         <!-- Filtros -->
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px">
-          <div>
-            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Município</label>
-            <select id="envio-mun" onchange="renderEnvioView()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text);min-width:200px">
-              <option value="">Selecione…</option>
-            </select>
-          </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
           <div>
             <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Ano</label>
             <select id="envio-ano" onchange="renderEnvioView()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text)"></select>
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Mês</label>
+            <select id="envio-mes" onchange="renderEnvioView()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text)">
+              <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+              <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
+              <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+              <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Municípios</label>
+            <select id="envio-scope" onchange="renderEnvioView()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text)">
+              <option value="portfolio">Apenas portfólio (61)</option>
+              <option value="todos">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Buscar</label>
+            <input id="envio-search" type="text" placeholder="Filtrar município…" oninput="renderEnvioView()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;width:160px">
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid var(--border);border-radius:6px;background:#fff;cursor:pointer" onclick="document.getElementById('envio-nao-enviou').click()">
+            <input type="checkbox" id="envio-nao-enviou" onchange="renderEnvioView()" style="cursor:pointer;accent-color:var(--accent)">
+            <label for="envio-nao-enviou" style="font-size:.83rem;font-weight:600;cursor:pointer;color:var(--red)">❌ Apenas quem não enviou</label>
           </div>
           <span id="envio-info" style="font-size:.78rem;color:var(--text-muted);align-self:center"></span>
         </div>
         <!-- Legenda -->
         <div style="display:flex;gap:16px;font-size:.75rem;color:var(--text-muted);margin-bottom:12px">
           <span>✅ Enviou</span>
-          <span style="color:var(--red)">❌ Não enviou</span>
-          <span>— Sem dado</span>
+          <span style="color:var(--red)">❌ Não enviou (0 pacotes)</span>
+          <span>— Sem registro</span>
         </div>
-        <!-- Tabela: módulos (linhas) × meses (colunas) -->
+        <!-- Matriz: municípios (linhas) × módulos (colunas) -->
         <div id="envio-wrap" style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
-          <table id="envio-table" style="width:100%;border-collapse:collapse;font-size:.84rem">
+          <table id="envio-table" style="width:100%;border-collapse:collapse;font-size:.82rem">
             <thead id="envio-thead"></thead>
             <tbody id="envio-tbody"></tbody>
           </table>
         </div>
         <div id="envio-empty" style="display:none;text-align:center;padding:48px;color:var(--text-muted)">
           <div style="font-size:2rem;margin-bottom:8px">📭</div>
-          <div>Nenhum dado encontrado para este município e ano.</div>
+          <div id="envio-empty-msg">Nenhum dado encontrado.</div>
           <div style="font-size:.78rem;margin-top:8px">Execute a extensão eSfinge Updater para importar dados.</div>
         </div>
-        <div id="envio-loading" style="display:none;text-align:center;padding:48px;color:var(--text-muted)">
-          Carregando dados…
-        </div>
-        <div id="envio-select-hint" style="text-align:center;padding:48px;color:var(--text-muted)">
-          <div style="font-size:2rem;margin-bottom:8px">🏙️</div>
-          <div>Selecione um município para ver o status de envio mensal.</div>
+        <div id="envio-loading" style="text-align:center;padding:48px;color:var(--text-muted)">
+          <div style="font-size:2rem;margin-bottom:8px">⏳</div>
+          Carregando dados do Firestore…
         </div>
       </div><!-- /tce-pane-envio -->
 
@@ -689,13 +705,46 @@
 
     <div class="view" id="view-admin">
       <div class="view-title">Painel Admin — Banco de Dados</div>
-      <div class="view-subtitle">Dados diretamente do Firestore · Somente leitura</div>
-      <div id="admin-container" style="margin-top:12px">
+      <div class="view-subtitle">Firestore · Leitura e edição com autenticação Google</div>
+
+      <!-- ── Cabeçalho Auth + Stats ───────────────────────────── -->
+      <div id="admin-auth-bar" style="display:flex;align-items:center;gap:14px;padding:12px 16px;background:#F8F9FB;border:1px solid var(--border);border-radius:10px;margin-bottom:16px;flex-wrap:wrap">
+        <!-- Usuário não logado -->
+        <div id="admin-auth-guest" style="display:flex;align-items:center;gap:10px">
+          <button onclick="adminSignIn()" style="display:flex;align-items:center;gap:8px;padding:8px 18px;background:#fff;border:1.5px solid #ddd;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px;height:18px" alt="G">
+            Entrar com Google
+          </button>
+          <span style="font-size:.78rem;color:var(--text-muted)">Faça login para editar registros</span>
+        </div>
+        <!-- Usuário logado -->
+        <div id="admin-auth-user" style="display:none;align-items:center;gap:10px">
+          <img id="admin-user-photo" src="" style="width:32px;height:32px;border-radius:50%;border:2px solid var(--accent)" alt="">
+          <div>
+            <div id="admin-user-name" style="font-size:.85rem;font-weight:700;color:var(--text)"></div>
+            <div id="admin-user-email" style="font-size:.73rem;color:var(--text-muted)"></div>
+          </div>
+          <button onclick="adminSignOut()" style="margin-left:6px;padding:5px 14px;background:none;border:1px solid #ddd;border-radius:6px;font-size:.78rem;cursor:pointer;color:var(--text-muted)">Sair</button>
+        </div>
+        <!-- Stats do banco -->
+        <div id="admin-stats" style="margin-left:auto;display:flex;gap:20px;flex-wrap:wrap">
+          <div style="text-align:center">
+            <div id="stat-total" style="font-size:1.2rem;font-weight:700;color:var(--accent)">—</div>
+            <div style="font-size:.72rem;color:var(--text-muted)">docs nesta coleção</div>
+          </div>
+          <div style="text-align:center">
+            <div id="stat-update" style="font-size:.82rem;font-weight:600;color:var(--text)">—</div>
+            <div style="font-size:.72rem;color:var(--text-muted)">última atualização</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="admin-container" style="margin-top:4px">
         <!-- Filtros -->
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:flex-end">
           <div>
             <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Coleção</label>
-            <select id="admin-col-sel" onchange="adminApplyFilters()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text);min-width:200px">
+            <select id="admin-col-sel" onchange="renderAdminView()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text);min-width:200px">
               <option value="jira_chamados">jira_chamados (agregado)</option>
               <option value="jira_chamados_issues">jira_chamados_issues (individual)</option>
               <option value="status_envio">status_envio (eSfinge)</option>
@@ -819,6 +868,21 @@
   </div>
 </div>
 
+<!-- Modal: Edição de documento Admin -->
+<div id="admin-edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:28px;width:min(560px,94vw);max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h3 style="margin:0;font-size:1rem;font-weight:700;color:var(--text)">✏️ Editar documento</h3>
+      <button onclick="document.getElementById('admin-edit-modal').style.display='none'" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted)">✕</button>
+    </div>
+    <div id="admin-edit-content"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+      <button onclick="document.getElementById('admin-edit-modal').style.display='none'" style="padding:8px 20px;background:#f3f4f6;border:none;border-radius:7px;font-size:.85rem;cursor:pointer">Cancelar</button>
+      <button id="admin-edit-save-btn" onclick="adminSaveEdit()" style="padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:.85rem;font-weight:600;cursor:pointer">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: demais municípios -->
 <div class="modal-overlay hidden" id="outro-modal" onclick="closeOutroModal(event)">
   <div class="modal-box">
@@ -848,12 +912,118 @@ const FIREBASE_CONFIG = {
   appId:             '1:403708882905:web:ad8e706f9357d232cc73c8'
 };
 firebase.initializeApp(FIREBASE_CONFIG);
-const _db = firebase.firestore();
+const _db   = firebase.firestore();
+const _auth = firebase.auth();
 
-// Busca todos os docs de uma coleção do Firestore
+// ── Admin: Auth Google ─────────────────────────────────────────────────
+let _adminUser = null;
+
+_auth.onAuthStateChanged(function(user) {
+  _adminUser = user;
+  const guestEl = document.getElementById('admin-auth-guest');
+  const userEl  = document.getElementById('admin-auth-user');
+  if (!guestEl) return; // view ainda não montada
+  if (user) {
+    guestEl.style.display = 'none';
+    userEl.style.display  = 'flex';
+    document.getElementById('admin-user-name').textContent  = user.displayName || 'Usuário';
+    document.getElementById('admin-user-email').textContent = user.email || '';
+    const photo = document.getElementById('admin-user-photo');
+    if (user.photoURL) photo.src = user.photoURL; else photo.style.display = 'none';
+  } else {
+    guestEl.style.display = 'flex';
+    userEl.style.display  = 'none';
+  }
+  // Re-renderizar tabela para mostrar/ocultar botões de edição
+  if (_adminState.docs.length) adminApplyFilters();
+});
+
+function adminSignIn() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  _auth.signInWithPopup(provider).catch(e => alert('Erro ao entrar: ' + e.message));
+}
+function adminSignOut() {
+  _auth.signOut();
+}
+
+// ── Admin: CRUD ────────────────────────────────────────────────────────
+function adminDeleteDoc(col, id, rowBtn) {
+  if (!_adminUser) { alert('Faça login para excluir.'); return; }
+  if (!confirm('Excluir este documento? Esta ação não pode ser desfeita.')) return;
+  rowBtn.textContent = '…';
+  rowBtn.disabled = true;
+  _db.collection(col).doc(id).delete()
+    .then(() => {
+      _adminState.docs = _adminState.docs.filter(d => d._id !== id);
+      _adminState.filtered = _adminState.filtered.filter(d => d._id !== id);
+      adminApplyFilters();
+    })
+    .catch(e => { alert('Erro ao excluir: ' + e.message); rowBtn.textContent = '🗑'; rowBtn.disabled = false; });
+}
+
+function adminEditDoc(col, docObj) {
+  if (!_adminUser) { alert('Faça login para editar.'); return; }
+  const modal   = document.getElementById('admin-edit-modal');
+  const content = document.getElementById('admin-edit-content');
+  // Gera campos editáveis (todos exceto _id)
+  const fields = Object.keys(docObj).filter(k => k !== '_id');
+  content.innerHTML = fields.map(k => {
+    const val = docObj[k] !== undefined ? docObj[k] : '';
+    return '<div style="margin-bottom:10px">' +
+      '<label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">' + k + '</label>' +
+      '<input id="edit-field-' + k + '" value="' + String(val).replace(/"/g, '&quot;') + '" ' +
+      'style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;box-sizing:border-box">' +
+      '</div>';
+  }).join('');
+  modal.dataset.col    = col;
+  modal.dataset.id     = docObj._id;
+  modal.dataset.fields = JSON.stringify(fields);
+  modal.style.display  = 'flex';
+}
+
+function adminSaveEdit() {
+  const modal  = document.getElementById('admin-edit-modal');
+  const col    = modal.dataset.col;
+  const id     = modal.dataset.id;
+  const fields = JSON.parse(modal.dataset.fields);
+  const updated = {};
+  fields.forEach(k => {
+    const el = document.getElementById('edit-field-' + k);
+    if (el) {
+      const v = el.value;
+      // tenta converter para número se possível
+      updated[k] = v !== '' && !isNaN(v) && !isNaN(parseFloat(v)) ? parseFloat(v) : v;
+    }
+  });
+  const btn = document.getElementById('admin-edit-save-btn');
+  btn.textContent = '…'; btn.disabled = true;
+  _db.collection(col).doc(id).update(updated)
+    .then(() => {
+      const idx = _adminState.docs.findIndex(d => d._id === id);
+      if (idx >= 0) _adminState.docs[idx] = { ..._adminState.docs[idx], ...updated };
+      adminApplyFilters();
+      document.getElementById('admin-edit-modal').style.display = 'none';
+    })
+    .catch(e => { alert('Erro ao salvar: ' + e.message); btn.textContent = 'Salvar'; btn.disabled = false; });
+}
+
+// ── Admin: Stats ──────────────────────────────────────────────────────
+async function updateAdminStats(docs) {
+  document.getElementById('stat-total').textContent = docs.length;
+  try {
+    const meta = await fetchFirestoreMeta();
+    if (meta) {
+      const ts = meta.timestamp || meta.atualizado_em || '';
+      document.getElementById('stat-update').textContent =
+        ts ? new Date(ts).toLocaleString('pt-BR') : '—';
+    }
+  } catch(e) {}
+}
+
+// Busca todos os docs de uma coleção do Firestore (inclui _id para CRUD)
 async function fetchFirestore(collectionName) {
   const snapshot = await _db.collection(collectionName).get();
-  return snapshot.docs.map(d => d.data());
+  return snapshot.docs.map(d => ({ _id: d.id, ...d.data() }));
 }
 
 // Busca metadado de última atualização
@@ -3633,30 +3803,34 @@ function adminApplyFilters() {
     : ['key','municipio','vertical','status','slo_horas','responsavel','issuetype','summary','atualizado_em','url'];
   const allKeys = COLS_ORDER.filter(k => rows.some(d => d[k] !== undefined && d[k] !== ''));
   const thead = document.getElementById('admin-thead');
+  const acaoTh = _adminUser ? '<th style="padding:9px 12px;background:#1C1A23;color:#fff;font-size:.78rem;font-weight:600;text-align:left;white-space:nowrap">Ações</th>' : '';
   thead.innerHTML = '<tr>' + allKeys.map(k =>
     `<th style="padding:9px 12px;background:#1C1A23;color:#fff;font-size:.78rem;font-weight:600;text-align:left;white-space:nowrap">${k}</th>`
-  ).join('') + '</tr>';
+  ).join('') + acaoTh + '</tr>';
 
   // Corpo
   const tbody = document.getElementById('admin-tbody');
-  tbody.innerHTML = rows.map((d, i) =>
-    '<tr style="background:' + (i%2===0?'#fff':'#F9FAFB') + ';border-bottom:1px solid #E2E8F0">' +
-    allKeys.map(k => {
+  tbody.innerHTML = rows.map((d, i) => {
+    const bg = i%2===0?'#fff':'#F9FAFB';
+    const cells = allKeys.map(k => {
       const val = d[k] !== undefined ? String(d[k]) : '—';
-      if (k === 'url' && val.startsWith('http')) {
+      if (k === 'url' && val.startsWith('http'))
         return `<td style="padding:7px 12px;white-space:nowrap"><a href="${val}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:.78rem">🔗 Abrir</a></td>`;
-      }
-      if (k === 'atualizado_em' && val.length > 10) {
+      if (k === 'atualizado_em' && val.length > 10)
         return `<td style="padding:7px 12px;white-space:nowrap;font-size:.78rem;color:var(--text-muted)">${new Date(val).toLocaleString('pt-BR')}</td>`;
-      }
-      if (k === 'slo_horas') {
-        const neg = val.startsWith('-');
-        return `<td style="padding:7px 12px;white-space:nowrap;font-weight:600;color:${neg?'var(--red)':'var(--green)'}">${val||'—'}</td>`;
-      }
-      return `<td style="padding:7px 12px;white-space:nowrap;max-width:320px;overflow:hidden;text-overflow:ellipsis" title="${val.replace(/"/g,'&quot;')}">${val}</td>`;
-    }).join('') +
-    '</tr>'
-  ).join('');
+      return `<td style="padding:7px 12px;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis;font-size:.82rem">${val}</td>`;
+    }).join('');
+    const actCol = col;
+    const actionBtns = _adminUser && d._id ? (
+      `<td style="padding:4px 8px;white-space:nowrap">` +
+      `<button onclick='adminEditDoc("${actCol}", ${JSON.stringify(d).replace(/'/g, "&#39;")})' ` +
+        `style="padding:3px 10px;background:#4F46E5;color:#fff;border:none;border-radius:5px;font-size:.75rem;cursor:pointer;margin-right:4px">✏️</button>` +
+      `<button onclick='adminDeleteDoc("${actCol}", "${d._id}", this)' ` +
+        `style="padding:3px 10px;background:#EF4444;color:#fff;border:none;border-radius:5px;font-size:.75rem;cursor:pointer">🗑</button>` +
+      `</td>`
+    ) : '';
+    return `<tr style="background:${bg};border-bottom:1px solid #E2E8F0">${cells}${actionBtns}</tr>`;
+  }).join('');
 }
 
 // ── TCE SC / eSfinge — controle de sub-abas nível 1 ─────────────────────
