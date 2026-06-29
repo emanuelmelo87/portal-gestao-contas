@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfólio Médias Contas — Dashboard Executivo</title>
+  <title>Jira Médias Contas — Dashboard Executivo</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
     /* ===== Reset & Base ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -205,28 +207,6 @@
     }
     .view { display: none; }
     .view.active { display: block; }
-    .view-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 2px;
-    }
-    .btn-refresh-tab {
-      padding: 5px 14px;
-      background: rgba(255,255,255,.07);
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 8px;
-      color: var(--text-muted);
-      font-size: .78rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .15s, color .15s;
-      white-space: nowrap;
-    }
-    .btn-refresh-tab:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .btn-refresh-tab:disabled { opacity: .4; cursor: default; }
     .view-title {
       font-size: 1rem;
       font-weight: 700;
@@ -317,9 +297,6 @@
     .colab-table tbody tr:hover { background: #f7faff; }
     .colab-vaga-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 600; }
     @media (max-width: 768px) { .colab-layout { grid-template-columns: 1fr; } }
-    /* Colaboradores filter chips */
-    ._cchip{background:#EBF4FF;color:#2B6CB0;padding:3px 10px;border-radius:20px;font-size:.78rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
-    ._cchip:hover{background:#BEE3F8}
     .risk-main { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
     .risk-col-title {
       font-size: 0.78rem; font-weight: 700; color: var(--text-muted);
@@ -465,16 +442,10 @@
 <header>
   <div class="header-inner">
     <div class="header-title">
-<svg xmlns="http://www.w3.org/2000/svg" width="120" height="25" viewBox="0 0 166.641 35" aria-label="Betha Sistemas">
-        <g transform="translate(0.424 -17.137)">
-          <path d="M255.374,27.661c-.1-.637-.4-.96-.832-.96-.481,0-.615.344-.944.975L246.81,40.855h10.722Zm3.036,18.872h-14.5l-4.7,9.165h-8.114l14.918-28.659c2.7-5.194,5.853-5.968,9.488-5.968,3.611,0,6.736,1.394,7.487,5.968L267.709,55.7h-7.9Z" transform="translate(-101.492 -3.561)" fill="#ffffff"/>
-          <path d="M193.241,27.24H181.924l-5.035,28.49h-7.631l5.023-28.49H163.418l1-5.749h29.806Z" transform="translate(-96.154 -3.594)" fill="#ffffff"/>
-          <path d="M150.8,55.73H139.466q-5.351,0-8.185-2.047a6.477,6.477,0,0,1-2.818-5.547,13.076,13.076,0,0,1,.114-1.684l2.767-15.635a9.94,9.94,0,0,1,4.457-6.8,16.948,16.948,0,0,1,9.68-2.528h11.641l-.993,5.748H144.5a6.033,6.033,0,0,0-4.147,1.158,5.3,5.3,0,0,0-1.394,3.023l-.672,3.813H153.63l-.962,5.67h-15.31l-.9,5.064a8.509,8.509,0,0,0-.175,1.445c0,1.794,1.375,2.686,4.149,2.686h12.209l-.7,4.015-.162.943a.9.9,0,0,1-.979.672" transform="translate(-93.397 -3.594)" fill="#ffffff"/>
-          <path d="M113.308,44.313c0-2.5-1.516-3.752-4.51-3.752h-8.5L98.59,50.034h8.095a6.96,6.96,0,0,0,4.941-1.585,5.422,5.422,0,0,0,1.683-4.136m1.021-14.022c0-6.065-8.009-4.075-11.654-3.66l-1.409,8.456h7.244a6.121,6.121,0,0,0,4.133-1.451,4.258,4.258,0,0,0,1.687-3.346m-8.606,25.373H89.934l5.741-32.916A59.754,59.754,0,0,1,110.7,20.666c5.468,0,11.45,2.412,11.45,8.889,0,4.02-2.978,6.337-6.678,7.643l-.061.193q5.711,2.263,5.715,6.635a10.1,10.1,0,0,1-4.314,8.516c-3.008,2.208-6.832,3.124-11.087,3.124" transform="translate(-90.358 -3.529)" fill="#ffffff"/>
-          <path d="M206.772,35.233h13.133l2.416-13.741h7.7l-5.892,33.47a.912.912,0,0,1-1.033.767h-6.813L218.9,40.9H205.787l-2.6,14.826h-7.769l6.013-34.237h7.766Z" transform="translate(-98.678 -3.594)" fill="#ffffff"/>
-        </g>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 36" width="100" height="36" aria-label="Betha Sistemas">
+        <text x="0" y="27" font-family="DM Sans, sans-serif" font-size="28" font-weight="700" fill="#ffffff" letter-spacing="-0.5">betha</text>
       </svg>
-      <span style="width:1px;height:28px;background:rgba(255,255,255,0.35);display:inline-block;margin:0 14px;vertical-align:middle;"></span><h1>Portfólio Médias Contas <span>Dashboard Executivo</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
+      <span style="width:1px;height:28px;background:rgba(255,255,255,0.35);display:inline-block;margin:0 14px;vertical-align:middle;"></span><h1>Jira Médias Contas <span>Dashboard Executivo</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
     </div>
     <div class="header-meta">
       <div class="sync-info">
@@ -486,17 +457,7 @@
         <label for="date-picker">📅</label>
         <input type="date" id="date-picker" class="date-picker-input" onchange="onDateChange(this.value)">
       </div>
-      
-    <button id="admin-header-btn" onclick="adminOpen()" style="
-      background:rgba(255,255,255,0.12);
-      border:1px solid rgba(255,255,255,0.25);
-      color:#fff;padding:6px 14px;border-radius:6px;
-      font-size:.8rem;font-weight:600;cursor:pointer;
-      display:flex;align-items:center;gap:6px;
-      transition:background .15s">
-      🔐 Admin
-    </button>
-    <button class="btn-refresh" id="btn-refresh" onclick="refreshToday()">⟳ Atualizar</button>
+      <button class="btn-refresh" id="btn-refresh" onclick="refreshToday()">⟳ Atualizar</button>
     </div>
   </div>
 </header>
@@ -553,8 +514,9 @@
     <button class="tab-btn" onclick="switchTab(1)">🔧 Implantações</button>
     <button class="tab-btn" onclick="switchTab(2)">⚠️ Risco de Churn</button>
     <button class="tab-btn" onclick="switchTab(3)">⭐ NPS</button>
-    <button class="tab-btn" onclick="switchTab(4)"><img src="https://virtual.tce.sc.gov.br/mf-auth/assets/images/logo-dark.png" alt="eSfinge" style="height:14px;vertical-align:middle;margin-right:5px" onerror="this.outerHTML='🏛️'"> eSfinge</button>
+    <button class="tab-btn" onclick="switchTab(4)">🏛️ CND</button>
     <button class="tab-btn" onclick="switchTab(5)">👥 Colaboradores</button>
+    <button class="tab-btn" id="tab-btn-admin" onclick="switchTab(7)">🗄️ Admin</button>
   </div>
 
   <!-- Chart Panel -->
@@ -562,50 +524,35 @@
 
     <!-- View: Chamados de Suporte (default) -->
     <div class="view active" id="view-suporte">
-      <div class="view-header">
-        <div class="view-title">Chamados de Suporte</div>
-        <button class="btn-refresh-tab" id="refresh-tab-btn-6" onclick="refreshTabData(6)">🔄 Atualizar</button>
-      </div>
+      <div class="view-title">Chamados de Suporte</div>
       <div class="view-subtitle">Todos os chamados abertos do portfólio — monitoramento de SLO de Atendimento • Fonte: Jira</div>
       <div id="suporte-content" style="margin-top:8px"></div>
     </div>
 
     <!-- View: Chamados de Serviço (pos 1) -->
     <div class="view" id="view-0">
-      <div class="view-header">
-        <div class="view-title">Chamados de Serviço</div>
-        <button class="btn-refresh-tab" id="refresh-tab-btn-0" onclick="refreshTabData(0)">🔄 Atualizar</button>
-      </div>
+      <div class="view-title">Chamados de Serviço</div>
       <div class="view-subtitle">Monitoramento de SLO de Atendimento • Fonte: Jira</div>
       <div id="servico-content" style="margin-top:8px"></div>
     </div>
 
     <!-- View: Implantações (pos 2) -->
     <div class="view" id="view-7">
-      <div class="view-header">
-        <div class="view-title">Implantações Pendentes e Em Andamento</div>
-        <button class="btn-refresh-tab" id="refresh-tab-btn-1" onclick="refreshTabData(1)">🔄 Atualizar</button>
-      </div>
+      <div class="view-title">Implantações Pendentes e Em Andamento</div>
       <div class="view-subtitle">Issues de implantação por município e vertical • Fonte: Jira</div>
       <div id="impl-content" style="margin-top:8px"></div>
     </div>
 
     <!-- View: Risco de Churn (pos 2) -->
     <div class="view" id="view-3">
-      <div class="view-header">
-        <div class="view-title">Clientes com Risco de Churn</div>
-        <button class="btn-refresh-tab" id="refresh-tab-btn-2" onclick="refreshTabData(2)">🔄 Atualizar</button>
-      </div>
+      <div class="view-title">Clientes com Risco de Churn</div>
       <div class="view-subtitle">Municípios com risco de churn (cancelamento de contrato) • Fonte: Google Sheets</div>
       <div id="risk-container" style="margin-top:16px"></div>
     </div>
 
     <!-- View: NPS (Geral + Por Cliente) (pos 3) -->
     <div class="view" id="view-4">
-      <div class="view-header">
-        <div class="view-title">NPS do Portfólio</div>
-        <button class="btn-refresh-tab" id="refresh-tab-btn-3" onclick="refreshTabData(3)">🔄 Atualizar</button>
-      </div>
+      <div class="view-title">NPS do Portfólio</div>
       <div class="view-subtitle">Net Promoter Score consolidado • Fonte: Google Sheets</div>
       <div class="nps-panel" id="nps-panel" style="margin-top:16px">
         <div class="nps-score-box">
@@ -643,41 +590,23 @@
 
     <!-- View: CND (pos 4) -->
     <div class="view" id="view-2">
-      <div class="view-header">
-        <div style="display:flex;align-items:center;gap:12px">
-          <img src="https://virtual.tce.sc.gov.br/mf-auth/assets/images/logo-dark.png" alt="TCE-SC" style="height:28px;object-fit:contain" onerror="this.style.display='none'">
-          <div class="view-title">eSfinge — Portfólio Médias Contas</div>
-        </div>
-        <button class="btn-refresh-tab" id="refresh-tab-btn-4" onclick="refreshTabData(4)">🔄 Atualizar</button>
-      </div>
-      <div class="view-subtitle">Certidões Negativas de Débito e Status de Envio • Fonte: TCE-SC Virtual (e-Sfinge SC)</div>
+      <div class="view-title">Situação CND do Portfólio</div>
+      <div class="view-subtitle">Certidões Negativas de Débito • Fonte: TCE-SC Virtual (e-Sfinge SC)</div>
 
-      <!-- Sub-abas: Estadual / Federal / Status de Envio -->
-      <div style="display:flex;gap:0;margin:12px 0 0;border-bottom:2px solid #E2E8F0;flex-wrap:wrap">
+      <!-- Sub-abas Estadual / Federal (Federal oculto aguardando revisão) -->
+      <div style="display:flex;gap:8px;margin:12px 0 16px;border-bottom:2px solid #E2E8F0">
         <button id="cnd-sub-estadual" class="cnd-sub-btn cnd-sub-active" onclick="switchCNDSubTab('estadual')"
-          style="padding:9px 18px;background:none;border:none;border-bottom:3px solid var(--accent);font-weight:700;font-size:.88rem;color:var(--accent);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
-          📄 Certidão
+          style="padding:8px 18px;background:none;border:none;border-bottom:3px solid var(--accent);font-weight:700;font-size:.9rem;color:var(--accent);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
+          🏛️ Estadual (SC)
         </button>
         <button id="cnd-sub-federal" class="cnd-sub-btn" onclick="switchCNDSubTab('federal')"
-          style="display:none;padding:9px 18px;background:none;border:none;border-bottom:3px solid transparent;font-weight:700;font-size:.88rem;color:var(--text-muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
+          style="display:none;padding:8px 18px;background:none;border:none;border-bottom:3px solid transparent;font-weight:700;font-size:.9rem;color:var(--text-muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
           🇧🇷 Federal
-        </button>
-        <button id="cnd-sub-envio" class="cnd-sub-btn" onclick="switchCNDSubTab('envio')"
-          style="padding:9px 18px;background:none;border:none;border-bottom:3px solid transparent;font-weight:700;font-size:.88rem;color:var(--text-muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
-          📋 Status de Envio
         </button>
       </div>
 
       <!-- Estadual: 3 donuts (certidões quadrimestrais) + tabela -->
       <div id="cnd-pane-estadual">
-        <!-- Filtro de Município -->
-        <div style="margin:14px 0 8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <label style="font-size:.78rem;font-weight:600;color:var(--text-muted)">Filtrar município:</label>
-          <input id="cnd-mun-filter" type="text" placeholder="Buscar município…" oninput="renderCND()"
-            style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;width:220px;background:#fff;color:var(--text)">
-          <button onclick="document.getElementById('cnd-mun-filter').value='';renderCND()"
-            style="padding:5px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:.78rem;cursor:pointer;color:var(--text-muted)">✕ Limpar</button>
-        </div>
         <div id="cnd-estadual-status" style="margin-bottom:12px"></div>
         <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start"></div>
         <div id="cnd-estadual-table" style="margin-top:24px"></div>
@@ -689,47 +618,14 @@
         <div id="cnd-federal-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start"></div>
         <div id="cnd-federal-table" style="margin-top:24px"></div>
       </div>
-
-      <!-- Status de Envio: grid módulos × meses -->
-      <div id="cnd-pane-envio" style="display:none;margin-top:16px">
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
-          <div>
-            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Região</label>
-            <select id="envio-filter-regiao" onchange="renderStatusEnvio()"
-              style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-              <option value="">Todas</option>
-              <option value="Região Norte">Região Norte</option>
-              <option value="Região Sul">Região Sul</option>
-              <option value="Região Oeste">Região Oeste</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Município</label>
-            <input id="envio-filter-mun" type="text" placeholder="Buscar…" oninput="renderStatusEnvio()"
-              style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;width:200px;background:#fff;color:var(--text)">
-          </div>
-          <div>
-            <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Ano</label>
-            <select id="envio-filter-ano" onchange="renderStatusEnvio()"
-              style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-              <option value="">Atual</option>
-            </select>
-          </div>
-        </div>
-        <div id="envio-container" style="overflow-x:auto"></div>
-      </div>
     </div>
 
     <!-- View: Colaboradores (pos 5) -->
     <div class="view" id="view-6">
-      <div class="view-header">
-        <div class="view-title">Colaboradores</div>
-        <button class="btn-refresh-tab" id="refresh-tab-btn-5" onclick="refreshTabData(5)">🔄 Atualizar</button>
-      </div>
-      <div class="view-subtitle">Distribuição e listagem da equipe</div>
+      <div class="view-title">Colaboradores</div>
+      <div class="view-subtitle">Distribuição e listagem da equipe por vaga • Fonte: Google Sheets</div>
       <div id="colab-container" style="margin-top:8px"></div>
     </div>
-
 
 
     <div class="view" id="view-admin">
@@ -743,6 +639,7 @@
             <select id="admin-col-sel" onchange="adminApplyFilters()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text);min-width:200px">
               <option value="jira_chamados">jira_chamados (agregado)</option>
               <option value="jira_chamados_issues">jira_chamados_issues (individual)</option>
+              <option value="status_envio">status_envio (eSfinge)</option>
             </select>
           </div>
           <div>
@@ -772,6 +669,52 @@
           </table>
         </div>
         <div id="admin-empty" style="display:none;text-align:center;padding:40px;color:var(--text-muted)">Nenhum dado encontrado.</div>
+
+        <!-- ── Painel eSfinge (status_envio) ───────────────────────── -->
+        <div id="esfinge-panel" style="display:none">
+          <!-- Filtros eSfinge -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:flex-end">
+            <div>
+              <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Ano</label>
+              <select id="esf-ano" onchange="renderEsfingeMatrix()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text)"></select>
+            </div>
+            <div>
+              <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Mês</label>
+              <select id="esf-mes" onchange="renderEsfingeMatrix()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text)">
+                <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+                <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
+                <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+                <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Municípios</label>
+              <select id="esf-portfolio" onchange="renderEsfingeMatrix()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff;color:var(--text)">
+                <option value="portfolio">Apenas portfólio (61)</option>
+                <option value="todos">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Buscar município</label>
+              <input id="esf-search" type="text" placeholder="Filtrar…" oninput="renderEsfingeMatrix()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;width:160px">
+            </div>
+            <span id="esf-count" style="font-size:.78rem;color:var(--text-muted);align-self:center"></span>
+          </div>
+          <!-- Legenda -->
+          <div style="display:flex;gap:16px;font-size:.75rem;color:var(--text-muted);margin-bottom:10px">
+            <span>✅ Enviou</span>
+            <span style="color:var(--red)">❌ Não enviou</span>
+            <span>— Sem dado</span>
+          </div>
+          <!-- Matriz -->
+          <div id="esf-matrix-wrap" style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
+            <table id="esf-matrix" style="width:100%;border-collapse:collapse;font-size:.78rem">
+              <thead id="esf-thead"></thead>
+              <tbody id="esf-tbody"></tbody>
+            </table>
+          </div>
+          <div id="esf-empty" style="display:none;text-align:center;padding:40px;color:var(--text-muted)">Nenhum dado para o período selecionado.</div>
+        </div>
       </div>
     </div>
 
@@ -779,10 +722,9 @@
 </main>
 
 <footer>
-  Portfólio Médias Contas — Dashboard Executivo &nbsp;|&nbsp; Betha Sistemas &nbsp;|&nbsp;
+  Jira Médias Contas — Dashboard Executivo &nbsp;|&nbsp; Betha Sistemas &nbsp;|&nbsp;
   Fontes: Jira (Betha) · Firebase Firestore · CND &nbsp;|&nbsp;
-  Gerado em: <span id="footer-date">—</span> &nbsp;|&nbsp;
-  <span style="font-size:.78rem;font-weight:600;opacity:.7">🚀 24/06/2026 16:37</span>
+  Gerado em: <span id="footer-date">—</span>
 </footer>
 
 <div id="loading-overlay">
@@ -836,7 +778,7 @@
 
 <script>
 // ============================================================
-// FIREBASE — config (SDK carregado lazy só para Admin)
+// FIREBASE FIRESTORE
 // ============================================================
 const FIREBASE_CONFIG = {
   apiKey:            'AIzaSyDfdeamuZElziGrzkexDUU12OwaT-TTNoQ',
@@ -846,129 +788,21 @@ const FIREBASE_CONFIG = {
   messagingSenderId: '403708882905',
   appId:             '1:403708882905:web:ad8e706f9357d232cc73c8'
 };
-const _FS_PROJECT = 'jira-medias-contas';
-const _FS_KEY     = 'AIzaSyDfdeamuZElziGrzkexDUU12OwaT-TTNoQ';
-const _FS_BASE    = 'https://firestore.googleapis.com/v1/projects/' + _FS_PROJECT + '/databases/(default)/documents';
-let _db = null; // inicializado lazy no Admin
+firebase.initializeApp(FIREBASE_CONFIG);
+const _db = firebase.firestore();
 
-// Converte campo Firestore REST → valor JS
-function _fsVal(v) {
-  if (!v) return '';
-  if (v.stringValue  !== undefined) return v.stringValue;
-  if (v.integerValue !== undefined) return parseInt(v.integerValue);
-  if (v.doubleValue  !== undefined) return v.doubleValue;
-  if (v.booleanValue !== undefined) return v.booleanValue;
-  if (v.nullValue    !== undefined) return null;
-  return '';
+// Busca todos os docs de uma coleção do Firestore
+async function fetchFirestore(collectionName) {
+  const snapshot = await _db.collection(collectionName).get();
+  return snapshot.docs.map(d => d.data());
 }
 
-// Converte documento Firestore REST → objeto JS
-function _fsDoc(doc) {
-  const o = {};
-  if (doc.fields) Object.entries(doc.fields).forEach(([k, v]) => { o[k] = _fsVal(v); });
-  return o;
-}
-
-// Busca todos os docs de uma coleção via REST (sem SDK)
-// Cache local (localStorage) para leituras Firestore — TTL 30 min
-// Evita esgotar a cota diária de 50k leituras do plano gratuito
-const _FS_CACHE_TTL = 30 * 60 * 1000; // 30 minutos em ms
-
-function _fsCacheGet(col) {
-  try {
-    const raw = localStorage.getItem('_fs_' + col);
-    if (!raw) return null;
-    const { ts, docs } = JSON.parse(raw);
-    if (Date.now() - ts > _FS_CACHE_TTL) { localStorage.removeItem('_fs_' + col); return null; }
-    console.log('[Firestore cache] HIT', col, docs.length, 'docs');
-    return docs;
-  } catch(_) { return null; }
-}
-
-function _fsCacheSet(col, docs) {
-  try { localStorage.setItem('_fs_' + col, JSON.stringify({ ts: Date.now(), docs })); } catch(_) {}
-}
-
-function _fsCacheClear(col) {
-  try { localStorage.removeItem('_fs_' + col); } catch(_) {}
-}
-
-// Throttle global: no máximo 1 req Firestore a cada 300ms
-// + Retry com backoff exponencial em 429/503
-let _fsQueue = Promise.resolve();
-function _fsThrottle(fn) {
-  _fsQueue = _fsQueue.then(() => new Promise(r => setTimeout(r, 300))).then(fn);
-  return _fsQueue;
-}
-
-async function _fetchFSPage(url, attempt = 0) {
-  const resp = await fetch(url);
-  if (resp.status === 429 || resp.status === 503) {
-    if (attempt >= 4) throw new Error('Firestore HTTP ' + resp.status + ' (após retries)');
-    const delay = (2 ** attempt) * 1500 + Math.random() * 500;
-    console.warn('[Firestore] 429 — retry', attempt + 1, 'em', Math.round(delay) + 'ms');
-    await new Promise(r => setTimeout(r, delay));
-    return _fetchFSPage(url, attempt + 1);
-  }
-  if (!resp.ok) throw new Error('Firestore HTTP ' + resp.status);
-  return resp.json();
-}
-
-async function fetchFirestore(col, forceRefresh = false) {
-  if (!forceRefresh) {
-    const cached = _fsCacheGet(col);
-    if (cached) return cached;
-  }
-  const docs = [];
-  let pageToken = null;
-  do {
-    const url = _FS_BASE + '/' + col + '?key=' + _FS_KEY + '&pageSize=300' + (pageToken ? '&pageToken=' + pageToken : '');
-    const data = await _fsThrottle(() => _fetchFSPage(url));
-    if (data.documents) data.documents.forEach(d => docs.push(_fsDoc(d)));
-    pageToken = data.nextPageToken || null;
-  } while (pageToken);
-  _fsCacheSet(col, docs);
-  return docs;
-}
-
-// Busca metadado de última atualização via REST
+// Busca metadado de última atualização
 async function fetchFirestoreMeta() {
   try {
-    const url = _FS_BASE + '/_meta/last_update?key=' + _FS_KEY;
-    const resp = await fetch(url);
-    if (!resp.ok) return null;
-    return _fsDoc(await resp.json());
+    const doc = await _db.collection('_meta').doc('last_update').get();
+    return doc.exists ? doc.data() : null;
   } catch(e) { return null; }
-}
-
-// Carrega Firebase SDK completo (lazy, só para Admin)
-let _sdkLoading = null;
-function _loadFirebaseSDK() {
-  if (_sdkLoading) return _sdkLoading;
-  _sdkLoading = new Promise((resolve, reject) => {
-    if (window.firebase && window.firebase.auth) { resolve(); return; }
-    const urls = [
-      'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
-      'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js',
-      'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
-    ];
-    let n = 0;
-    const loadNext = () => {
-      if (n >= urls.length) {
-        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-        _db = firebase.firestore();
-        resolve();
-        return;
-      }
-      const s = document.createElement('script');
-      s.src = urls[n++];
-      s.onload = loadNext;
-      s.onerror = reject;
-      document.head.appendChild(s);
-    };
-    loadNext();
-  });
-  return _sdkLoading;
 }
 
 // ============================================================
@@ -1014,8 +848,6 @@ PORTFOLIO_MUNICIPIOS.forEach(m => { PORTFOLIO_SET[normMun(m)] = m; });
 
 const charts = {};
 let activeTab = 6;
-// _munRegMap: { municipio -> regiao } construído de state.municipios
-let _munRegMap = {};
 
 // ============================================================
 // PALETA DE CORES
@@ -1036,7 +868,6 @@ function getVerticalColor(v) {
 
 // Busca dados de uma aba da planilha via Apps Script web app
 function fetchSheet(sheetName) {
-  if (!CONFIG.APPS_SCRIPT_URL) return Promise.reject(new Error('APPS_SCRIPT_URL não configurado'));
   return new Promise((resolve, reject) => {
     const cbName = '_sheetCb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     const timeout = setTimeout(() => {
@@ -1071,7 +902,6 @@ function fetchSheet(sheetName) {
 // ─── Comparativo Semanal ─────────────────────────────────────────
 // Variante de fetchSheet com data explícita (não usa state.selectedDate)
 function fetchSheetOnDate(sheetName, dateStr) {
-  if (!CONFIG.APPS_SCRIPT_URL) return Promise.reject(new Error('APPS_SCRIPT_URL não configurado'));
   return new Promise((resolve, reject) => {
     const cbName = '_wkCb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     const timeout = setTimeout(() => { delete window[cbName]; reject(new Error('timeout')); }, 20000);
@@ -1244,135 +1074,86 @@ function refreshToday() {
   loadAllData();
 }
 
-async function loadAllData(forceRefresh = false) {
-  // Se forceRefresh, limpa cache do Firestore para buscar dados frescos
-  if (forceRefresh) {
-    ['jira_chamados','colaboradores'].forEach(_fsCacheClear);
-    console.log('[loadAllData] Cache Firestore limpo — buscando dados frescos');
-  }
+async function loadAllData() {
   const btn = document.getElementById('btn-refresh');
   showLoading(true);
   if (btn) btn.disabled = true;
 
-  // Garantir arrays nos novos dados
-  if (!state.municipios)   state.municipios   = [];
-  if (!state.statusEnvio)  state.statusEnvio  = [];
+  const [jiraRes, riscoRes, npsRes, cndEstRes, cndFedRes, colabRes, implRes, implIssuesRes, chamadosIssuesRes, suporteRes, suporteIssuesRes] = await Promise.allSettled([
+    fetchFirestore('jira_chamados'),
+    fetchSheet('Risco de Exclusão'),
+    fetchSheet('NPS_Calculado'),
+    fetchCNDEstadual(),
+    fetchCNDFederal(),
+    fetchSheet('Colaboradores'),
+    fetchSheet('Jira_Implantacoes'),
+    fetchSheet('Jira_Implantacoes_Issues'),
+    fetchFirestore('jira_chamados_issues'),
+    fetchSheet('Jira_Chamados_Suporte'),
+    fetchSheet('Jira_Chamados_Suporte_Issues'),
+  ]);
 
-  // Timeout de segurança: força remoção do overlay em 10s
-  const safetyTimer = setTimeout(() => {
-    console.error('[loadAllData] timeout de segurança — removendo overlay');
-    showLoading(false);
-    if (btn) btn.disabled = false;
-  }, 10000);
+  if (jiraRes.status === 'fulfilled')  state.jira  = jiraRes.value;
+  else { console.warn('Jira:', jiraRes.reason?.message); state.jira = []; }
 
-  try {
-    // ── FASE 1: carrega jira_chamados (atual ou histórico) ──────────────────
-    const today = new Date().toISOString().slice(0, 10);
-    const isHistorical = state.selectedDate && state.selectedDate !== today;
-    const jiraCol = isHistorical
-      ? `jira_chamados_hist/${state.selectedDate}`
-      : 'jira_chamados';
+  if (riscoRes.status === 'fulfilled') state.risco = riscoRes.value;
+  else { console.warn('Risco:', riscoRes.reason?.message); state.risco = []; }
 
-    // Atualiza badge HISTÓRICO no header
-    const histBadge = document.getElementById('hist-badge');
-    if (histBadge) histBadge.style.display = isHistorical ? 'inline-block' : 'none';
+  if (npsRes.status === 'fulfilled')   state.nps   = npsRes.value;
+  else { console.warn('NPS:', npsRes.reason?.message); state.nps = []; }
 
-    let jiraOk = false;
-    try {
-      const jiraRes = await Promise.allSettled([fetchFirestore(jiraCol)]);
-      const jiraData = jiraRes[0];
-      if (jiraData.status === 'fulfilled') { state.jira = jiraData.value; jiraOk = true; }
-      else {
-        console.error('[Fase1] Jira falhou:', jiraData.reason?.message || jiraData.reason);
-        state.jira = [];
-      }
-    } catch(e) {
-      console.error('[Fase1] Erro inesperado:', e);
-      state.jira = [];
+  if (cndEstRes.status === 'fulfilled') state.cndEstadual = cndEstRes.value;
+  else { console.warn('CND Estadual:', cndEstRes.reason?.message); state.cndEstadual = []; }
+
+  if (cndFedRes.status === 'fulfilled') state.cndFederal = cndFedRes.value;
+  else { console.warn('CND Federal:', cndFedRes.reason?.message); state.cndFederal = []; }
+
+  // Compatibilidade com KPIs legados (usa Estadual como referência geral)
+  state.cnd = state.cndEstadual;
+
+  if (colabRes.status === 'fulfilled') state.colaboradores = colabRes.value;
+  else { console.warn('Colaboradores:', colabRes.reason?.message); state.colaboradores = []; }
+
+  if (implRes.status === 'fulfilled')  state.implantacoes = implRes.value;
+  else { console.warn('Implantacoes:', implRes.reason?.message); state.implantacoes = []; }
+
+  if (implIssuesRes.status === 'fulfilled') state.implantacoesIssues = implIssuesRes.value;
+  else { console.warn('ImplantacoesIssues:', implIssuesRes.reason?.message); state.implantacoesIssues = []; }
+
+  if (chamadosIssuesRes.status === 'fulfilled') state.chamadosIssues = chamadosIssuesRes.value;
+  else { console.warn('ChamadosIssues:', chamadosIssuesRes.reason?.message); state.chamadosIssues = []; }
+
+  if (suporteRes.status === 'fulfilled') state.suporte = suporteRes.value;
+  else { console.warn('Suporte:', suporteRes.reason?.message); state.suporte = []; }
+
+  if (suporteIssuesRes.status === 'fulfilled') state.suporteIssues = suporteIssuesRes.value;
+  else { console.warn('SuporteIssues:', suporteIssuesRes.reason?.message); state.suporteIssues = []; }
+
+  // Timestamps
+  const now = new Date().toLocaleString('pt-BR');
+  document.getElementById('footer-date').textContent = now;
+
+  // Tenta pegar timestamp do metadado Firestore
+  fetchFirestoreMeta().then(meta => {
+    if (meta && meta.jira_chamados_at) {
+      document.getElementById('sync-jira').textContent = new Date(meta.jira_chamados_at).toLocaleString('pt-BR');
     }
+  }).catch(() => {});
+  const jiraTS = state.jira.find(r => r.atualizado_em)?.atualizado_em;
+  document.getElementById('sync-jira').textContent = jiraTS
+    ? new Date(jiraTS).toLocaleString('pt-BR') : (state.jira.length ? now : 'Indisponível');
+  document.getElementById('sync-cnd').textContent = (state.cndEstadual.length || state.cndFederal.length) ? now : 'Indisponível';
+  const implTS = state.implantacoes.find(r => r.atualizado_em)?.atualizado_em;
+  document.getElementById('sync-impl').textContent = implTS
+    ? new Date(implTS).toLocaleString('pt-BR') : (state.implantacoes.length ? now : 'Indisponível');
 
-    try { updateKPIs(); } catch(e) { console.error('[Fase1] updateKPIs:', e); }
-    try { renderActiveView(); } catch(e) { console.error('[Fase1] renderActiveView:', e); }
+  updateKPIs();
+  renderActiveView();
+  showLoading(false);
+  document.getElementById('btn-refresh').disabled = false;
 
-    clearTimeout(safetyTimer);
-    showLoading(false);
-    if (btn) btn.disabled = false;
-
-    if (!jiraOk) {
-      const el = document.getElementById('kpi-chamados-sub');
-      if (el) el.textContent = 'Erro ao conectar Firestore — abra o console (F12)';
-    }
-
-    fetchFirestoreMeta().then(meta => {
-      if (meta && meta.jira_chamados_at)
-        document.getElementById('sync-jira').textContent = new Date(meta.jira_chamados_at).toLocaleString('pt-BR');
-    }).catch(() => {});
-
-    // ── FASE 2: carrega restante em background (sem bloquear a UI) ────────────
-    // Escalonado em dois grupos para evitar 429 no Firestore REST
-    const _delay = ms => new Promise(r => setTimeout(r, ms));
-
-    // Grupo A: Firestore (colaboradores) + Sheets que não competem
-    const [colabRes, riscoRes, npsRes, munsRes, envioRes] = await Promise.allSettled([
-      fetchFirestore('colaboradores'),
-      fetchSheet('Risco de Exclusão'),
-      fetchSheet('NPS_Calculado'),
-      fetchFirestore('municipios'),
-      fetchFirestore('status_envio'),
-    ]);
-
-    // Pequena pausa antes do próximo grupo
-    await _delay(300);
-
-    // Grupo B: CND + Implantações + Suporte
-    const [cndEstRes, cndFedRes, implRes, implIssuesRes, suporteRes, suporteIssuesRes] = await Promise.allSettled([
-      fetchCNDEstadual(),
-      fetchCNDFederal(),
-      fetchSheet('Jira_Implantacoes'),
-      fetchSheet('Jira_Implantacoes_Issues'),
-      fetchSheet('Jira_Chamados_Suporte'),
-      fetchSheet('Jira_Chamados_Suporte_Issues'),
-    ]);
-
-    if (riscoRes.status === 'fulfilled')      state.risco           = riscoRes.value;      else { console.warn('[Fase2] Risco:', riscoRes.reason?.message);               state.risco = []; }
-    if (npsRes.status === 'fulfilled')        state.nps             = npsRes.value;         else { console.warn('[Fase2] NPS:', npsRes.reason?.message);                   state.nps = []; }
-    if (cndEstRes.status === 'fulfilled')     state.cndEstadual     = cndEstRes.value;      else { console.warn('[Fase2] CND Est:', cndEstRes.reason?.message);             state.cndEstadual = []; }
-    if (cndFedRes.status === 'fulfilled')     state.cndFederal      = cndFedRes.value;      else { console.warn('[Fase2] CND Fed:', cndFedRes.reason?.message);             state.cndFederal = []; }
-    state.cnd = state.cndEstadual;
-    if (munsRes.status === 'fulfilled')        state.municipios      = munsRes.value;        else { console.warn('[Fase2] Municipios:', munsRes.reason?.message);           state.municipios = []; }
-    if (envioRes.status === 'fulfilled')       state.statusEnvio     = envioRes.value;       else { console.warn('[Fase2] StatusEnvio:', envioRes.reason?.message);          state.statusEnvio = []; }
-    _munRegMap = {}; state.municipios.forEach(m => { if (m.municipio) _munRegMap[m.municipio] = m.regiao || ''; });
-    if (colabRes.status === 'fulfilled')      state.colaboradores   = colabRes.value;       else { console.warn('[Fase2] Colab:', colabRes.reason?.message);                state.colaboradores = []; }
-    if (implRes.status === 'fulfilled')       state.implantacoes    = implRes.value;        else { console.warn('[Fase2] Impl:', implRes.reason?.message);                  state.implantacoes = []; }
-    if (implIssuesRes.status === 'fulfilled') state.implantacoesIssues = implIssuesRes.value; else { console.warn('[Fase2] ImplIssues:', implIssuesRes.reason?.message);   state.implantacoesIssues = []; }
-    if (suporteRes.status === 'fulfilled')    state.suporte         = suporteRes.value;     else { console.warn('[Fase2] Suporte:', suporteRes.reason?.message);            state.suporte = []; }
-    if (suporteIssuesRes.status === 'fulfilled') state.suporteIssues = suporteIssuesRes.value; else { console.warn('[Fase2] SupIssues:', suporteIssuesRes.reason?.message); state.suporteIssues = []; }
-
-    const now = new Date().toLocaleString('pt-BR');
-    try { document.getElementById('footer-date').textContent = now; } catch(_) {}
-    fetchFirestoreMeta().then(meta => {
-      if (meta && meta.jira_chamados_at)
-        document.getElementById('sync-jira').textContent = new Date(meta.jira_chamados_at).toLocaleString('pt-BR');
-    }).catch(() => {});
-    try {
-      const jiraTS = state.jira.find(r => r.atualizado_em)?.atualizado_em;
-      document.getElementById('sync-jira').textContent = jiraTS
-        ? new Date(jiraTS).toLocaleString('pt-BR') : (state.jira.length ? now : 'Indisponível');
-      document.getElementById('sync-cnd').textContent = (state.cndEstadual.length || state.cndFederal.length) ? now : 'Indisponível';
-      const implTS = state.implantacoes.find(r => r.atualizado_em)?.atualizado_em;
-      document.getElementById('sync-impl').textContent = implTS
-        ? new Date(implTS).toLocaleString('pt-BR') : (state.implantacoes.length ? now : 'Indisponível');
-    } catch(_) {}
-
-    try { updateKPIs(); } catch(e) { console.error('[Fase2] updateKPIs:', e); }
-    try { renderActiveView(); } catch(e) { console.error('[Fase2] renderActiveView:', e); }
-    try { fetchWeeklyComparison().catch(e => console.warn('Comparativo semanal:', e.message)); } catch(_) {}
-
-  } finally {
-    clearTimeout(safetyTimer);
-    showLoading(false);
-    if (btn) btn.disabled = false;
-  }
+  // Comparativo semanal roda em paralelo (não bloqueia a dashboard principal)
+  fetchWeeklyComparison().catch(e => console.warn('Comparativo semanal:', e.message));
 }
 
 // ============================================================
@@ -1534,62 +1315,11 @@ function switchTab(idx) {
     const domIdx = [6,0,1,2,3,4,5].indexOf(idx); // ordem das tabs no nav
     document.querySelectorAll('.view')[domIdx]?.classList.add('active');
   }
-  document.querySelectorAll('.tab-btn')[([6,0,1,2,3,4,5].indexOf(idx))]?.classList.add('active');
+  const adminBtn = document.getElementById('tab-btn-admin');
+  if (idx === 7) { adminBtn?.classList.add('active'); renderAdminView(); }
+  else document.querySelectorAll('.tab-btn')[([6,0,1,2,3,4,5].indexOf(idx))]?.classList.add('active');
   activeTab = idx;
   renderView(idx);
-}
-
-
-// ── Refresh individual por aba ────────────────────────────────────────────
-async function refreshTabData(tabIdx) {
-  const btn = document.getElementById('refresh-tab-btn-' + tabIdx);
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Atualizando…'; }
-  try {
-    switch(tabIdx) {
-      case 6: // Chamados de Suporte
-        [state.suporte, state.suporteIssues] = await Promise.all([
-          fetchSheet('Jira_Chamados_Suporte').catch(() => []),
-          fetchSheet('Jira_Chamados_Suporte_Issues').catch(() => []),
-        ]);
-        break;
-      case 0: // Chamados de Serviço
-        state.jira = await fetchFirestore('jira_chamados').catch(() => []);
-        break;
-      case 1: // Implantações
-        [state.implantacoes, state.implantacoesIssues] = await Promise.all([
-          fetchSheet('Jira_Implantacoes').catch(() => []),
-          fetchSheet('Jira_Implantacoes_Issues').catch(() => []),
-        ]);
-        break;
-      case 2: // Risco de Churn
-        state.risco = await fetchSheet('Risco de Exclusão').catch(() => []);
-        break;
-      case 3: // NPS
-        state.nps = await fetchSheet('NPS_Calculado').catch(() => []);
-        break;
-      case 4: // CND + eSfinge
-        _fsCacheClear('status_envio'); _fsCacheClear('municipios');
-        [state.cndEstadual, state.cndFederal, state.statusEnvio, state.municipios] = await Promise.all([
-          fetchCNDEstadual().catch(() => []),
-          fetchCNDFederal().catch(() => []),
-          fetchFirestore('status_envio', true).catch(() => []),
-          fetchFirestore('municipios', true).catch(() => []),
-        ]);
-        state.cnd = state.cndEstadual;
-        _munRegMap = {}; state.municipios.forEach(m => { if (m.municipio) _munRegMap[m.municipio] = m.regiao || ''; });
-        break;
-      case 5: // Colaboradores
-        _fsCacheClear('colaboradores');
-        state.colaboradores = await fetchFirestore('colaboradores', true).catch(() => []);
-        break;
-    }
-    try { updateKPIs(); } catch(_) {}
-    renderView(tabIdx);
-  } catch(e) {
-    console.error('[refreshTabData] tab', tabIdx, e);
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔄 Atualizar'; }
-  }
 }
 
 function renderActiveView() { renderView(activeTab); }
@@ -2514,23 +2244,19 @@ function renderCNDStatusFonte(containerId, dataFonte, nomeFonte) {
 // Alterna sub-aba CND (Estadual/Federal)
 function switchCNDSubTab(tab) {
   state.cndSubTab = tab;
-  const paneE   = document.getElementById('cnd-pane-estadual');
-  const paneF   = document.getElementById('cnd-pane-federal');
-  const paneEnv = document.getElementById('cnd-pane-envio');
-  const btnE    = document.getElementById('cnd-sub-estadual');
-  const btnF    = document.getElementById('cnd-sub-federal');
-  const btnEnv  = document.getElementById('cnd-sub-envio');
-  const active  = 'var(--accent)';
-  const muted   = 'var(--text-muted)';
-
-  if (paneE)   paneE.style.display   = tab === 'estadual' ? '' : 'none';
-  if (paneF)   paneF.style.display   = tab === 'federal'  ? '' : 'none';
-  if (paneEnv) paneEnv.style.display = tab === 'envio'    ? '' : 'none';
-
-  [btnE, btnF, btnEnv].forEach(b => { if (b) { b.style.color = muted; b.style.borderBottomColor = 'transparent'; } });
-  const activeBtn = tab === 'estadual' ? btnE : tab === 'federal' ? btnF : btnEnv;
-  if (activeBtn) { activeBtn.style.color = active; activeBtn.style.borderBottomColor = active; }
-
+  const paneE = document.getElementById('cnd-pane-estadual');
+  const paneF = document.getElementById('cnd-pane-federal');
+  const btnE  = document.getElementById('cnd-sub-estadual');
+  const btnF  = document.getElementById('cnd-sub-federal');
+  if (tab === 'federal') {
+    paneE.style.display = 'none'; paneF.style.display = '';
+    btnF.style.color = 'var(--accent)';  btnF.style.borderBottomColor = 'var(--accent)';
+    btnE.style.color = 'var(--text-muted)'; btnE.style.borderBottomColor = 'transparent';
+  } else {
+    paneE.style.display = ''; paneF.style.display = 'none';
+    btnE.style.color = 'var(--accent)';  btnE.style.borderBottomColor = 'var(--accent)';
+    btnF.style.color = 'var(--text-muted)'; btnF.style.borderBottomColor = 'transparent';
+  }
   renderCND();
 }
 
@@ -2552,7 +2278,6 @@ function renderCND() {
   }
 
   if (state.cndSubTab === 'federal') renderCNDFederal();
-  else if (state.cndSubTab === 'envio') renderStatusEnvio();
   else renderCNDEstadual();
 }
 
@@ -2613,11 +2338,7 @@ function renderCNDEstadual() {
     if (!grupos[key]) grupos[key] = { nome: r.municipio, items: [] };
     grupos[key].items.push(r);
   });
-  const _cndMunFilter = (document.getElementById('cnd-mun-filter')?.value || '').toLowerCase().trim();
-  const allMunKeys = Object.keys(grupos).sort((a, b) => grupos[a].nome.localeCompare(grupos[b].nome, 'pt-BR'));
-  const munKeys = _cndMunFilter
-    ? allMunKeys.filter(k => grupos[k].nome.toLowerCase().includes(_cndMunFilter))
-    : allMunKeys;
+  const munKeys = Object.keys(grupos).sort((a, b) => grupos[a].nome.localeCompare(grupos[b].nome, 'pt-BR'));
   const totalMuns = munKeys.length;
 
   // Conta municípios Com / Sem CND para um dado período
@@ -3154,266 +2875,109 @@ function renderNPSPorCliente() {
 // ============================================================
 // VIEW 7 — Colaboradores
 // ============================================================
-// ── renderStatusEnvio ────────────────────────────────────────────────────
-const _ENVIO_MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-const _ENVIO_MESES_LBL = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const _ENVIO_MODULOS = ['eSfinge Contábil','eSfinge Folha','eSfinge Tributário','eSfinge Compras/Contratos/Obras'];
-
-function renderStatusEnvio() {
-  const container = document.getElementById('envio-container');
-  if (!container) return;
-
-  // Preencher select de anos
-  const anoSel = document.getElementById('envio-filter-ano');
-  if (anoSel) {
-    const anos = [...new Set(state.statusEnvio.map(r => r.ano).filter(Boolean))].sort((a,b)=>b-a);
-    if (anoSel.options.length <= 1 && anos.length) {
-      anos.forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = a; anoSel.appendChild(o); });
-    }
-  }
-
-  const fRegiao = document.getElementById('envio-filter-regiao')?.value || '';
-  const fMun    = (document.getElementById('envio-filter-mun')?.value || '').toLowerCase().trim();
-  const fAno    = parseInt(document.getElementById('envio-filter-ano')?.value) || new Date().getFullYear();
-
-  if (!state.statusEnvio.length) {
-    container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted)">Nenhum dado de Status de Envio cadastrado ainda.<br><small>Use o Admin para importar ou cadastrar os dados.</small></div>';
-    return;
-  }
-
-  // Filtrar dados
-  let dados = state.statusEnvio.filter(r => {
-    const ano = parseInt(r.ano) || fAno;
-    if (ano !== fAno) return false;
-    const regiao = _munRegMap[r.municipio] || r.regiao || '';
-    if (fRegiao && regiao !== fRegiao) return false;
-    if (fMun && !(r.municipio||'').toLowerCase().includes(fMun)) return false;
-    return true;
-  });
-
-  // Agrupar por município
-  const porMun = {};
-  dados.forEach(r => {
-    const mun = r.municipio || '—';
-    if (!porMun[mun]) porMun[mun] = { regiao: _munRegMap[mun] || r.regiao || '', modulos: {} };
-    porMun[mun].modulos[r.modulo] = r;
-  });
-
-  const muns = Object.keys(porMun).sort((a,b) => a.localeCompare(b,'pt-BR'));
-
-  if (!muns.length) {
-    container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted)">Nenhum dado encontrado para os filtros selecionados.</div>';
-    return;
-  }
-
-  const badge = (v) => {
-    if (!v) return '<span style="color:#CBD5E0;font-size:.72rem">—</span>';
-    if (v === 'Enviado')   return '<span style="background:#C6F6D5;color:#276749;padding:2px 7px;border-radius:8px;font-size:.72rem;font-weight:700;white-space:nowrap">✓ Enviado</span>';
-    if (v === 'Em atraso') return '<span style="background:#FED7D7;color:#C53030;padding:2px 7px;border-radius:8px;font-size:.72rem;font-weight:700;white-space:nowrap">⚠ Em atraso</span>';
-    return `<span style="background:#EDF2F7;color:#718096;padding:2px 7px;border-radius:8px;font-size:.72rem">${v}</span>`;
-  };
-
-  const regiaoTag = (reg) => {
-    const colors = { 'Região Norte': '#BEE3F8:#2B6CB0', 'Região Sul': '#C6F6D5:#276749', 'Região Oeste': '#FEEBC8:#C05621' };
-    const [bg, color] = (colors[reg] || '#EDF2F7:#4A5568').split(':');
-    return reg ? `<span style="background:${bg};color:${color};padding:1px 8px;border-radius:8px;font-size:.68rem;font-weight:700;margin-left:6px">${reg}</span>` : '';
-  };
-
-  let html = '<table style="width:100%;border-collapse:collapse;font-family:inherit;min-width:700px">';
-  html += '<thead><tr style="background:var(--header-bg);color:#fff;position:sticky;top:0">';
-  html += '<th style="padding:9px 12px;text-align:left;font-size:.73rem;min-width:220px">Município / Módulo</th>';
-  _ENVIO_MESES_LBL.forEach(m => { html += `<th style="padding:9px 8px;font-size:.72rem;text-align:center">${m}</th>`; });
-  html += '<th style="padding:9px 8px;font-size:.72rem;text-align:center;min-width:90px">Ratificado até</th>';
-  html += '</tr></thead><tbody>';
-
-  muns.forEach((mun, mi) => {
-    const { regiao, modulos } = porMun[mun];
-    const bgMun = '#EEF2FF';
-    // Linha cabeçalho do município
-    html += `<tr style="background:${bgMun}">`;
-    html += `<td colspan="${14}" style="padding:7px 12px;font-weight:700;font-size:.83rem;color:#2D3748">${mun}${regiaoTag(regiao)}</td>`;
-    html += '</tr>';
-
-    // Linhas dos módulos
-    _ENVIO_MODULOS.forEach((mod, mdi) => {
-      const r = modulos[mod] || {};
-      const bg = mdi % 2 === 0 ? '#fff' : '#F8FAFC';
-      html += `<tr style="background:${bg}">`;
-      html += `<td style="padding:6px 12px 6px 24px;font-size:.78rem;color:#4A5568;border-left:3px solid #C3DAFE">${mod}</td>`;
-      _ENVIO_MESES.forEach(mes => { html += `<td style="padding:6px 8px;text-align:center">${badge(r[mes])}</td>`; });
-      html += `<td style="padding:6px 8px;text-align:center;font-size:.75rem;color:#4A5568;font-weight:600">${r.ratificado_ate||'—'}</td>`;
-      html += '</tr>';
-    });
-  });
-
-  html += '</tbody></table>';
-  container.innerHTML = html;
-}
-
-
 function renderColaboradores() {
-  ['chart-colab-cargo','chart-colab-area','chart-colab-equipe','chart-colab-gestor'].forEach(id => destroyChart(id));
+  destroyChart('chart-6');
+  destroyChart('chart-7');
   const container = document.getElementById('colab-container');
-  try {
-    if (!state.colaboradores || !state.colaboradores.length) {
-      container.innerHTML = '<div class="unavailable"><div class="unavailable-icon">👥</div>' +
-        '<div class="unavailable-text">Nenhum colaborador cadastrado</div>' +
-        '<button onclick="adminOpen()" style="margin-top:14px;padding:8px 20px;background:#0761FF;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600">+ Abrir Admin para cadastrar</button>' +
-        '</div>';
-      return;
-    }
-    const colabs = state.colaboradores;
-    if (!window._colabFilter) window._colabFilter = { cargo: null, area: null, equipe: null, gestor: null };
-    const f = window._colabFilter;
 
-    const cargoMap = {}, areaMap = {}, equipeMap = {}, gestorMap = {};
-    colabs.forEach(c => {
-      const cargo  = String(c.cargo  || 'Não informado');
-      const area   = String(c.area_atendimento   || 'Não informado');
-      const equipe = String(c.equipe_atendimento || 'Não informado');
-      const gestor = String(c.gestor || 'Não informado');
-      cargoMap[cargo]   = (cargoMap[cargo]   || 0) + 1;
-      areaMap[area]     = (areaMap[area]     || 0) + 1;
-      equipeMap[equipe] = (equipeMap[equipe] || 0) + 1;
-      gestorMap[gestor] = (gestorMap[gestor] || 0) + 1;
-    });
-
-    const filtered = colabs.filter(c =>
-      (!f.cargo  || String(c.cargo              || 'Não informado') === f.cargo)  &&
-      (!f.area   || String(c.area_atendimento   || 'Não informado') === f.area)   &&
-      (!f.equipe || String(c.equipe_atendimento || 'Não informado') === f.equipe) &&
-      (!f.gestor || String(c.gestor || 'Não informado') === f.gestor)
-    ).sort((a,b) => String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
-
-    const PIE_COLORS_C = ['#0761FF','#38A169','#D69E2E','#805AD5','#E53E3E','#DD6B20','#0987A0','#C53030','#2B6CB0','#9F7AEA','#48BB78','#718096'];
-
-    const chips = [
-      f.cargo  ? `<span class="_cchip" onclick="window._colabFilter.cargo=null;renderColaboradores()">${f.cargo} &#x2715;</span>`  : '',
-      f.area   ? `<span class="_cchip" onclick="window._colabFilter.area=null;renderColaboradores()">${f.area} &#x2715;</span>`    : '',
-      f.equipe ? `<span class="_cchip" onclick="window._colabFilter.equipe=null;renderColaboradores()">${f.equipe} &#x2715;</span>`: '',
-      f.gestor ? `<span class="_cchip" onclick="window._colabFilter.gestor=null;renderColaboradores()">${f.gestor} &#x2715;</span>`: '',
-    ].filter(Boolean).join('');
-
-    const tableRows = filtered.map((c,i) => {
-      const em = String(c.email||'');
-      const emEsc = em.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-      const mailUrl = em ? 'https://mail.google.com/mail/?view=cm&to=' + encodeURIComponent(em) : '';
-      const wa  = String(c.whatsapp||'').replace(/\D/g,'');
-      const wap = String(c.whatsapp_prof||'').replace(/\D/g,'');
-      const waUrl  = wa  ? 'https://wa.me/' + (wa.startsWith('55')  ? wa  : '55' + wa)  : '';
-      const wapUrl = wap ? 'https://wa.me/' + (wap.startsWith('55') ? wap : '55' + wap) : '';
-      const bg = i%2===0 ? '#F6F7FB' : '#FFFFFF';
-      const btns = [];
-      if (em)     btns.push('<a href="' + mailUrl + '" target="_blank" title="E-mail: ' + emEsc + '" style="display:inline-flex;align-items:center;background:#EBF4FF;border-radius:6px;padding:4px 8px;text-decoration:none;font-size:.85rem;margin-right:3px">✉️</a>');
-      if (em)     btns.push('<button onclick="_openGoogleChat(\'' + emEsc + '\')" style="background:#E6F4EA;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:.85rem;margin-right:3px">💬</button>');
-      if (waUrl)  btns.push('<a href="' + waUrl  + '" target="_blank" title="WA pessoal: '  + wa  + '" style="display:inline-flex;align-items:center;background:#DCFCE7;border-radius:6px;padding:4px 8px;text-decoration:none;font-size:.85rem;color:#166534;font-weight:600;margin-right:3px">📱 Pessoal</a>');
-      if (wapUrl) btns.push('<a href="' + wapUrl + '" target="_blank" title="WA profissional: ' + wap + '" style="display:inline-flex;align-items:center;background:#FEF9C3;border-radius:6px;padding:4px 8px;text-decoration:none;font-size:.85rem;color:#854D0E;font-weight:600">📱 Prof.</a>');
-      const contato = btns.length ? btns.join('') : '—';
-      return `<tr style="background:${bg};border-bottom:1px solid #E0E5F5">
-        <td style="padding:9px 14px;font-weight:600">${String(c.nome||'—')}</td>
-        <td style="padding:9px 14px"><span style="background:#EBF4FF;color:#2B6CB0;padding:2px 8px;border-radius:12px;font-size:.76rem;white-space:nowrap">${String(c.cargo||'—')}</span></td>
-        <td style="padding:9px 14px;color:#6B7280">${String(c.area_atuacao||'—')}</td>
-        <td style="padding:9px 14px">${String(c.equipe_atendimento||'—')}</td>
-        <td style="padding:9px 14px">${String(c.area_atendimento||'—')}</td>
-        <td style="padding:9px 14px;color:#6B7280">${String(c.gestor||'—')}</td>
-        <td style="padding:9px 14px;white-space:nowrap">
-          ${wa  ? '<div style="font-size:.78rem;color:#166534">📱 ' + wa  + '</div>' : ''}
-          ${wap ? '<div style="font-size:.78rem;color:#854D0E">📱 ' + wap + ' <span style=\"font-size:.7rem;background:#FEF9C3;padding:1px 5px;border-radius:8px\">Prof</span></div>' : ''}
-          ${!wa && !wap ? '—' : ''}
-        </td>
-        <td style="padding:9px 14px;text-align:center;white-space:nowrap">${contato}</td>
-      </tr>`;
-    }).join('');
-
-    const chipsHtml = chips
-      ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-          <span style="font-size:.8rem;color:#6B7280">Filtros:</span>${chips}
-          <span onclick="window._colabFilter={cargo:null,area:null,equipe:null,gestor:null};renderColaboradores()" style="font-size:.78rem;color:#6B7280;cursor:pointer;text-decoration:underline;margin-left:4px">Limpar tudo</span>
-        </div>` : '';
-
-    container.innerHTML =
-      `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-bottom:22px">
-        <div style="background:#FFFFFF;border:1px solid #E0E5F5;border-radius:10px;padding:16px">
-          <div style="font-size:.75rem;font-weight:700;color:#6B7280;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Cargo</div>
-          <div style="position:relative;height:220px"><canvas id="chart-colab-cargo"></canvas></div>
-        </div>
-        <div style="background:#FFFFFF;border:1px solid #E0E5F5;border-radius:10px;padding:16px">
-          <div style="font-size:.75rem;font-weight:700;color:#6B7280;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Área de Atendimento</div>
-          <div style="position:relative;height:220px"><canvas id="chart-colab-area"></canvas></div>
-        </div>
-        <div style="background:#FFFFFF;border:1px solid #E0E5F5;border-radius:10px;padding:16px">
-          <div style="font-size:.75rem;font-weight:700;color:#6B7280;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Equipe</div>
-          <div style="position:relative;height:220px"><canvas id="chart-colab-equipe"></canvas></div>
-        </div>
-        <div style="background:#FFFFFF;border:1px solid #E0E5F5;border-radius:10px;padding:16px">
-          <div style="font-size:.75rem;font-weight:700;color:#6B7280;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Por Gestor</div>
-          <div style="position:relative;height:220px"><canvas id="chart-colab-gestor"></canvas></div>
-        </div>
-      </div>
-      ${chipsHtml}
-      <div style="font-size:.85rem;color:#6B7280;margin-bottom:10px">
-        Equipe — <strong>${filtered.length}</strong> colaborador${filtered.length !== 1 ? 'es' : ''}${filtered.length !== colabs.length ? ' de ' + colabs.length : ''}
-      </div>
-      <div style="overflow-x:auto;border:1px solid #E0E5F5;border-radius:10px">
-        <table style="width:100%;border-collapse:collapse;font-size:.84rem">
-          <thead>
-            <tr style="background:#0761FF;color:#fff">
-              <th style="padding:10px 14px;text-align:left;white-space:nowrap">Nome</th>
-              <th style="padding:10px 14px;text-align:left;white-space:nowrap">Cargo</th>
-              <th style="padding:10px 14px;text-align:left;white-space:nowrap">Área de Atuação</th>
-              <th style="padding:10px 14px;text-align:left;white-space:nowrap">Equipe</th>
-              <th style="padding:10px 14px;text-align:left;white-space:nowrap">Área de Atend.</th>
-              <th style="padding:10px 14px;text-align:left;white-space:nowrap">Gestor</th>
-              <th style="padding:10px 14px;text-align:left;white-space:nowrap">WhatsApp(s)</th>
-              <th style="padding:10px 14px;text-align:center;white-space:nowrap">Contato</th>
-            </tr>
-          </thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </div>`;
-
-    _drawColabPie('chart-colab-cargo',  cargoMap,  PIE_COLORS_C, v => { window._colabFilter.cargo  = v; renderColaboradores(); });
-    _drawColabPie('chart-colab-area',   areaMap,   PIE_COLORS_C, v => { window._colabFilter.area   = v; renderColaboradores(); });
-    _drawColabPie('chart-colab-equipe', equipeMap, PIE_COLORS_C, v => { window._colabFilter.equipe = v; renderColaboradores(); });
-    _drawColabPie('chart-colab-gestor',  gestorMap, PIE_COLORS_C, v => { window._colabFilter.gestor  = v; renderColaboradores(); });
-  } catch(e) {
-    console.error('[renderColaboradores] ERRO:', e);
-    if (container) container.innerHTML = `<div style="color:#E53E3E;padding:24px;text-align:center">
-      Erro ao renderizar colaboradores: <strong>${e.message}</strong><br><small>Veja o console (F12) para detalhes.</small>
-    </div>`;
+  if (!state.colaboradores.length) {
+    unavailable(container, 'Dados de colaboradores indisponíveis. Verifique se a planilha está publicada.');
+    return;
   }
-}
 
-function _drawColabPie(canvasId, dataMap, colors, onClickCb) {
-  const entries = Object.entries(dataMap).sort((a,b) => b[1]-a[1]);
-  const labels  = entries.map(e => e[0]);
-  const data    = entries.map(e => e[1]);
-  charts[canvasId] = new Chart(document.getElementById(canvasId), {
-    type: 'doughnut',
-    data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length), borderWidth: 2, borderColor: '#fff' }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
-        tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.parsed } }
-      },
-      onClick: (_e, items) => { if (items.length > 0) onClickCb(labels[items[0].index]); }
+  const COLAB_COLORS = [
+    '#2B6CB0','#276749','#C05621','#805AD5','#0987A0',
+    '#C53030','#DD6B20','#B7791F','#2C7A7B','#553C9A',
+    '#2F855A','#9B2C2C','#2A4365','#744210','#1A365D',
+  ];
+  const ATEND_COLORS = [
+    '#0987A0','#C05621','#276749','#805AD5','#2B6CB0',
+    '#B7791F','#C53030','#2C7A7B','#DD6B20','#553C9A',
+  ];
+
+  // ── Agrupar por Vaga ──────────────────────────────────────
+  const vagaMap = {};
+  state.colaboradores.forEach(r => {
+    const v = (r.vaga || 'Sem vaga').trim();
+    vagaMap[v] = (vagaMap[v] || 0) + 1;
+  });
+  const vagaEntries = Object.entries(vagaMap).sort((a, b) => b[1] - a[1]);
+  const vagaLabels  = vagaEntries.map(e => e[0]);
+  const vagaCounts  = vagaEntries.map(e => e[1]);
+  const vagaColors  = vagaLabels.map((_, i) => COLAB_COLORS[i % COLAB_COLORS.length]);
+  const colorByVaga = {};
+  vagaLabels.forEach((v, i) => { colorByVaga[v] = COLAB_COLORS[i % COLAB_COLORS.length]; });
+
+  // ── Agrupar por Área de Atendimento ───────────────────────
+  const atendMap = {};
+  state.colaboradores.forEach(r => {
+    const a = (r.area_de_atendimento || 'Não informado').trim();
+    atendMap[a] = (atendMap[a] || 0) + 1;
+  });
+  const atendEntries = Object.entries(atendMap).sort((a, b) => b[1] - a[1]);
+  const atendLabels  = atendEntries.map(e => e[0]);
+  const atendCounts  = atendEntries.map(e => e[1]);
+  const atendColors  = atendLabels.map((_, i) => ATEND_COLORS[i % ATEND_COLORS.length]);
+
+  // ── Linhas da tabela ──────────────────────────────────────
+  const tableRows = state.colaboradores.map(r => {
+    const vaga = (r.vaga || '').trim();
+    const cor  = colorByVaga[vaga] || '#718096';
+    return `<tr>
+      <td>${r.analista || '—'}</td>
+      <td><span class="colab-vaga-badge" style="background:${cor}20;color:${cor};border:1px solid ${cor}40">${vaga || '—'}</span></td>
+      <td>${r.area_de_atuacao || '—'}</td>
+      <td>${r.regiao || '—'}</td>
+      <td>${r.area_de_atendimento || '—'}</td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+      <div>
+        <div class="risk-col-title">Distribuição por Vaga</div>
+        <div style="height:300px"><canvas id="chart-6"></canvas></div>
+      </div>
+      <div>
+        <div class="risk-col-title">Distribuição por Área de Atendimento</div>
+        <div style="height:300px"><canvas id="chart-7"></canvas></div>
+      </div>
+    </div>
+    <div>
+      <div class="risk-col-title">Equipe — ${state.colaboradores.length} colaboradores</div>
+      <table class="colab-table">
+        <thead><tr>
+          <th>Analista</th><th>Vaga</th><th>Área de Atuação</th><th>Região</th><th>Área de Atendimento</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>`;
+
+  const pieOptions = (label) => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12, padding: 8 } },
+      tooltip: { callbacks: {
+        label: ctx => ` ${ctx.label}: ${ctx.parsed} colaborador${ctx.parsed !== 1 ? 'es' : ''}`
+      }}
     }
+  });
+
+  charts['chart-6'] = new Chart(document.getElementById('chart-6'), {
+    type: 'pie',
+    data: { labels: vagaLabels, datasets: [{ data: vagaCounts, backgroundColor: vagaColors, borderWidth: 2, borderColor: '#fff' }] },
+    options: pieOptions('vaga'),
+  });
+
+  charts['chart-7'] = new Chart(document.getElementById('chart-7'), {
+    type: 'pie',
+    data: { labels: atendLabels, datasets: [{ data: atendCounts, backgroundColor: atendColors, borderWidth: 2, borderColor: '#fff' }] },
+    options: pieOptions('atendimento'),
   });
 }
 
-function _openGoogleChat(email) {
-  if (navigator.clipboard) navigator.clipboard.writeText(email).catch(()=>{});
-  window.open('https://chat.google.com/', '_blank');
-  const tip = document.createElement('div');
-  tip.textContent = '&#x1F4AC; Email copiado! Cole no buscador do Google Chat';
-  Object.assign(tip.style, { position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
-    background:'#1C1A23', color:'#fff', padding:'10px 20px', borderRadius:'8px', zIndex:'99999',
-    fontSize:'.85rem', boxShadow:'0 4px 16px rgba(0,0,0,.3)', pointerEvents:'none' });
-  document.body.appendChild(tip);
-  setTimeout(() => tip.remove(), 3000);
-}
-
+// ============================================================
 // VIEW 7 — Implantações por Município × Vertical (Pivot + Gráficos)
 // ============================================================
 const IMPL_VERTICAIS = ['Arrecadação','Atendimento','Contratos','Contábil','Educação','ISS','Parceiros','Pessoal','Plataforma','Saúde'];
@@ -3932,6 +3496,23 @@ async function renderAdminView() {
   const sel = document.getElementById('admin-col-sel');
   const col = sel ? sel.value : 'jira_chamados';
 
+  const isEsfinge = col === 'status_envio';
+
+  // Mostrar/ocultar painéis
+  document.getElementById('admin-table').closest('div').style.display    = isEsfinge ? 'none' : 'block';
+  document.getElementById('admin-empty').style.display                   = 'none';
+  document.getElementById('esfinge-panel').style.display                 = isEsfinge ? 'block' : 'none';
+
+  // Mostrar/ocultar filtros padrão irrelevantes para eSfinge
+  const adminFilters = document.getElementById('admin-mun-sel')?.closest('div')?.parentElement;
+  if (adminFilters) {
+    Array.from(adminFilters.children).forEach((el, i) => {
+      if (i > 0 && i < 4) el.style.display = isEsfinge ? 'none' : ''; // mun, vert, search
+    });
+  }
+
+  if (isEsfinge) { renderAdminEsfinge(); return; }
+
   // Só recarrega se mudou de coleção ou está vazio
   if (_adminState.collection !== col || _adminState.docs.length === 0) {
     _adminState.collection = col;
@@ -4019,6 +3600,120 @@ function adminApplyFilters() {
   ).join('');
 }
 
+// ── eSfinge Status Envio — matriz municípios × módulos ────────────────
+const _ESF = { docs: [], loaded: false };
+
+const ESF_PORTFOLIO = [
+  'Água Doce','Águas de Chapecó','Anitápolis','Armazém','Atalanta',
+  'Balneário Camboriú','Balneário Gaivota','Balneário Rincão','Bom Jardim da Serra',
+  'Braço do Norte','Braço do Trombudo','Caçador','Campo Belo do Sul','Capinzal',
+  'Celso Ramos','Chapecó','Cocal do Sul','Descanso','Dionísio Cerqueira','Forquilhinha',
+  'Grão Pará',"Herval d'Oeste",'Ibiam','Imaruí','Itajaí','Lauro Müller',
+  'Major Gercino','Major Vieira','Maracajá','Maravilha','Mondaí','Monte Carlo',
+  'Monte Castelo','Nova Veneza','Orleans','Painel','Palmitos','Passo de Torres',
+  'Passos Maia','Paulo Lopes','Pedras Grandes','Petrolândia','Piratuba','Ponte Alta',
+  'Pouso Redondo','Rancho Queimado','Sangão','Santa Cecília','São José do Cerrito',
+  'São Lourenço do Oeste','São Ludgero','São Miguel do Oeste','Schroeder','Siderópolis',
+  'Sombrio','Trombudo Central','Turvo','Urubici','Vargem','Vargem Bonita','Vidal Ramos'
+];
+
+async function renderAdminEsfinge() {
+  // Inicializar seletores de ano/mês na primeira abertura
+  const anoSel = document.getElementById('esf-ano');
+  if (!anoSel.options.length) {
+    const anoAtual = new Date().getFullYear();
+    for (let y = anoAtual; y >= anoAtual - 2; y--) {
+      anoSel.add(new Option(y, y));
+    }
+    anoSel.value = anoAtual;
+    const mesAnterior = new Date().getMonth() || 12; // mês anterior
+    document.getElementById('esf-mes').value = mesAnterior;
+  }
+
+  if (!_ESF.loaded) {
+    document.getElementById('esf-tbody').innerHTML =
+      '<tr><td colspan="99" style="text-align:center;padding:20px;color:var(--text-muted)">Carregando dados eSfinge…</td></tr>';
+    try {
+      _ESF.docs  = await fetchFirestore('status_envio');
+      _ESF.loaded = true;
+    } catch(e) {
+      document.getElementById('esf-tbody').innerHTML =
+        '<tr><td colspan="99" style="padding:20px;color:var(--red)">Erro: ' + e.message + '</td></tr>';
+      return;
+    }
+  }
+  renderEsfingeMatrix();
+}
+
+function renderEsfingeMatrix() {
+  const ano       = parseInt(document.getElementById('esf-ano')?.value)  || new Date().getFullYear();
+  const mes       = parseInt(document.getElementById('esf-mes')?.value)  || 1;
+  const portfolio = (document.getElementById('esf-portfolio')?.value)    === 'portfolio';
+  const search    = (document.getElementById('esf-search')?.value || '').toLowerCase().trim();
+
+  // Filtrar por período
+  let docs = _ESF.docs.filter(d => d.ano == ano && d.mes == mes);
+
+  // Filtrar portfólio
+  if (portfolio) {
+    const portSet = new Set(ESF_PORTFOLIO.map(m => m.toLowerCase().trim()));
+    docs = docs.filter(d => portSet.has((d.municipio||'').toLowerCase().trim()));
+  }
+
+  // Busca por município
+  if (search) docs = docs.filter(d => (d.municipio||'').toLowerCase().includes(search));
+
+  // Módulos únicos (colunas) — ordenados
+  const modulos = [...new Set(docs.map(d => d.modulo).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt-BR'));
+
+  // Municípios únicos (linhas) — ordenados
+  const municipios = [...new Set(docs.map(d => d.municipio).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt-BR'));
+
+  document.getElementById('esf-count').textContent = municipios.length + ' municípios · ' + modulos.length + ' módulos';
+
+  if (municipios.length === 0) {
+    document.getElementById('esf-matrix-wrap').style.display = 'none';
+    document.getElementById('esf-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('esf-matrix-wrap').style.display = 'block';
+  document.getElementById('esf-empty').style.display = 'none';
+
+  // Índice: municipio+modulo → qtd_pacotes
+  const idx = {};
+  docs.forEach(d => { idx[(d.municipio||'') + '||' + (d.modulo||'')] = d.qtd_pacotes; });
+
+  // Cabeçalho
+  const thead = document.getElementById('esf-thead');
+  thead.innerHTML = '<tr>' +
+    '<th style="padding:8px 12px;background:#1C1A23;color:#fff;font-size:.75rem;font-weight:600;text-align:left;white-space:nowrap;position:sticky;left:0;z-index:2">Município</th>' +
+    modulos.map(m =>
+      `<th style="padding:8px 6px;background:#1C1A23;color:#fff;font-size:.72rem;font-weight:600;text-align:center;white-space:nowrap;max-width:100px;overflow:hidden;text-overflow:ellipsis" title="${m}">${m}</th>`
+    ).join('') +
+    '<th style="padding:8px 10px;background:#1C1A23;color:#aaa;font-size:.72rem;font-weight:600;text-align:center">Total</th>' +
+    '</tr>';
+
+  // Corpo
+  const tbody = document.getElementById('esf-tbody');
+  tbody.innerHTML = municipios.map((mun, i) => {
+    const bg = i % 2 === 0 ? '#fff' : '#F9FAFB';
+    let total = 0;
+    const cells = modulos.map(m => {
+      const qtd = idx[mun + '||' + m];
+      if (qtd === undefined || qtd === null) return `<td style="text-align:center;padding:6px 4px;color:#ccc;font-size:.9rem">—</td>`;
+      if (qtd > 0) { total++; return `<td style="text-align:center;padding:6px 4px;font-size:.9rem" title="${qtd} pacotes">✅</td>`; }
+      return `<td style="text-align:center;padding:6px 4px;font-size:.9rem;color:var(--red)">❌</td>`;
+    }).join('');
+    const pct = modulos.length ? Math.round(total / modulos.length * 100) : 0;
+    const pctColor = pct >= 80 ? 'var(--green)' : pct >= 50 ? '#f59e0b' : 'var(--red)';
+    return `<tr style="background:${bg};border-bottom:1px solid #E2E8F0">
+      <td style="padding:7px 12px;white-space:nowrap;font-size:.82rem;font-weight:500;position:sticky;left:0;background:${bg};z-index:1">${mun}</td>
+      ${cells}
+      <td style="text-align:center;padding:6px 10px;font-weight:700;font-size:.8rem;color:${pctColor}">${total}/${modulos.length}</td>
+    </tr>`;
+  }).join('');
+}
+
 function adminExportCSV() {
   const rows = _adminState.filtered;
   if (!rows.length) return;
@@ -4033,431 +3728,6 @@ function adminExportCSV() {
 }
 
 
-// ============================================================
-// ADMIN — Google Auth + Firestore CRUD
-// ============================================================
-const _ADMIN_ALLOWED = ['emanuel.melo87@gmail.com'];
-const _adminData = { collection: null, docs: [], filtered: [], docIds: [] };
-let _editDocId = null;
-
-async function adminOpen() {
-  document.getElementById('admin-overlay').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-  try {
-    await _loadFirebaseSDK();
-    firebase.auth().onAuthStateChanged(function(user) {
-      if (user) _adminShowPanel(user);
-      else _adminShowLogin();
-    });
-  } catch(e) {
-    console.error('Erro ao carregar Firebase SDK:', e);
-    _adminShowLogin();
-  }
-}
-
-function adminClose() {
-  document.getElementById('admin-overlay').style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function _adminShowLogin() {
-  document.getElementById('admin-login-panel').style.display = 'flex';
-  document.getElementById('admin-data-panel').style.display = 'none';
-  document.getElementById('admin-signout-btn').style.display = 'none';
-  document.getElementById('admin-user-info').textContent = '';
-}
-
-function _adminShowPanel(user) {
-  if (!_ADMIN_ALLOWED.includes(user.email)) {
-    document.getElementById('admin-login-error').textContent = 'Acesso negado: ' + user.email;
-    document.getElementById('admin-login-error').style.display = 'block';
-    firebase.auth().signOut();
-    return;
-  }
-  document.getElementById('admin-login-panel').style.display = 'none';
-  document.getElementById('admin-data-panel').style.display = 'block';
-  document.getElementById('admin-signout-btn').style.display = 'block';
-  document.getElementById('admin-user-info').textContent = user.email;
-  _adminLoadCounts();
-}
-
-function adminSignIn() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  provider.setCustomParameters({ login_hint: 'emanuel.melo87@gmail.com' });
-  firebase.auth().signInWithPopup(provider)
-    .then(r => _adminShowPanel(r.user))
-    .catch(e => {
-      document.getElementById('admin-login-error').textContent = 'Erro: ' + e.message;
-      document.getElementById('admin-login-error').style.display = 'block';
-    });
-}
-
-function adminSignOut() {
-  firebase.auth().signOut().then(_adminShowLogin);
-}
-
-async function _adminLoadCounts() {
-  for (const col of ['jira_chamados','jira_chamados_issues','_meta','colaboradores']) {
-    try {
-      const snap = await _db.collection(col).get();
-      const el = document.getElementById('card-count-' + col);
-      if (el) el.textContent = snap.size + ' docs';
-    } catch(e) {}
-  }
-}
-
-async function adminLoadCollection(col) {
-  _adminData.collection = col;
-  document.getElementById('admin-table-area').style.display = 'block';
-  document.getElementById('admin-table-title').textContent = col;
-  document.getElementById('admin-main-tbody').innerHTML =
-    '<tr><td colspan="99" style="color:rgba(255,255,255,.4);padding:24px;text-align:center">Carregando…</td></tr>';
-  // Usa SDK se disponível (para ter IDs dos docs para edição), senão REST
-  if (_db) {
-    const snap = await _db.collection(col).get();
-    _adminData.docs   = snap.docs.map(d => d.data());
-    _adminData.docIds = snap.docs.map(d => d.id);
-  } else {
-    const docs = await fetchFirestore(col);
-    _adminData.docs   = docs;
-    _adminData.docIds = docs.map((d, i) => d.key || String(i));
-  }
-  _adminData.filtered = _adminData.docs.slice();
-  // Mostra/oculta botões de gestão de colaboradores
-  const colabActions = document.getElementById('admin-colab-actions');
-  if (colabActions) colabActions.style.display = (col === 'colaboradores') ? 'flex' : 'none';
-  _adminRenderTable();
-}
-
-function adminTableFilter() {
-  const q = (document.getElementById('admin-table-search').value || '').toLowerCase();
-  _adminData.filtered = q
-    ? _adminData.docs.filter(d => JSON.stringify(d).toLowerCase().includes(q))
-    : _adminData.docs.slice();
-  _adminRenderTable();
-}
-
-function _adminRenderTable() {
-  const rows = _adminData.filtered;
-  document.getElementById('admin-table-count').textContent = rows.length + ' registros';
-  const COL_ORDER = _adminData.collection === 'jira_chamados'
-    ? ['municipio','vertical','total_chamados','slo_estourado','atualizado_em']
-    : _adminData.collection === 'jira_chamados_issues'
-    ? ['key','municipio','vertical','status','slo_horas','responsavel','issuetype','summary','atualizado_em']
-    : _adminData.collection === 'colaboradores'
-    ? ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','whatsapp_prof','gestor']
-    : _adminData.collection === 'municipios'
-    ? ['municipio','regiao']
-    : _adminData.collection === 'status_envio'
-    ? ['municipio','regiao','ano','modulo','jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez','ratificado_ate']
-    : Object.keys(rows[0] || {});
-  const keys = COL_ORDER.filter(k => rows.some(d => d[k] !== undefined && d[k] !== ''));
-  if (!keys.length && rows.length) keys.push(...Object.keys(rows[0]));
-  document.getElementById('admin-main-thead').innerHTML =
-    '<tr style="position:sticky;top:0">' +
-    keys.map(k => `<th style="padding:10px 14px;background:#0F1117;color:rgba(255,255,255,.7);font-size:.75rem;font-weight:600;text-align:left;white-space:nowrap;border-bottom:1px solid #2D3748">${k}</th>`).join('') +
-    '<th style="padding:10px 14px;background:#0F1117;color:rgba(255,255,255,.7);font-size:.75rem;font-weight:600;border-bottom:1px solid #2D3748">Ações</th></tr>';
-  document.getElementById('admin-main-tbody').innerHTML = rows.map((d, i) => {
-    const docIdx = _adminData.docs.indexOf(d);
-    const docId  = _adminData.docIds[docIdx] || String(i);
-    return `<tr style="border-bottom:1px solid #1a2030;transition:background .1s" onmouseover="this.style.background='#252836'" onmouseout="this.style.background=''">` +
-      keys.map(k => {
-        const val = d[k] !== undefined ? String(d[k]) : '—';
-        if (k === 'url' && val.startsWith('http'))
-          return `<td style="padding:8px 14px;white-space:nowrap"><a href="${val}" target="_blank" style="color:#0761FF;font-size:.78rem">Abrir</a></td>`;
-        if (k === 'atualizado_em' && val.length > 10)
-          return `<td style="padding:8px 14px;white-space:nowrap;color:rgba(255,255,255,.4);font-size:.78rem">${new Date(val).toLocaleString('pt-BR')}</td>`;
-        if (k === 'slo_horas') {
-          const neg = val.startsWith('-');
-          return `<td style="padding:8px 14px;white-space:nowrap;font-weight:600;color:${neg?'#FC8181':'#68D391'}">${val||'—'}</td>`;
-        }
-        return `<td style="padding:8px 14px;color:#E2E8F0;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${val.replace(/"/g,'&quot;')}">${val}</td>`;
-      }).join('') +
-      (`<td style="padding:8px 14px;white-space:nowrap">` +
-      `<button onclick="adminOpenEdit('${docId}')" style="padding:4px 12px;background:#0761FF;border:none;color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;font-weight:600;margin-right:4px">Editar</button>` +
-      (_adminData.collection === 'colaboradores' ? `<button onclick="adminColabDelete('${docId}')" style="padding:4px 10px;background:#E53E3E;border:none;color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;font-weight:600">&#x1F5D1;</button>` : '') +
-      `</td></tr>`);
-  }).join('');
-}
-
-function adminOpenEdit(docId) {
-  _editDocId = docId;
-  const docIdx = _adminData.docIds.indexOf(docId);
-  const data   = _adminData.docs[docIdx] || {};
-  document.getElementById('admin-edit-title').textContent = 'Editar: ' + docId;
-  document.getElementById('admin-edit-status').textContent = '';
-  const SKIP = ['atualizado_em','key','url'];
-  let fieldsHtml;
-  if (_adminData.collection === 'colaboradores') {
-    // Sempre mostrar todos os campos padrão de colaboradores
-    const COLAB_FIELDS = ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','whatsapp_prof','gestor'];
-    const COLAB_LABELS = {
-      nome:'Nome', cargo:'Cargo', area_atuacao:'Área de Atuação',
-      area_atendimento:'Área de Atendimento', equipe_atendimento:'Equipe de Atendimento',
-      email:'E-mail', whatsapp:'WhatsApp Pessoal (ex: 47991234567)', whatsapp_prof:'WhatsApp Prof. (ex: 47991234567)', gestor:'Gestor'
-    };
-    fieldsHtml = COLAB_FIELDS.map(k => {
-      const v = data[k] !== undefined ? String(data[k]) : '';
-      return `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${COLAB_LABELS[k]||k}</label><input data-field="${k}" value="${v.replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`;
-    }).join('');
-  } else {
-    fieldsHtml = Object.entries(data)
-      .filter(([k]) => !SKIP.includes(k))
-      .map(([k,v]) => `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${k}</label><input data-field="${k}" value="${String(v).replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`).join('');
-  }
-  document.getElementById('admin-edit-fields').innerHTML = fieldsHtml;
-  document.getElementById('admin-edit-modal').style.display = 'flex';
-}
-
-function adminCloseEdit() {
-  document.getElementById('admin-edit-modal').style.display = 'none';
-  _editDocId = null;
-}
-
-async function adminSaveEdit() {
-  const inputs  = document.querySelectorAll('#admin-edit-fields input[data-field]');
-  const updates = {};
-  inputs.forEach(inp => {
-    const k = inp.dataset.field, v = inp.value;
-    const num = Number(v);
-    updates[k] = (!isNaN(num) && v.trim() !== '') ? num : v;
-  });
-  updates.atualizado_em = new Date().toISOString();
-  const statusEl = document.getElementById('admin-edit-status');
-  statusEl.style.color = 'rgba(255,255,255,.5)';
-  statusEl.textContent = 'Salvando…';
-  try {
-    if (_editDocId) {
-      // Edição de doc existente
-      await _db.collection(_adminData.collection).doc(_editDocId).update(updates);
-      const idx = _adminData.docIds.indexOf(_editDocId);
-      if (idx >= 0) Object.assign(_adminData.docs[idx], updates);
-    } else {
-      // Novo colaborador
-      const docId = (updates.nome||Date.now().toString()).toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
-      await _db.collection(_adminData.collection).doc(docId).set(updates);
-      _adminData.docs.push(updates);
-      _adminData.docIds.push(docId);
-      _adminData.filtered = _adminData.docs.slice();
-      const cc = document.getElementById('card-count-colaboradores');
-      if (cc) cc.textContent = _adminData.docs.length + ' docs';
-    }
-    statusEl.style.color = '#68D391';
-    statusEl.textContent = '✅ Salvo!';
-    setTimeout(() => { adminCloseEdit(); _adminRenderTable(); }, 800);
-  } catch(e) {
-    statusEl.style.color = '#FC8181';
-    statusEl.textContent = '❌ Erro: ' + e.message;
-  }
-}
-
-function adminExportCollectionCSV() {
-  const rows = _adminData.filtered;
-  if (!rows.length) return;
-  const keys = Object.keys(rows[0]);
-  const csv = [keys.join(',')].concat(rows.map(r =>
-    keys.map(k => '"' + (r[k]||'').toString().replace(/"/g,'""') + '"').join(',')
-  )).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = (_adminData.collection||'data') + '_' + new Date().toISOString().slice(0,10) + '.csv';
-  a.click();
-}
-
-// ── Admin: Colaboradores CRUD ─────────────────────────────────────────────
-
-function adminColabAdd() {
-  _editDocId = null;
-  document.getElementById('admin-edit-title').textContent = 'Novo Colaborador';
-  document.getElementById('admin-edit-status').textContent = '';
-  const fields = ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','whatsapp_prof','gestor'];
-  const labels = {
-    nome:'Nome', cargo:'Cargo', area_atuacao:'Área de Atuação',
-    area_atendimento:'Área de Atendimento', equipe_atendimento:'Equipe de Atendimento',
-    email:'E-mail', whatsapp:'WhatsApp Pessoal (ex: 47991234567)', whatsapp_prof:'WhatsApp Prof. (ex: 47991234567)', gestor:'Gestor'
-  };
-  document.getElementById('admin-edit-fields').innerHTML = fields.map(k =>
-    `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${labels[k]||k}</label><input data-field="${k}" value="" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`
-  ).join('');
-  document.getElementById('admin-edit-modal').style.display = 'flex';
-}
-
-async function adminColabDelete(docId) {
-  if (!confirm('Excluir colaborador "' + docId + '"?')) return;
-  try {
-    await _db.collection('colaboradores').doc(docId).delete();
-    const idx = _adminData.docIds.indexOf(docId);
-    if (idx >= 0) { _adminData.docs.splice(idx,1); _adminData.docIds.splice(idx,1); }
-    _adminData.filtered = _adminData.docs.slice();
-    document.getElementById('card-count-colaboradores').textContent = _adminData.docs.length + ' docs';
-    _adminRenderTable();
-  } catch(e) { alert('Erro ao excluir: ' + e.message); }
-}
-
-function adminColabImportCSV() {
-  document.getElementById('admin-csv-input').value = '';
-  document.getElementById('admin-csv-input').click();
-}
-
-async function adminColabProcessCSV(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const text = await file.text();
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) { alert('CSV vazio ou sem dados.'); return; }
-  const SEP = lines[0].includes(';') ? ';' : ',';
-  const headers = lines[0].split(SEP).map(h => h.trim().replace(/^"+|"+$/g,'').toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''));
-  const MAP = { area_de_atuacao:'area_atuacao', area_de_atendimento:'area_atendimento',
-    equipe_de_atendimento:'equipe_atendimento', e_mail:'email', email:'email',
-    whatsapp:'whatsapp', celular:'whatsapp', telefone:'whatsapp', fone:'whatsapp',
-    whatsapp_prof:'whatsapp_prof', whatsapp_profissional:'whatsapp_prof', cel_prof:'whatsapp_prof', fone_prof:'whatsapp_prof' };
-  const normHeaders = headers.map(h => MAP[h] || h);
-  const rows = lines.slice(1).map(line => {
-    const vals = line.split(SEP).map(v => v.trim().replace(/^"+|"+$/g,''));
-    const obj = {};
-    normHeaders.forEach((h, i) => { if (h && vals[i]) obj[h] = vals[i]; });
-    obj.atualizado_em = new Date().toISOString();
-    return obj;
-  }).filter(r => r.nome);
-  if (!rows.length) { alert('Nenhuma linha válida no CSV (verifique se há coluna "Nome").'); return; }
-  if (!confirm('Importar ' + rows.length + ' colaboradores? Registros existentes com mesmo nome serão sobrescritos.')) return;
-  let ok = 0, err = 0;
-  for (const r of rows) {
-    try {
-      const docId = (r.nome||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
-      await _db.collection('colaboradores').doc(docId).set(r, { merge: true });
-      ok++;
-    } catch(e) { err++; console.error('CSV import err:', e); }
-  }
-  alert('Importação concluída: ' + ok + ' ok, ' + err + ' erros.');
-  adminLoadCollection('colaboradores');
-}
-
-
 </script>
-
-<!-- ═══════════════════════════════════════════════════════
-     PAINEL ADMIN
-═══════════════════════════════════════════════════════ -->
-<div id="admin-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:#0F1117;overflow-y:auto;font-family:'DM Sans',sans-serif">
-
-  <!-- Header do Admin -->
-  <div style="background:#1C1A23;border-bottom:3px solid #0761FF;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10">
-    <div style="display:flex;align-items:center;gap:12px">
-      <svg width="80" viewBox="0 0 80 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <text x="0" y="18" font-family="DM Sans,sans-serif" font-size="20" font-weight="700" fill="white">betha</text>
-      </svg>
-      <span style="color:#fff;font-size:1rem;font-weight:600;opacity:.85">Admin</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <span id="admin-user-info" style="color:rgba(255,255,255,.65);font-size:.82rem"></span>
-      <button id="admin-signout-btn" onclick="adminSignOut()" style="display:none;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:5px 13px;border-radius:6px;font-size:.8rem;cursor:pointer">Sair</button>
-      <button onclick="adminClose()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:5px 13px;border-radius:6px;font-size:.8rem;cursor:pointer">✕ Fechar</button>
-    </div>
-  </div>
-
-  <!-- Login -->
-  <div id="admin-login-panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;gap:20px">
-    <div style="text-align:center;color:#fff;margin-bottom:8px">
-      <div style="font-size:2rem;margin-bottom:8px">🔐</div>
-      <div style="font-size:1.2rem;font-weight:700">Acesso Restrito</div>
-      <div style="font-size:.85rem;color:rgba(255,255,255,.5);margin-top:6px">Apenas administradores autorizados</div>
-    </div>
-    <button onclick="adminSignIn()" style="
-      background:#fff;color:#1C1A23;border:none;padding:13px 28px;
-      border-radius:8px;font-size:.95rem;font-weight:700;cursor:pointer;
-      display:flex;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.3)">
-      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l6-6C34.2 6.3 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-9 20-20 0-1.3-.1-2.7-.4-4z"/><path fill="#FF3D00" d="M6.3 14.7l7 5.1C15 16 19.2 13 24 13c3 0 5.7 1.1 7.8 2.9l6-6C34.2 6.3 29.4 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.5 35.5 26.9 36 24 36c-5.2 0-9.6-3-11.3-7.3l-6.9 5.3C9.4 39.8 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.6-2.6 4.8-4.8 6.3l6.2 5.2C40.4 36.2 44 30.6 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
-      Entrar com Google
-    </button>
-    <div id="admin-login-error" style="color:#FC8181;font-size:.82rem;display:none"></div>
-  </div>
-
-  <!-- Painel de dados (visível após login) -->
-  <div id="admin-data-panel" style="display:none;padding:28px;max-width:1400px;margin:0 auto">
-
-    <!-- Cards das coleções -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:28px">
-      <div onclick="adminLoadCollection('jira_chamados')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:10px;padding:20px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:1.6rem;margin-bottom:8px">📊</div>
-        <div style="color:#fff;font-weight:700;font-size:1rem">Chamados</div>
-        <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">jira_chamados</div>
-        <div id="card-count-jira_chamados" style="color:#0761FF;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('jira_chamados_issues')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:10px;padding:20px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:1.6rem;margin-bottom:8px">🎫</div>
-        <div style="color:#fff;font-weight:700;font-size:1rem">Issues</div>
-        <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">jira_chamados_issues</div>
-        <div id="card-count-jira_chamados_issues" style="color:#0761FF;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('municipios')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:10px;padding:20px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:1.6rem;margin-bottom:8px">🗺️</div>
-        <div style="color:#fff;font-weight:700;font-size:1rem">Municípios × Região</div>
-        <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">municipios</div>
-        <div id="card-count-municipios" style="color:#0761FF;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('status_envio')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:10px;padding:20px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:1.6rem;margin-bottom:8px">📋</div>
-        <div style="color:#fff;font-weight:700;font-size:1rem">Status de Envio</div>
-        <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">status_envio</div>
-        <div id="card-count-status_envio" style="color:#0761FF;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('_meta')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:10px;padding:20px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:1.6rem;margin-bottom:8px">⚙️</div>
-        <div style="color:#fff;font-weight:700;font-size:1rem">Metadados</div>
-        <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">_meta</div>
-        <div id="card-count-_meta" style="color:#0761FF;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('colaboradores')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:10px;padding:20px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#38A169'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:1.6rem;margin-bottom:8px">👥</div>
-        <div style="color:#fff;font-weight:700;font-size:1rem">Colaboradores</div>
-        <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">colaboradores</div>
-        <div id="card-count-colaboradores" style="color:#38A169;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
-      </div>
-    </div>
-
-    <!-- Área da tabela -->
-    <div id="admin-table-area" style="display:none;background:#1C1A23;border:1px solid #2D3748;border-radius:10px;overflow:hidden">
-      <!-- Toolbar -->
-      <div style="padding:16px 20px;border-bottom:1px solid #2D3748;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <span id="admin-table-title" style="color:#fff;font-weight:700;font-size:1rem"></span>
-        <input id="admin-table-search" type="text" placeholder="Filtrar…" oninput="adminTableFilter()" style="padding:6px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.83rem;width:200px">
-        <button onclick="adminExportCollectionCSV()" style="padding:6px 14px;background:#0761FF;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">⬇ CSV</button>
-        <span id="admin-colab-actions" style="display:none;gap:8px">
-          <button onclick="adminColabAdd()" style="padding:6px 14px;background:#38A169;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">+ Adicionar</button>
-          <button onclick="adminColabImportCSV()" style="padding:6px 14px;background:#805AD5;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">&#x1F4C2; Importar CSV</button>
-          <input id="admin-csv-input" type="file" accept=".csv" style="display:none" onchange="adminColabProcessCSV(this)">
-        </span>
-        <span id="admin-table-count" style="color:rgba(255,255,255,.4);font-size:.78rem;margin-left:auto"></span>
-      </div>
-      <!-- Tabela -->
-      <div style="overflow-x:auto;max-height:60vh;overflow-y:auto">
-        <table id="admin-main-table" style="width:100%;border-collapse:collapse;font-size:.82rem">
-          <thead id="admin-main-thead"></thead>
-          <tbody id="admin-main-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal de edição -->
-<div id="admin-edit-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center">
-  <div style="background:#1C1A23;border:1px solid #2D3748;border-radius:12px;padding:28px;width:90%;max-width:560px;max-height:85vh;overflow-y:auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h3 id="admin-edit-title" style="color:#fff;margin:0;font-size:1rem">Editar documento</h3>
-      <button onclick="adminCloseEdit()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:1.2rem;cursor:pointer">✕</button>
-    </div>
-    <div id="admin-edit-fields"></div>
-    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
-      <button onclick="adminCloseEdit()" style="padding:8px 20px;background:#2D3748;border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:.85rem">Cancelar</button>
-      <button onclick="adminSaveEdit()" style="padding:8px 20px;background:#0761FF;border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600">Salvar</button>
-    </div>
-    <div id="admin-edit-status" style="margin-top:10px;font-size:.8rem;text-align:center"></div>
-  </div>
-</div>
-
 </body>
 </html>
