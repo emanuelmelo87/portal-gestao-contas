@@ -713,41 +713,16 @@
       <div class="view-title">Prestação de Contas</div>
       <div class="view-subtitle">Certidões e Obrigações por Município • Fonte: TCE-SC / e-Sfinge / CAUC</div>
 
-      <!-- Cards de navegação: Estadual | Federal -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 0">
-
-        <!-- Card Estadual -->
-        <div id="card-esfera-estadual" onclick="switchTCETab('estadual')" style="border:2px solid var(--accent);border-radius:12px;padding:16px 20px;cursor:pointer;background:#EFF6FF;transition:all .18s;position:relative;overflow:hidden">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="font-size:2rem;line-height:1">🏛️</div>
-            <div>
-              <div style="font-weight:800;font-size:1rem;color:#1E40AF">Estadual</div>
-              <div style="font-size:.78rem;color:#3B82F6;margin-top:2px">TCE-SC • e-Sfinge</div>
-            </div>
-            <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-              <div id="card-est-cnd" style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#DBEAFE;color:#1E40AF">CND —</div>
-              <div id="card-est-envio" style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEF3C7;color:#92400E">Envio —</div>
-            </div>
-          </div>
-          <div id="card-est-indicator" style="position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--accent)"></div>
-        </div>
-
-        <!-- Card Federal -->
-        <div id="card-esfera-federal" onclick="switchTCETab('federal')" style="border:2px solid #E2E8F0;border-radius:12px;padding:16px 20px;cursor:pointer;background:#F8FAFC;transition:all .18s;position:relative;overflow:hidden">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="font-size:2rem;line-height:1">🇧🇷</div>
-            <div>
-              <div style="font-weight:800;font-size:1rem;color:#374151">Federal</div>
-              <div style="font-size:.78rem;color:#6B7280;margin-top:2px">PGFN • FGTS • SICONFI</div>
-            </div>
-            <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-              <div id="card-fed-regular" style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#D1FAE5;color:#065F46">Regular —</div>
-              <div id="card-fed-atencao" style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEF3C7;color:#92400E">Atenção —</div>
-            </div>
-          </div>
-          <div id="card-fed-indicator" style="position:absolute;bottom:0;left:0;right:0;height:3px;background:transparent"></div>
-        </div>
-
+      <!-- Toggle Estadual / Federal -->
+      <div style="display:flex;gap:6px;margin:14px 0 0;background:#F1F5F9;border-radius:10px;padding:4px;width:fit-content">
+        <button id="tce-pill-estadual" onclick="switchTCETab('estadual')"
+          style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .15s;background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12)">
+          🏛️ Estadual
+        </button>
+        <button id="tce-pill-federal" onclick="switchTCETab('federal')"
+          style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .15s;background:transparent;color:#64748B">
+          🇧🇷 Federal
+        </button>
       </div>
 
       <!-- Painel: Estadual -->
@@ -4141,10 +4116,8 @@ async function adminColabProcessCSV(input) {
 function switchTCETab(tab) {
   const estadualPane = document.getElementById('tce-pane-estadual');
   const federalPane  = document.getElementById('tce-pane-federal');
-  const cardEst      = document.getElementById('card-esfera-estadual');
-  const cardFed      = document.getElementById('card-esfera-federal');
-  const indEst       = document.getElementById('card-est-indicator');
-  const indFed       = document.getElementById('card-fed-indicator');
+  const pillEst      = document.getElementById('tce-pill-estadual');
+  const pillFed      = document.getElementById('tce-pill-federal');
   if (!estadualPane) return;
 
   state.tceActiveTab = tab;
@@ -4152,22 +4125,14 @@ function switchTCETab(tab) {
   if (tab === 'estadual') {
     estadualPane.style.display = 'block';
     federalPane.style.display  = 'none';
-    // Card Estadual: ativo
-    if (cardEst) { cardEst.style.borderColor = 'var(--accent)'; cardEst.style.background = '#EFF6FF'; }
-    if (indEst)  indEst.style.background = 'var(--accent)';
-    // Card Federal: inativo
-    if (cardFed) { cardFed.style.borderColor = '#E2E8F0'; cardFed.style.background = '#F8FAFC'; }
-    if (indFed)  indFed.style.background = 'transparent';
+    if (pillEst) { pillEst.style.background = 'var(--accent)'; pillEst.style.color = '#fff'; pillEst.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
+    if (pillFed) { pillFed.style.background = 'transparent'; pillFed.style.color = '#64748B'; pillFed.style.boxShadow = 'none'; }
     initEnvioPanel();
   } else {
     estadualPane.style.display = 'none';
     federalPane.style.display  = 'block';
-    // Card Federal: ativo
-    if (cardFed) { cardFed.style.borderColor = '#3B82F6'; cardFed.style.background = '#EFF6FF'; }
-    if (indFed)  indFed.style.background = '#3B82F6';
-    // Card Estadual: inativo
-    if (cardEst) { cardEst.style.borderColor = '#E2E8F0'; cardEst.style.background = '#F8FAFC'; }
-    if (indEst)  indEst.style.background = 'transparent';
+    if (pillFed) { pillFed.style.background = '#fff'; pillFed.style.color = '#1E40AF'; pillFed.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
+    if (pillEst) { pillEst.style.background = 'transparent'; pillEst.style.color = '#64748B'; pillEst.style.boxShadow = 'none'; }
     renderFederal();
   }
 }
@@ -4191,29 +4156,8 @@ async function _loadMunicipios() {
   return _MUN_CACHE.docs;
 }
 
-// Atualiza os chips de resumo nos cards Estadual/Federal
-function updateEsferaCards() {
-  // Estadual — CND
-  const cndEl = document.getElementById('kpi-cnd-est');
-  const cndSub = document.getElementById('kpi-cnd-est-sub');
-  if (cndEl) {
-    const cardCnd = document.getElementById('card-est-cnd');
-    if (cardCnd) cardCnd.textContent = 'CND ' + cndEl.textContent;
-  }
-  // Estadual — Envio (busca dos cards internos do envio)
-  const cardEnvio = document.getElementById('card-est-envio');
-  const envioOk   = document.getElementById('envio-card-ok');
-  if (cardEnvio && envioOk && envioOk.textContent !== '—') {
-    cardEnvio.textContent = '✅ ' + envioOk.textContent + ' enviados';
-  }
-  // Federal — Regular/Atenção
-  const fedOk  = document.getElementById('fed-card-ok');
-  const fedAt  = document.getElementById('fed-card-atencao');
-  const cfedOk = document.getElementById('card-fed-regular');
-  const cfedAt = document.getElementById('card-fed-atencao');
-  if (cfedOk && fedOk) cfedOk.textContent = 'Regular ' + fedOk.textContent;
-  if (cfedAt && fedAt) cfedAt.textContent = 'Atenção '  + fedAt.textContent;
-}
+// Cards de esfera removidos — função mantida para não quebrar chamadas
+function updateEsferaCards() {}
 
 // ─── FILTER BAR (sub-header) ─────────────────────────────────────────────────
 
