@@ -624,6 +624,17 @@
 
   <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
 
+  <!-- Região -->
+  <div style="display:flex;flex-direction:column;gap:3px">
+    <label style="font-size:.72rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">🗺️ Região</label>
+    <select id="regiao-filter" onchange="onFilterChange('regiao', this.value)"
+      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.82rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:140px">
+      <option value="">Todas as regiões</option>
+    </select>
+  </div>
+
+  <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
+
   <!-- Município -->
   <div style="display:flex;flex-direction:column;gap:3px">
     <label style="font-size:.72rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">🏙️ Município</label>
@@ -812,31 +823,20 @@
       <!-- Painel: Estadual -->
       <div id="tce-pane-estadual" style="padding-top:16px">
 
-        <!-- Seção Principal: Status de Envio (padrão) -->
-        <div id="estadual-envio-section">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
-            <div style="display:flex;align-items:center;gap:8px">
-              <span style="background:#FEEBC8;color:#7B341E;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">ENVIO</span>
-              <span style="font-size:.9rem;font-weight:700;color:var(--text)">Prestação de Contas — Status de Envio</span>
-            </div>
-            <button id="btn-show-cnd" onclick="toggleCND()"
-              style="display:flex;align-items:center;gap:6px;padding:7px 16px;border:1.5px solid #CBD5E0;border-radius:8px;background:#fff;color:#475569;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s"
-              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-              onmouseout="this.style.borderColor='#CBD5E0';this.style.color='#475569'">
-              📄 Ver Certidão CND <span id="cnd-toggle-arrow">▼</span>
-            </button>
-          </div>
+        <!-- Sub-tabs Estadual: Envio | CND -->
+        <div style="display:flex;gap:6px;margin-bottom:16px;background:#F1F5F9;border-radius:10px;padding:4px;width:fit-content">
+          <button id="est-sub-envio" onclick="switchEstadualSub('envio')"
+            style="padding:7px 20px;border:none;border-radius:7px;font-size:.84rem;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12);transition:all .15s">
+            📊 Status de Envio
+          </button>
+          <button id="est-sub-cnd" onclick="switchEstadualSub('cnd')"
+            style="padding:7px 20px;border:none;border-radius:7px;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
+            📄 Certidão CND
+          </button>
+        </div>
 
-          <!-- Seção CND colapsável -->
-          <div id="estadual-cnd-section" style="display:none;margin-bottom:20px;padding:16px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #E2E8F0">
-              <span style="background:#C6F6D5;color:#276749;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">CERTIDÃO</span>
-              <span style="font-size:.85rem;font-weight:700;color:var(--text)">Certidão Negativa de Débito — TCE-SC (e-Sfinge)</span>
-            </div>
-            <div id="cnd-estadual-status" style="margin-bottom:12px"></div>
-            <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start;flex-wrap:wrap"></div>
-            <div id="cnd-estadual-table" style="margin-top:16px"></div>
-          </div>
+        <!-- Sub-página: Status de Envio -->
+        <div id="estadual-envio-section">
 
           <!-- Barra de filtros de Envio -->
           <div id="envio-filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
@@ -907,6 +907,40 @@
             <span id="envio-loading-msg">Carregando dados…</span>
           </div>
         </div><!-- /estadual-envio-section -->
+
+        <!-- Sub-página: Certidão CND -->
+        <div id="estadual-cnd-section" style="display:none">
+
+          <!-- Barra de filtros da CND -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
+            <div>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Ano de referência</label>
+              <select id="cnd-ano-filter" onchange="renderCNDEstadual()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div style="width:1px;background:var(--border);align-self:stretch"></div>
+            <div>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Região</label>
+              <select id="cnd-regiao-filter" onchange="renderCNDEstadual()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Status CND</label>
+              <select id="cnd-status-filter" onchange="renderCNDEstadual()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                <option value="">Todos</option>
+                <option value="Com CND">✅ Com CND</option>
+                <option value="Sem CND">❌ Sem CND</option>
+              </select>
+            </div>
+            <span id="cnd-filter-info" style="font-size:.75rem;color:var(--text-muted);align-self:flex-end;margin-left:auto"></span>
+          </div>
+
+          <div id="cnd-estadual-status" style="margin-bottom:12px"></div>
+          <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start;flex-wrap:wrap"></div>
+          <div id="cnd-estadual-table" style="margin-top:16px"></div>
+        </div><!-- /estadual-cnd-section -->
 
       </div><!-- /tce-pane-estadual -->
 
@@ -1099,7 +1133,7 @@ const CONFIG = {
 // ============================================================
 // ESTADO
 // ============================================================
-const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndFederal: [], cndSubTab: 'estadual', selectedMunicipio: '', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
+const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndFederal: [], cndSubTab: 'estadual', selectedMunicipio: '', selectedRegiao: '', estadualSub: 'envio', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
 // Abas que possuem versão histórica no servidor
 const HIST_SHEETS = ['Jira_Chamados', 'Jira_Chamados_Suporte', 'Jira_Implantacoes', 'NPS_Calculado', 'CND_Municipios', 'CND_Federal', 'CND_Estadual', 'Risco de Exclusão', 'Colaboradores'];
 
@@ -1414,6 +1448,7 @@ async function loadAllData() {
   renderActiveView();
   renderFederal();
   populateMunicipioFilter();
+  populateRegiaoFilter();
   setTimeout(updateEsferaCards, 100);
   showLoading(false);
   document.getElementById('btn-refresh').disabled = false;
@@ -2616,10 +2651,21 @@ function renderCNDEstadual() {
   const statusFonte = state.cndEstadual[0].status_fonte || '';
   renderCNDStatusFonte('cnd-estadual-status', statusFonte, 'e-Sfinge TCE/SC');
 
-  // Aplicar filtro de município global
-  const cndSource = state.selectedMunicipio
-    ? state.cndEstadual.filter(r => normMun(r.municipio) === normMun(state.selectedMunicipio))
-    : state.cndEstadual;
+  // Aplicar filtros: município global + região (header ou filtro CND interno)
+  const regiaoFil = state.selectedRegiao || document.getElementById('cnd-regiao-filter')?.value || '';
+  const statusCNDFil = document.getElementById('cnd-status-filter')?.value || '';
+
+  // Mapa municipio → regiao
+  const munRegiaoMap = {};
+  (_MUN_CACHE.docs || []).forEach(d => { if (d.municipio) munRegiaoMap[d.municipio.toLowerCase().trim()] = d.regiao || ''; });
+
+  let cndSource = state.cndEstadual;
+  if (state.selectedMunicipio) {
+    cndSource = cndSource.filter(r => normMun(r.municipio) === normMun(state.selectedMunicipio));
+  }
+  if (regiaoFil) {
+    cndSource = cndSource.filter(r => munRegiaoMap[(r.municipio||'').toLowerCase().trim()] === regiaoFil);
+  }
 
   // Agrupar por município
   const ordenados = [...cndSource].sort((a, b) => {
@@ -4220,7 +4266,7 @@ function switchTCETab(tab) {
     federalPane.style.display  = 'none';
     if (pillEst) { pillEst.style.background = 'var(--accent)'; pillEst.style.color = '#fff'; pillEst.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
     if (pillFed) { pillFed.style.background = 'transparent'; pillFed.style.color = '#64748B'; pillFed.style.boxShadow = 'none'; }
-    initEnvioPanel();
+    switchEstadualSub(state.estadualSub || 'envio');
   } else {
     estadualPane.style.display = 'none';
     federalPane.style.display  = 'block';
@@ -4321,6 +4367,19 @@ function _syncCompetenciaToEnvio() {
 function onFilterChange(type, value) {
   if (type === 'date') {
     onDateChange(value);
+  } else if (type === 'regiao') {
+    state.selectedRegiao = value;
+    // Sincronizar selects internos de região
+    const envioReg = document.getElementById('envio-regiao');
+    if (envioReg) envioReg.value = value;
+    const cndReg = document.getElementById('cnd-regiao-filter');
+    if (cndReg) cndReg.value = value;
+    // Filtrar município pelo regiao
+    _filterMunicipiosByRegiao(value);
+    // Re-renderizar
+    renderCNDEstadual();
+    renderEnvioView();
+    renderFederal();
   } else if (type === 'municipio') {
     onMunicipioChange(value);
   } else if (type === 'mes' || type === 'ano') {
@@ -4350,6 +4409,15 @@ function clearFilters() {
   const datePicker = document.getElementById('date-picker');
   if (datePicker) { datePicker.value = todayStr; onDateChange(todayStr); }
 
+  // Região → todas
+  state.selectedRegiao = '';
+  const regSel = document.getElementById('regiao-filter');
+  if (regSel) regSel.value = '';
+  const envioReg = document.getElementById('envio-regiao');
+  if (envioReg) envioReg.value = '';
+  const cndReg = document.getElementById('cnd-regiao-filter');
+  if (cndReg) cndReg.value = '';
+
   // Município → todos
   const munSel = document.getElementById('mun-filter');
   if (munSel) { munSel.value = ''; }
@@ -4376,6 +4444,106 @@ function onMunicipioChange(val) {
   renderEnvioView();
   // Atualiza federal se visível
   renderFederal();
+}
+
+// ─── FILTROS DE REGIÃO ────────────────────────────────────────────────────────
+
+let _REGIAO_CACHE = [];
+
+async function populateRegiaoFilter() {
+  // Carregar regiões únicas do Firestore municipios
+  if (!_REGIAO_CACHE.length) {
+    try {
+      const snap = await _db.collection('municipios').get();
+      const set = new Set();
+      snap.forEach(d => { const r = d.data().regiao; if (r) set.add(r); });
+      _REGIAO_CACHE = Array.from(set).sort((a,b) => a.localeCompare(b,'pt'));
+    } catch(e) { console.warn('populateRegiaoFilter:', e); }
+  }
+
+  // Preencher header
+  const sel = document.getElementById('regiao-filter');
+  if (sel) {
+    const cur = state.selectedRegiao || sel.value;
+    sel.innerHTML = '<option value="">Todas as regiões</option>';
+    _REGIAO_CACHE.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r; opt.textContent = r;
+      if (r === cur) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  // Preencher select de região dentro do Status de Envio
+  const envioReg = document.getElementById('envio-regiao');
+  if (envioReg) {
+    const cur2 = state.selectedRegiao || envioReg.value;
+    envioReg.innerHTML = '<option value="">Todas</option>';
+    _REGIAO_CACHE.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r; opt.textContent = r;
+      if (r === cur2) opt.selected = true;
+      envioReg.appendChild(opt);
+    });
+    // Sincronizar com state
+    if (state.selectedRegiao) envioReg.value = state.selectedRegiao;
+  }
+}
+
+function populateCNDFilters() {
+  // Região no filtro da CND
+  const cndReg = document.getElementById('cnd-regiao-filter');
+  if (cndReg && _REGIAO_CACHE.length) {
+    const cur = state.selectedRegiao || cndReg.value;
+    cndReg.innerHTML = '<option value="">Todas</option>';
+    _REGIAO_CACHE.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r; opt.textContent = r;
+      if (r === cur) opt.selected = true;
+      cndReg.appendChild(opt);
+    });
+  }
+  // Ano na CND — extrair dos labels dos períodos
+  const cndAno = document.getElementById('cnd-ano-filter');
+  if (cndAno && state.cndEstadual.length) {
+    const labels = [
+      state.cndEstadual[0].p1_label || '',
+      state.cndEstadual[0].p2_label || '',
+      state.cndEstadual[0].p3_label || '',
+    ];
+    const anos = [...new Set(labels.map(l => { const m = l.match(/\d{4}/); return m ? m[0] : null; }).filter(Boolean))].sort().reverse();
+    const cur = cndAno.value;
+    cndAno.innerHTML = '<option value="">Todos</option>';
+    anos.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a; opt.textContent = a;
+      if (a === cur) opt.selected = true;
+      cndAno.appendChild(opt);
+    });
+  }
+}
+
+function _filterMunicipiosByRegiao(regiao) {
+  // Filtra o select de município pelo regiao selecionada
+  // Os dados de municípios ficam no _MUN_CACHE
+  const sel = document.getElementById('mun-filter');
+  if (!sel) return;
+  const curMun = state.selectedMunicipio;
+  sel.innerHTML = '<option value="">Todos os municípios</option>';
+  let muns = _MUN_CACHE.docs || [];
+  if (regiao) muns = muns.filter(d => d.regiao === regiao);
+  muns.sort((a,b) => (a.municipio||'').localeCompare(b.municipio||'','pt'));
+  muns.forEach(d => {
+    if (!d.municipio) return;
+    const opt = document.createElement('option');
+    opt.value = d.municipio; opt.textContent = d.municipio;
+    if (d.municipio === curMun) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  // Se município atual não existe na região, limpar
+  if (curMun && !muns.find(d => d.municipio === curMun)) {
+    state.selectedMunicipio = '';
+  }
 }
 
 async function populateMunicipioFilter() {
@@ -4497,21 +4665,35 @@ function renderFederal() {
 }
 
 
-// ─── TOGGLE CND ──────────────────────────────────────────────────────────────
-function toggleCND() {
-  const section = document.getElementById('estadual-cnd-section');
-  const arrow   = document.getElementById('cnd-toggle-arrow');
-  const btn     = document.getElementById('btn-show-cnd');
-  if (!section) return;
-  const open = section.style.display !== 'none';
-  section.style.display = open ? 'none' : 'block';
-  if (arrow) arrow.textContent = open ? '▼' : '▲';
-  if (btn) {
-    btn.style.borderColor = open ? '#CBD5E0' : 'var(--accent)';
-    btn.style.color       = open ? '#475569' : 'var(--accent)';
-    btn.style.background  = open ? '#fff' : '#EFF6FF';
+// ─── SUB-TABS ESTADUAL (Envio | CND) ─────────────────────────────────────────
+function switchEstadualSub(sub) {
+  const envioSec = document.getElementById('estadual-envio-section');
+  const cndSec   = document.getElementById('estadual-cnd-section');
+  const btnEnvio = document.getElementById('est-sub-envio');
+  const btnCND   = document.getElementById('est-sub-cnd');
+  if (!envioSec) return;
+
+  state.estadualSub = sub;
+
+  if (sub === 'envio') {
+    envioSec.style.display = 'block';
+    cndSec.style.display   = 'none';
+    if (btnEnvio) { btnEnvio.style.background = 'var(--accent)'; btnEnvio.style.color = '#fff'; btnEnvio.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
+    if (btnCND)   { btnCND.style.background = 'transparent'; btnCND.style.color = '#64748B'; btnCND.style.boxShadow = 'none'; }
+    initEnvioPanel();
+  } else {
+    envioSec.style.display = 'none';
+    cndSec.style.display   = 'block';
+    if (btnCND)   { btnCND.style.background = 'var(--accent)'; btnCND.style.color = '#fff'; btnCND.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
+    if (btnEnvio) { btnEnvio.style.background = 'transparent'; btnEnvio.style.color = '#64748B'; btnEnvio.style.boxShadow = 'none'; }
+    populateCNDFilters();
+    renderCNDEstadual();
   }
 }
+
+// Função toggleCND mantida para compatibilidade (não usada mais)
+function toggleCND() { switchEstadualSub('cnd'); }
+
 
 function initEnvioPanel() {
   const anoSel = document.getElementById('envio-ano');
@@ -4597,7 +4779,7 @@ function renderEnvioView() {
   document.getElementById('envio-loading').style.display = 'none';
 
   const scope        = document.getElementById('envio-scope')?.value || 'portfolio';
-  const regiaoFil    = document.getElementById('envio-regiao')?.value || '';
+  const regiaoFil    = state.selectedRegiao || document.getElementById('envio-regiao')?.value || '';
   const statusFil    = document.getElementById('envio-status-filter')?.value || '';
   const search       = (document.getElementById('envio-search')?.value || '').toLowerCase().trim();
 
