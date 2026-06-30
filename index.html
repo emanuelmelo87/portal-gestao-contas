@@ -498,6 +498,64 @@
       #card-esfera-estadual:hover, #card-esfera-federal:hover {
         box-shadow: 0 4px 16px rgba(0,0,0,.10);
       }
+      /* ══════════════ RESPONSIVIDADE MOBILE ══════════════ */
+      * { box-sizing: border-box; }
+
+      /* Header mobile */
+      @media (max-width: 768px) {
+        .header-content { flex-direction: column; gap: 8px; padding: 10px 16px; }
+        .header-logo { justify-content: center; }
+        .header-meta { flex-wrap: wrap; justify-content: center; gap: 8px; }
+        .sync-info { display: none; }
+        h1 { font-size: 1rem !important; }
+        h1 span { font-size: .75rem !important; }
+      }
+
+      /* Filter bar mobile */
+      @media (max-width: 768px) {
+        #filter-bar { flex-wrap: wrap; gap: 10px; padding: 10px 14px; }
+        #filter-bar > div { width: 100%; }
+        #filter-bar > div[style*="width:1px"] { display: none !important; }
+        #filter-bar select, #filter-bar input[type="date"] { width: 100%; font-size: .9rem; padding: 8px 10px; }
+        #filter-bar button { width: 100%; justify-content: center; padding: 10px; }
+      }
+
+      /* Chart panel mobile */
+      @media (max-width: 768px) {
+        .chart-panel { padding: 12px; border-radius: 0; margin: 0; }
+        .view-title { font-size: 1.1rem !important; }
+        .view-subtitle { font-size: .78rem !important; }
+      }
+
+      /* Toggle pill mobile */
+      @media (max-width: 768px) {
+        #tce-pill-wrapper { width: 100% !important; }
+        #tce-pill-estadual, #tce-pill-federal { flex: 1; text-align: center; }
+      }
+
+      /* Envio filtros mobile */
+      @media (max-width: 768px) {
+        #envio-filter-bar { flex-direction: column !important; gap: 10px !important; }
+        #envio-filter-bar > div[style*="width:1px"] { display: none !important; }
+        #envio-filter-bar select, #envio-filter-bar input { width: 100%; }
+        #envio-cards { grid-template-columns: repeat(2, 1fr) !important; }
+      }
+
+      /* Tabela Federal mobile */
+      @media (max-width: 768px) {
+        .fed-row { grid-template-columns: 1fr 1fr !important; row-gap: 2px; }
+        .fed-row > span:nth-child(2) { grid-column: 1 / -1; font-size: .75rem; }
+        .fed-row > span:nth-child(3) { display: none; }
+      }
+
+      /* CND donuts mobile */
+      @media (max-width: 768px) {
+        #cnd-estadual-donuts { flex-direction: column !important; align-items: center !important; }
+      }
+
+      /* Geral: max-width centrado */
+      .chart-panel, #filter-bar, header .header-content { max-width: 1200px; }
+      main { max-width: 1200px; margin: 0 auto; }
 </style>
 </head>
 <body>
@@ -714,7 +772,7 @@
       <div class="view-subtitle">Certidões e Obrigações por Município • Fonte: TCE-SC / e-Sfinge / CAUC</div>
 
       <!-- Toggle Estadual / Federal -->
-      <div style="display:flex;gap:6px;margin:14px 0 0;background:#F1F5F9;border-radius:10px;padding:4px;width:fit-content">
+      <div id="tce-pill-wrapper" style="display:flex;gap:6px;margin:14px 0 0;background:#F1F5F9;border-radius:10px;padding:4px;width:fit-content">
         <button id="tce-pill-estadual" onclick="switchTCETab('estadual')"
           style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .15s;background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12)">
           🏛️ Estadual
@@ -728,29 +786,37 @@
       <!-- Painel: Estadual -->
       <div id="tce-pane-estadual" style="padding-top:16px">
 
-        <!-- Seção 1: CND / Certidão -->
-        <div style="margin-bottom:4px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
-            <span style="background:#C6F6D5;color:#276749;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">CERTIDÃO</span>
-            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Certidão Negativa de Débito — TCE-SC (e-Sfinge)</span>
-          </div>
-          <div id="cnd-estadual-status" style="margin-bottom:12px"></div>
-          <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start"></div>
-          <div id="cnd-estadual-table" style="margin-top:16px"></div>
-        </div>
-
-        <!-- Seção 2: Prestação de Contas / Status de Envio -->
-        <div style="margin-top:28px;padding-top:20px;border-top:2px solid #E2E8F0">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <span style="background:#FEEBC8;color:#7B341E;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">ENVIO</span>
-            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Prestação de Contas — Status de Envio (e-Sfinge)</span>
+        <!-- Seção Principal: Status de Envio (padrão) -->
+        <div id="estadual-envio-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="background:#FEEBC8;color:#7B341E;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">ENVIO</span>
+              <span style="font-size:.9rem;font-weight:700;color:var(--text)">Prestação de Contas — Status de Envio</span>
+            </div>
+            <button id="btn-show-cnd" onclick="toggleCND()"
+              style="display:flex;align-items:center;gap:6px;padding:7px 16px;border:1.5px solid #CBD5E0;border-radius:8px;background:#fff;color:#475569;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='#CBD5E0';this.style.color='#475569'">
+              📄 Ver Certidão CND <span id="cnd-toggle-arrow">▼</span>
+            </button>
           </div>
 
-          <!-- Barra de filtros -->
-          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
+          <!-- Seção CND colapsável -->
+          <div id="estadual-cnd-section" style="display:none;margin-bottom:20px;padding:16px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #E2E8F0">
+              <span style="background:#C6F6D5;color:#276749;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">CERTIDÃO</span>
+              <span style="font-size:.85rem;font-weight:700;color:var(--text)">Certidão Negativa de Débito — TCE-SC (e-Sfinge)</span>
+            </div>
+            <div id="cnd-estadual-status" style="margin-bottom:12px"></div>
+            <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start;flex-wrap:wrap"></div>
+            <div id="cnd-estadual-table" style="margin-top:16px"></div>
+          </div>
+
+          <!-- Barra de filtros de Envio -->
+          <div id="envio-filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
             <div>
               <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Competência</label>
-              <div style="display:flex;gap:5px;align-items:center">
+              <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
                 <select id="envio-mes" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
                   <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
                   <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
@@ -814,7 +880,7 @@
             <div style="font-size:2rem;margin-bottom:8px">⏳</div>
             <span id="envio-loading-msg">Carregando dados…</span>
           </div>
-        </div>
+        </div><!-- /estadual-envio-section -->
 
       </div><!-- /tce-pane-estadual -->
 
@@ -4404,6 +4470,22 @@ function renderFederal() {
   updateEsferaCards();
 }
 
+
+// ─── TOGGLE CND ──────────────────────────────────────────────────────────────
+function toggleCND() {
+  const section = document.getElementById('estadual-cnd-section');
+  const arrow   = document.getElementById('cnd-toggle-arrow');
+  const btn     = document.getElementById('btn-show-cnd');
+  if (!section) return;
+  const open = section.style.display !== 'none';
+  section.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.textContent = open ? '▼' : '▲';
+  if (btn) {
+    btn.style.borderColor = open ? '#CBD5E0' : 'var(--accent)';
+    btn.style.color       = open ? '#475569' : 'var(--accent)';
+    btn.style.background  = open ? '#fff' : '#EFF6FF';
+  }
+}
 
 function initEnvioPanel() {
   const anoSel = document.getElementById('envio-ano');
