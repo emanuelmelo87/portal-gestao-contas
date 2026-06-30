@@ -631,134 +631,138 @@
       <div class="view-title">TCE SC / eSfinge</div>
       <div class="view-subtitle">Certidões e Status de Envio de Obrigações • Fonte: TCE-SC / e-Sfinge SC</div>
 
-      <!-- Sub-abas nível 1: Certidão | Status de Envio -->
+      <!-- Sub-abas principais: Estadual | Federal -->
       <div style="display:flex;gap:8px;margin:12px 0 0;border-bottom:2px solid #E2E8F0">
-        <button id="tce-tab-certidao" class="tce-tab-btn tce-tab-active" onclick="switchTCETab('certidao')"
+        <button id="tce-tab-estadual" class="tce-tab-btn tce-tab-active" onclick="switchTCETab('estadual')"
           style="padding:9px 20px;background:none;border:none;border-bottom:3px solid var(--accent);font-weight:700;font-size:.9rem;color:var(--accent);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
-          📄 Certidão
+          🏛️ Estadual (SC)
         </button>
-        <button id="tce-tab-envio" class="tce-tab-btn" onclick="switchTCETab('envio')"
+        <button id="tce-tab-federal" class="tce-tab-btn" onclick="switchTCETab('federal')"
           style="padding:9px 20px;background:none;border:none;border-bottom:3px solid transparent;font-weight:700;font-size:.9rem;color:var(--text-muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
-          📊 Status de Envio
+          🇧🇷 Federal
         </button>
       </div>
 
-      <!-- Painel: Certidão -->
-      <div id="tce-pane-certidao" style="padding-top:16px">
-        <!-- Sub-abas Estadual / Federal -->
-        <div style="display:flex;gap:8px;margin:0 0 16px;border-bottom:2px solid #E2E8F0">
-          <button id="cnd-sub-estadual" class="cnd-sub-btn cnd-sub-active" onclick="switchCNDSubTab('estadual')"
-            style="padding:8px 18px;background:none;border:none;border-bottom:3px solid var(--accent);font-weight:700;font-size:.9rem;color:var(--accent);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
-            🏛️ Estadual (SC)
-          </button>
-          <button id="cnd-sub-federal" class="cnd-sub-btn" onclick="switchCNDSubTab('federal')"
-            style="display:none;padding:8px 18px;background:none;border:none;border-bottom:3px solid transparent;font-weight:700;font-size:.9rem;color:var(--text-muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
-            🇧🇷 Federal
-          </button>
+      <!-- Painel: Estadual -->
+      <div id="tce-pane-estadual" style="padding-top:16px">
+
+        <!-- Card 1: CND / Certidão Negativa -->
+        <div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;border-left:4px solid #276749">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div style="width:28px;height:28px;border-radius:50%;background:#C6F6D5;color:#276749;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</div>
+            <div style="font-weight:700;font-size:.9rem">Certidão Negativa de Débito — TCE-SC (e-Sfinge)</div>
+          </div>
+          <div id="cnd-estadual-status" style="margin-bottom:12px"></div>
+          <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start"></div>
+          <div id="cnd-estadual-table" style="margin-top:16px"></div>
         </div>
 
-      <!-- Estadual: 3 donuts (certidões quadrimestrais) + tabela -->
-      <div id="cnd-pane-estadual">
-        <div id="cnd-estadual-status" style="margin-bottom:12px"></div>
-        <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start"></div>
-        <div id="cnd-estadual-table" style="margin-top:24px"></div>
-      </div>
+        <!-- Card 2: Status de Envio (Prestação de Contas) -->
+        <div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:4px solid #B7791F">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div style="width:28px;height:28px;border-radius:50%;background:#FEEBC8;color:#7B341E;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</div>
+            <div style="font-weight:700;font-size:.9rem">Prestação de Contas — Status de Envio (e-Sfinge)</div>
+          </div>
+          <div id="tce-pane-envio-inner">
 
-      <!-- Federal: donuts por mês + tabela heatmap -->
-      <div id="cnd-pane-federal" style="display:none">
-        <div id="cnd-federal-status" style="margin-bottom:12px"></div>
-        <div id="cnd-federal-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start"></div>
-        <div id="cnd-federal-table" style="margin-top:24px"></div>
-      </div>
-      </div><!-- /tce-pane-certidao -->
-
-      <!-- Painel: Status de Envio -->
-      <div id="tce-pane-envio" style="display:none;padding-top:16px">
-
-        <!-- Barra de filtros -->
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
-          <div>
-            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Competência</label>
-            <div style="display:flex;gap:5px;align-items:center">
-              <select id="envio-mes" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-                <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
-                <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
-                <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
-                <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
-              </select>
-              <select id="envio-ano" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)"></select>
-              <button onclick="buscarEnvio()" id="envio-buscar-btn" style="padding:7px 16px;background:var(--accent);border:none;color:#fff;border-radius:6px;font-size:.83rem;font-weight:600;cursor:pointer">🔍 Buscar</button>
+            <!-- Barra de filtros -->
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
+              <div>
+                <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Competência</label>
+                <div style="display:flex;gap:5px;align-items:center">
+                  <select id="envio-mes" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                    <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+                    <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
+                    <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+                    <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
+                  </select>
+                  <select id="envio-ano" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)"></select>
+                  <button onclick="buscarEnvio()" id="envio-buscar-btn" style="padding:7px 16px;background:var(--accent);border:none;color:#fff;border-radius:6px;font-size:.83rem;font-weight:600;cursor:pointer">🔍 Buscar</button>
+                </div>
+              </div>
+              <div style="width:1px;background:var(--border);align-self:stretch"></div>
+              <div>
+                <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Escopo</label>
+                <select id="envio-scope" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                  <option value="portfolio">Portfólio</option>
+                  <option value="todos">Todos</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Região</label>
+                <select id="envio-regiao" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                  <option value="">Todas</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Status</label>
+                <select id="envio-status-filter" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                  <option value="">Todos</option>
+                  <option value="completo">✅ Completo</option>
+                  <option value="parcial">⚠️ Parcial</option>
+                  <option value="nenhum">❌ Não enviou</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Município</label>
+                <input id="envio-search" type="text" placeholder="Filtrar nome…" oninput="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;width:130px;background:#fff">
+              </div>
+              <span id="envio-info" style="font-size:.75rem;color:var(--text-muted);align-self:flex-end;padding-bottom:2px;margin-left:auto"></span>
             </div>
-          </div>
-          <div style="width:1px;background:var(--border);align-self:stretch"></div>
-          <div>
-            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Escopo</label>
-            <select id="envio-scope" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-              <option value="portfolio">Portfólio</option>
-              <option value="todos">Todos</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Região</label>
-            <select id="envio-regiao" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-              <option value="">Todas</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Status</label>
-            <select id="envio-status-filter" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-              <option value="">Todos</option>
-              <option value="completo">✅ Completo</option>
-              <option value="parcial">⚠️ Parcial</option>
-              <option value="nenhum">❌ Não enviou</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Município</label>
-            <input id="envio-search" type="text" placeholder="Filtrar nome…" oninput="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;width:130px;background:#fff">
-          </div>
-          <span id="envio-info" style="font-size:.75rem;color:var(--text-muted);align-self:flex-end;padding-bottom:2px;margin-left:auto"></span>
+
+            <!-- Cards de resumo -->
+            <div id="envio-cards" style="display:none;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+              <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='';renderEnvioView()">
+                <div id="envio-card-total" style="font-size:1.5rem;font-weight:700;color:var(--text)">—</div>
+                <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px">municípios</div>
+              </div>
+              <div style="background:#F0FFF4;border:1px solid #9AE6B4;border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='completo';renderEnvioView()">
+                <div id="envio-card-ok" style="font-size:1.5rem;font-weight:700;color:#276749">—</div>
+                <div style="font-size:.72rem;color:#276749;margin-top:2px">✅ Completo</div>
+              </div>
+              <div style="background:#FFFFF0;border:1px solid #F6E05E;border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='parcial';renderEnvioView()">
+                <div id="envio-card-parcial" style="font-size:1.5rem;font-weight:700;color:#7B6F00">—</div>
+                <div style="font-size:.72rem;color:#7B6F00;margin-top:2px">⚠️ Parcial</div>
+              </div>
+              <div style="background:#FFF5F5;border:1px solid #FEB2B2;border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='nenhum';renderEnvioView()">
+                <div id="envio-card-err" style="font-size:1.5rem;font-weight:700;color:#9B2335">—</div>
+                <div style="font-size:.72rem;color:#9B2335;margin-top:2px">❌ Não enviou</div>
+              </div>
+            </div>
+
+            <!-- Estado inicial -->
+            <div id="envio-hint" style="text-align:center;padding:48px;color:var(--text-muted)">
+              <div style="font-size:2rem;margin-bottom:8px">📅</div>
+              <div>Selecione a competência e clique em <strong>Buscar</strong>.</div>
+            </div>
+
+            <!-- Lista de municípios -->
+            <div id="envio-list" style="display:none;border:1px solid var(--border);border-radius:8px;overflow:hidden"></div>
+
+            <div id="envio-empty" style="display:none;text-align:center;padding:48px;color:var(--text-muted)">
+              <div style="font-size:2rem;margin-bottom:8px">📭</div>
+              <div id="envio-empty-msg">Nenhum dado encontrado.</div>
+              <div style="font-size:.75rem;margin-top:8px">Execute a extensão eSfinge Updater para importar dados.</div>
+            </div>
+            <div id="envio-loading" style="display:none;text-align:center;padding:48px;color:var(--text-muted)">
+              <div style="font-size:2rem;margin-bottom:8px">⏳</div>
+              <span id="envio-loading-msg">Carregando dados…</span>
+            </div>
+          </div><!-- /tce-pane-envio-inner -->
         </div>
 
-        <!-- Cards de resumo -->
-        <div id="envio-cards" style="display:none;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
-          <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='';renderEnvioView()">
-            <div id="envio-card-total" style="font-size:1.5rem;font-weight:700;color:var(--text)">—</div>
-            <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px">municípios</div>
-          </div>
-          <div style="background:#F0FFF4;border:1px solid #9AE6B4;border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='completo';renderEnvioView()">
-            <div id="envio-card-ok" style="font-size:1.5rem;font-weight:700;color:#276749">—</div>
-            <div style="font-size:.72rem;color:#276749;margin-top:2px">✅ Completo</div>
-          </div>
-          <div style="background:#FFFFF0;border:1px solid #F6E05E;border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='parcial';renderEnvioView()">
-            <div id="envio-card-parcial" style="font-size:1.5rem;font-weight:700;color:#7B6F00">—</div>
-            <div style="font-size:.72rem;color:#7B6F00;margin-top:2px">⚠️ Parcial</div>
-          </div>
-          <div style="background:#FFF5F5;border:1px solid #FEB2B2;border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='nenhum';renderEnvioView()">
-            <div id="envio-card-err" style="font-size:1.5rem;font-weight:700;color:#9B2335">—</div>
-            <div style="font-size:.72rem;color:#9B2335;margin-top:2px">❌ Não enviou</div>
-          </div>
-        </div>
+      </div><!-- /tce-pane-estadual -->
 
-        <!-- Estado inicial -->
-        <div id="envio-hint" style="text-align:center;padding:48px;color:var(--text-muted)">
-          <div style="font-size:2rem;margin-bottom:8px">📅</div>
-          <div>Selecione a competência e clique em <strong>Buscar</strong>.</div>
+      <!-- Painel: Federal (placeholder — integração futura) -->
+      <div id="tce-pane-federal" style="display:none;padding-top:16px">
+        <div style="text-align:center;padding:48px 24px;color:var(--text-muted);border:1px dashed var(--border);border-radius:10px">
+          <div style="font-size:2.5rem;margin-bottom:12px">🇧🇷</div>
+          <div style="font-weight:700;font-size:1rem;margin-bottom:6px;color:var(--text)">Federal — em breve</div>
+          <div style="font-size:.85rem">Integração com a API do CAUC / SICONFI será implementada em breve.<br>Os dados federais (PGFN, FGTS, Transferegov) aparecerão aqui.</div>
         </div>
+      </div><!-- /tce-pane-federal -->
 
-        <!-- Lista de municípios -->
-        <div id="envio-list" style="display:none;border:1px solid var(--border);border-radius:8px;overflow:hidden"></div>
 
-        <div id="envio-empty" style="display:none;text-align:center;padding:48px;color:var(--text-muted)">
-          <div style="font-size:2rem;margin-bottom:8px">📭</div>
-          <div id="envio-empty-msg">Nenhum dado encontrado.</div>
-          <div style="font-size:.75rem;margin-top:8px">Execute a extensão eSfinge Updater para importar dados.</div>
-        </div>
-        <div id="envio-loading" style="display:none;text-align:center;padding:48px;color:var(--text-muted)">
-          <div style="font-size:2rem;margin-bottom:8px">⏳</div>
-          <span id="envio-loading-msg">Carregando dados…</span>
-        </div>
-      </div><!-- /tce-pane-envio -->
 
     </div>
 
@@ -2335,24 +2339,10 @@ function switchCNDSubTab(tab) {
 }
 
 function renderCND() {
-  // Destroi charts existentes (tanto estadual quanto federal)
   destroyChart('cnd-est-atual');
-  destroyChart('cnd-fed-atual');
-
-  // Destaque visual das sub-abas no primeiro render
-  const btnE = document.getElementById('cnd-sub-estadual');
-  const btnF = document.getElementById('cnd-sub-federal');
-  if (btnE && btnF && !btnE.getAttribute('data-styled')) {
-    btnE.setAttribute('data-styled', '1');
-    const isEst = state.cndSubTab !== 'federal';
-    btnE.style.color = isEst ? 'var(--accent)' : 'var(--text-muted)';
-    btnE.style.borderBottomColor = isEst ? 'var(--accent)' : 'transparent';
-    btnF.style.color = !isEst ? 'var(--accent)' : 'var(--text-muted)';
-    btnF.style.borderBottomColor = !isEst ? 'var(--accent)' : 'transparent';
-  }
-
-  if (state.cndSubTab === 'federal') renderCNDFederal();
-  else renderCNDEstadual();
+  // Estadual sempre renderizado no painel Estadual
+  renderCNDEstadual();
+  // initEnvioPanel chamado pelo switchTCETab ao abrir a aba
 }
 
 // ─── Toggle expand/collapse de sub-linhas de entidades ────────────────
@@ -3975,30 +3965,27 @@ async function adminColabProcessCSV(input) {
 
 // ── TCE SC / eSfinge funções ──────────────────────────────────────────
 function switchTCETab(tab) {
-  const certBtn   = document.getElementById('tce-tab-certidao');
-  const envioBtn  = document.getElementById('tce-tab-envio');
-  const certPane  = document.getElementById('tce-pane-certidao');
-  const envioPane = document.getElementById('tce-pane-envio');
-  if (!certBtn) return;
+  const estadualBtn  = document.getElementById('tce-tab-estadual');
+  const federalBtn   = document.getElementById('tce-tab-federal');
+  const estadualPane = document.getElementById('tce-pane-estadual');
+  const federalPane  = document.getElementById('tce-pane-federal');
+  if (!estadualBtn) return;
 
-  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4F46E5';
-  const mutedColor  = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#6B7280';
-
-  if (tab === 'certidao') {
-    certPane.style.display  = 'block';
-    envioPane.style.display = 'none';
-    certBtn.style.borderBottomColor  = 'var(--accent)';
-    certBtn.style.color              = 'var(--accent)';
-    envioBtn.style.borderBottomColor = 'transparent';
-    envioBtn.style.color             = 'var(--text-muted)';
-  } else {
-    certPane.style.display  = 'none';
-    envioPane.style.display = 'block';
-    certBtn.style.borderBottomColor  = 'transparent';
-    certBtn.style.color              = 'var(--text-muted)';
-    envioBtn.style.borderBottomColor = 'var(--accent)';
-    envioBtn.style.color             = 'var(--accent)';
+  if (tab === 'estadual') {
+    estadualPane.style.display = 'block';
+    federalPane.style.display  = 'none';
+    estadualBtn.style.borderBottomColor = 'var(--accent)';
+    estadualBtn.style.color             = 'var(--accent)';
+    federalBtn.style.borderBottomColor  = 'transparent';
+    federalBtn.style.color              = 'var(--text-muted)';
     initEnvioPanel();
+  } else {
+    estadualPane.style.display = 'none';
+    federalPane.style.display  = 'block';
+    estadualBtn.style.borderBottomColor = 'transparent';
+    estadualBtn.style.color             = 'var(--text-muted)';
+    federalBtn.style.borderBottomColor  = 'var(--accent)';
+    federalBtn.style.color              = 'var(--accent)';
   }
 }
 
