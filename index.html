@@ -583,7 +583,7 @@
 
 <main>
   <!-- KPI Cards -->
-  <div class="kpi-grid">
+  <div class="kpi-grid" style="display:none">
     <!-- KPIs de Chamados pausados -->
     <div class="kpi-card" style="display:none">
       <div class="kpi-label">Total Chamados Abertos</div>
@@ -595,12 +595,12 @@
       <div class="kpi-value" id="kpi-depende">—</div>
       <div class="kpi-sub" id="kpi-depende-sub">—</div>
     </div>
-    <div class="kpi-card green">
+    <div class="kpi-card green" style="display:none">
       <div class="kpi-label">CND Estadual</div>
       <div class="kpi-value" id="kpi-cnd-est">—</div>
       <div class="kpi-sub" id="kpi-cnd-est-sub">Carregando…</div>
     </div>
-    <div class="kpi-card green" id="kpi-cnd-fed-card">
+    <div class="kpi-card green" id="kpi-cnd-fed-card" style="display:none">
       <div class="kpi-label">CND Federal</div>
       <div class="kpi-value" id="kpi-cnd-fed">—</div>
       <div class="kpi-sub" id="kpi-cnd-fed-sub">Carregando…</div>
@@ -643,7 +643,7 @@
   <div class="chart-panel">
 
     <!-- View: Chamados de Suporte (default) -->
-    <div class="view active" id="view-suporte">
+    <div class="view" id="view-suporte">
       <div class="view-title">Chamados de Suporte</div>
       <div class="view-subtitle">Todos os chamados abertos do portfólio — monitoramento de SLO de Atendimento • Fonte: Jira</div>
       <div id="suporte-content" style="margin-top:8px"></div>
@@ -709,7 +709,7 @@
     </div>
 
     <!-- View: CND (pos 4) -->
-    <div class="view" id="view-2">
+    <div class="view active" id="view-2">
       <div class="view-title">Prestação de Contas</div>
       <div class="view-subtitle">Certidões e Obrigações por Município • Fonte: TCE-SC / e-Sfinge / CAUC</div>
 
@@ -1501,7 +1501,7 @@ function npsZone(score) {
 // TAB SWITCHING
 // ============================================================
 // Mapa índice → id da view (necessário pois os índices não são sequenciais no DOM)
-const TAB_VIEW_IDS = { 0: 'view-0', 6: 'view-suporte', 1: 'view-7', 2: 'view-3' };
+const TAB_VIEW_IDS = { 0: 'view-0', 6: 'view-suporte', 1: 'view-7', 2: 'view-3', 4: 'view-2' };
 
 // Flags de lazy load por aba — evita buscas repetidas
 const _lazyLoaded = { colaboradores: false, chamadosIssues: false, implantacoes: false };
