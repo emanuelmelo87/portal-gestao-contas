@@ -4007,6 +4007,8 @@ async function adminLoadCollection(col) {
   if (colabActions) colabActions.style.display = (col === 'colaboradores') ? 'flex' : 'none';
   const munActions = document.getElementById('admin-mun-actions');
   if (munActions) munActions.style.display = (col === 'municipios') ? 'flex' : 'none';
+  const envioActions = document.getElementById('admin-envio-actions');
+  if (envioActions) envioActions.style.display = (col === 'status_envio') ? 'flex' : 'none';
   _adminRenderTable();
 }
 
@@ -4056,7 +4058,8 @@ function _adminRenderTable() {
       }).join('') +
       (`<td style="padding:8px 14px;white-space:nowrap">` +
       `<button onclick="adminOpenEdit('${docId}')" style="padding:4px 12px;background:#0761FF;border:none;color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;font-weight:600;margin-right:4px">Editar</button>` +
-      (_adminData.collection === 'colaboradores' ? `<button onclick="adminColabDelete('${docId}')" style="padding:4px 10px;background:#E53E3E;border:none;color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;font-weight:600">&#x1F5D1;</button>` : '') +
+      (['colaboradores','municipios','status_envio'].includes(_adminData.collection) ?
+        `<button onclick="adminDeleteDoc('${docId}')" style="padding:4px 10px;background:#E53E3E;border:none;color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;font-weight:600">&#x1F5D1;</button>` : '') +
       `</td></tr>`);
   }).join('');
 }
@@ -4114,14 +4117,28 @@ async function adminSaveEdit() {
       const idx = _adminData.docIds.indexOf(_editDocId);
       if (idx >= 0) Object.assign(_adminData.docs[idx], updates);
     } else {
-      // Novo colaborador
-      const docId = (updates.nome||Date.now().toString()).toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
-      await _db.collection(_adminData.collection).doc(docId).set(updates);
+      // Novo documento — gerar docId conforme coleção
+      let docId;
+      const col = _adminData.collection;
+      if (col === 'colaboradores') {
+        docId = (updates.nome||Date.now().toString()).toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+      } else if (col === 'municipios') {
+        docId = (updates.municipio||Date.now().toString()).toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+        _MUN_CACHE.docs = []; _MUN_CACHE.loaded = false;
+      } else if (col === 'status_envio') {
+        const mun = (updates.municipio||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_');
+        const mod = (updates.modulo||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_');
+        docId = `${mun}_${updates.ano||''}_${String(updates.mes||'').padStart(2,'0')}_${mod}` || Date.now().toString();
+      } else {
+        docId = Date.now().toString();
+      }
+      await _db.collection(col).doc(docId).set(updates);
       _adminData.docs.push(updates);
       _adminData.docIds.push(docId);
       _adminData.filtered = _adminData.docs.slice();
-      const cc = document.getElementById('card-count-colaboradores');
+      const cc = document.getElementById('card-count-' + col);
       if (cc) cc.textContent = _adminData.docs.length + ' docs';
     }
     statusEl.style.color = '#68D391';
@@ -4148,6 +4165,63 @@ function adminExportCollectionCSV() {
 
 // ── Admin: Colaboradores CRUD ─────────────────────────────────────────────
 
+// ── Admin: Municípios ─────────────────────────────────────────────────────
+
+function adminMunAdd() {
+  _editDocId = null;
+  document.getElementById('admin-edit-title').textContent = 'Novo Município';
+  document.getElementById('admin-edit-status').textContent = '';
+  document.getElementById('admin-edit-fields').innerHTML = `
+    <div style="margin-bottom:14px">
+      <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Município</label>
+      <input data-field="municipio" value="" placeholder="Ex: Florianópolis" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem">
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Região</label>
+      <input data-field="regiao" value="" placeholder="Ex: Grande Florianópolis" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem">
+    </div>`;
+  document.getElementById('admin-edit-modal').style.display = 'flex';
+}
+
+// ── Admin: Status de Envio ────────────────────────────────────────────────
+
+function adminEnvioAdd() {
+  _editDocId = null;
+  document.getElementById('admin-edit-title').textContent = 'Novo Registro de Envio';
+  document.getElementById('admin-edit-status').textContent = '';
+  const now = new Date();
+  const FIELDS = [
+    { k:'municipio',   label:'Município',   placeholder:'Ex: Florianópolis' },
+    { k:'ano',         label:'Ano',         placeholder: String(now.getFullYear()) },
+    { k:'mes',         label:'Mês (número)',placeholder: String(now.getMonth()+1) },
+    { k:'modulo',      label:'Módulo',      placeholder:'Ex: Contabilidade' },
+    { k:'qtd_pacotes', label:'Qtd Pacotes', placeholder:'0' },
+  ];
+  document.getElementById('admin-edit-fields').innerHTML = FIELDS.map(f =>
+    `<div style="margin-bottom:14px">
+      <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${f.label}</label>
+      <input data-field="${f.k}" value="" placeholder="${f.placeholder}" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem">
+    </div>`).join('');
+  document.getElementById('admin-edit-modal').style.display = 'flex';
+}
+
+// ── Admin: Delete genérico ────────────────────────────────────────────────
+
+async function adminDeleteDoc(docId) {
+  const col = _adminData.collection;
+  if (!confirm('Excluir o documento "' + docId + '" da coleção "' + col + '"?')) return;
+  try {
+    await _db.collection(col).doc(docId).delete();
+    const idx = _adminData.docIds.indexOf(docId);
+    if (idx >= 0) { _adminData.docs.splice(idx,1); _adminData.docIds.splice(idx,1); }
+    _adminData.filtered = _adminData.docs.slice();
+    const cc = document.getElementById('card-count-' + col);
+    if (cc) cc.textContent = _adminData.docs.length + ' docs';
+    _adminRenderTable();
+    if (col === 'municipios') { _MUN_CACHE.docs = []; _MUN_CACHE.loaded = false; }
+  } catch(e) { alert('Erro ao excluir: ' + e.message); }
+}
+
 function adminColabAdd() {
   _editDocId = null;
   document.getElementById('admin-edit-title').textContent = 'Novo Colaborador';
@@ -4164,17 +4238,8 @@ function adminColabAdd() {
   document.getElementById('admin-edit-modal').style.display = 'flex';
 }
 
-async function adminColabDelete(docId) {
-  if (!confirm('Excluir colaborador "' + docId + '"?')) return;
-  try {
-    await _db.collection('colaboradores').doc(docId).delete();
-    const idx = _adminData.docIds.indexOf(docId);
-    if (idx >= 0) { _adminData.docs.splice(idx,1); _adminData.docIds.splice(idx,1); }
-    _adminData.filtered = _adminData.docs.slice();
-    document.getElementById('card-count-colaboradores').textContent = _adminData.docs.length + ' docs';
-    _adminRenderTable();
-  } catch(e) { alert('Erro ao excluir: ' + e.message); }
-}
+// adminColabDelete → substituído por adminDeleteDoc (genérico)
+async function adminColabDelete(docId) { adminDeleteDoc(docId); }
 
 // ── Import CSV de municípios (municipio,regiao) ──────────────────────────
 function adminMunImportCSV() {
@@ -5161,13 +5226,49 @@ function adminExportCSV() {
         <span id="admin-table-title" style="color:#fff;font-weight:700;font-size:1rem"></span>
         <input id="admin-table-search" type="text" placeholder="Filtrar…" oninput="adminTableFilter()" style="padding:6px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.83rem;width:200px">
         <button onclick="adminExportCollectionCSV()" style="padding:6px 14px;background:#0761FF;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">⬇ CSV</button>
+        <button onclick="adminLoadCollection(_adminData.collection)" style="padding:6px 14px;background:#2D3748;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer" title="Recarregar">🔄</button>
         <span id="admin-colab-actions" style="display:none;gap:8px">
           <button onclick="adminColabAdd()" style="padding:6px 14px;background:#38A169;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">+ Adicionar</button>
           <button onclick="adminColabImportCSV()" style="padding:6px 14px;background:#805AD5;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">&#x1F4C2; Importar CSV</button>
           <input id="admin-csv-input" type="file" accept=".csv" style="display:none" onchange="adminColabProcessCSV(this)">
         </span>
-        <span id="admin-mun-actions" style="display:none;gap:8px">
-          <button onclick="adminMunImportCSV()" style="padding:6px 14px;background:#805AD5;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">&#x1F4C2; Importar CSV (municipio,regiao)</button>
+        <span id="admin-mun-actions" style="display:none;gap:8px;align-items:center">
+          <button onclick="adminMunAdd()" style="padding:6px 14px;background:#38A169;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">+ Adicionar</button>
+          <button onclick="adminMunImportCSV()" style="padding:6px 14px;background:#805AD5;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">&#x1F4C2; Importar CSV</button>
           <input id="admin-mun-csv-input" type="file" accept=".csv" style="display:none" onchange="adminMunProcessCSV(this)">
         </span>
-        <span id="adm
+        <span id="admin-envio-actions" style="display:none;gap:8px;align-items:center">
+          <button onclick="adminEnvioAdd()" style="padding:6px 14px;background:#38A169;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">+ Adicionar</button>
+        </span>
+        <span id="admin-table-count" style="color:rgba(255,255,255,.4);font-size:.78rem;margin-left:auto"></span>
+      </div>
+      <!-- Tabela -->
+      <div style="overflow-x:auto;max-height:60vh;overflow-y:auto">
+        <table id="admin-main-table" style="width:100%;border-collapse:collapse;font-size:.82rem">
+          <thead id="admin-main-thead"></thead>
+          <tbody id="admin-main-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de edição -->
+<div id="admin-edit-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center">
+  <div style="background:#1C1A23;border:1px solid #2D3748;border-radius:12px;padding:28px;width:90%;max-width:560px;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3 id="admin-edit-title" style="color:#fff;margin:0;font-size:1rem">Editar documento</h3>
+      <button onclick="adminCloseEdit()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div id="admin-edit-fields"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+      <button onclick="adminCloseEdit()" style="padding:8px 20px;background:#2D3748;border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:.85rem">Cancelar</button>
+      <button onclick="adminSaveEdit()" style="padding:8px 20px;background:#0761FF;border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600">Salvar</button>
+    </div>
+    <div id="admin-edit-status" style="margin-top:10px;font-size:.8rem;text-align:center"></div>
+  </div>
+</div>
+
+
+</body>
+</html>
