@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jira Médias Contas — Dashboard Executivo</title>
+  <title>Portal de Gestão de Contas</title>
   <!-- Preconnect para reduzir latência dos CDNs -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -477,7 +477,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 36" width="100" height="36" aria-label="Betha Sistemas">
         <text x="0" y="27" font-family="DM Sans, sans-serif" font-size="28" font-weight="700" fill="#ffffff" letter-spacing="-0.5">betha</text>
       </svg>
-      <span style="width:1px;height:28px;background:rgba(255,255,255,0.35);display:inline-block;margin:0 14px;vertical-align:middle;"></span><h1>Jira Médias Contas <span>Dashboard Executivo</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
+      <span style="width:1px;height:28px;background:rgba(255,255,255,0.35);display:inline-block;margin:0 14px;vertical-align:middle;"></span><h1>Portal de Gestão de Contas <span>eSfinge e Indicadores</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
     </div>
     <div class="header-meta">
       <div class="sync-info">
@@ -502,15 +502,16 @@
 <main>
   <!-- KPI Cards -->
   <div class="kpi-grid">
-    <div class="kpi-card">
+    <!-- KPIs de Chamados pausados -->
+    <div class="kpi-card" style="display:none">
       <div class="kpi-label">Total Chamados Abertos</div>
       <div class="kpi-value" id="kpi-chamados">—</div>
-      <div class="kpi-sub" id="kpi-chamados-sub">Carregando…</div>
+      <div class="kpi-sub" id="kpi-chamados-sub">—</div>
     </div>
-    <div class="kpi-card" style="border-top-color:#4338CA;cursor:pointer" onclick="switchTab(6)" title="Ver chamados que dependem de ação do time de atendimento e serviços">
+    <div class="kpi-card" style="display:none">
       <div class="kpi-label">Dependendo do Time</div>
-      <div class="kpi-value" id="kpi-depende" style="color:#4338CA">—</div>
-      <div class="kpi-sub" id="kpi-depende-sub">Carregando…</div>
+      <div class="kpi-value" id="kpi-depende">—</div>
+      <div class="kpi-sub" id="kpi-depende-sub">—</div>
     </div>
     <div class="kpi-card green">
       <div class="kpi-label">CND Estadual</div>
@@ -546,12 +547,12 @@
 
   <!-- Tab Navigation -->
   <div class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab(6)">🎯 Chamados de Suporte</button>
-    <button class="tab-btn" onclick="switchTab(0)">📊 Chamados de Serviço</button>
+    <button class="tab-btn" onclick="switchTab(6)" style="display:none">🎯 Chamados de Suporte</button>
+    <button class="tab-btn" onclick="switchTab(0)" style="display:none">📊 Chamados de Serviço</button>
     <button class="tab-btn" onclick="switchTab(1)">🔧 Implantações</button>
     <button class="tab-btn" onclick="switchTab(2)">⚠️ Risco de Churn</button>
     <button class="tab-btn" onclick="switchTab(3)">⭐ NPS</button>
-    <button class="tab-btn" onclick="switchTab(4)">🏛️ TCE SC / eSfinge</button>
+    <button class="tab-btn active" onclick="switchTab(4)">🏛️ TCE SC / eSfinge</button>
     <button class="tab-btn" onclick="switchTab(5)">👥 Colaboradores</button>
     
   </div>
@@ -774,7 +775,7 @@
 </main>
 
 <footer>
-  Jira Médias Contas — Dashboard Executivo &nbsp;|&nbsp; Betha Sistemas &nbsp;|&nbsp;
+  Portal de Gestão de Contas &nbsp;|&nbsp; Betha Sistemas &nbsp;|&nbsp;
   Fontes: Jira (Betha) · Firebase Firestore · CND &nbsp;|&nbsp;
   Gerado em: <span id="footer-date">—</span>
 </footer>
@@ -911,7 +912,7 @@ const PORTFOLIO_SET = {};
 PORTFOLIO_MUNICIPIOS.forEach(m => { PORTFOLIO_SET[normMun(m)] = m; });
 
 const charts = {};
-let activeTab = 6;
+let activeTab = 4; // Abre direto em TCE SC / eSfinge
 
 // ============================================================
 // PALETA DE CORES

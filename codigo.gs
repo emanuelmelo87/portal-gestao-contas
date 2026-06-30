@@ -51,6 +51,9 @@ const JQL = 'category = "Projetos ativos de atendimento - Filial" AND resolution
 // TRIGGER PRINCIPAL
 // ============================================================
 function onTimeTrigger() {
+  // ⚠️ COLETA JIRA PAUSADA — reativar quando chamados voltarem ao escopo
+  Logger.log('⏸ onTimeTrigger: coleta Jira pausada. Nenhum dado foi atualizado.');
+  /*
   const inicio = new Date();
   const hora   = Number(Utilities.formatDate(inicio, Session.getScriptTimeZone(), 'H'));
   const dateStr = Utilities.formatDate(inicio, Session.getScriptTimeZone(), 'yyyy-MM-dd');
@@ -77,6 +80,7 @@ function onTimeTrigger() {
     Logger.log('❌ ERRO: ' + e.message);
     throw e;
   }
+  */
 }
 
 // ============================================================
