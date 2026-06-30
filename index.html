@@ -479,6 +479,25 @@
       .fed-badge.atencao { background:#FEFCBF; color:#7B6F00; }
       .fed-badge.irregular { background:#FED7D7; color:#9B2335; }
       .fed-badge.pendente { background:#EDF2F7; color:#4A5568; }
+
+      /* Sub-header filter bar */
+      #filter-bar { font-family: inherit; }
+      #filter-bar select, #filter-bar input[type="date"] {
+        transition: border-color .15s, box-shadow .15s;
+      }
+      #filter-bar select:focus, #filter-bar input[type="date"]:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+      }
+      /* Cards de esfera */
+      #card-esfera-estadual, #card-esfera-federal {
+        user-select: none;
+        transition: border-color .18s, background .18s, box-shadow .18s;
+      }
+      #card-esfera-estadual:hover, #card-esfera-federal:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,.10);
+      }
 </style>
 </head>
 <body>
@@ -497,17 +516,8 @@
         <div>CND: <span id="sync-cnd">—</span></div>
         <div>Implantações: <span id="sync-impl">—</span></div>
       </div>
-      <div class="date-picker-wrapper">
-        <label for="date-picker">📅</label>
-        <input type="date" id="date-picker" class="date-picker-input" onchange="onDateChange(this.value)">
-      </div>
-      <div class="date-picker-wrapper" style="min-width:160px">
-        <label for="mun-filter" style="opacity:.8;font-size:.75rem">🏙️ Município</label>
-        <select id="mun-filter" onchange="onMunicipioChange(this.value)"
-          style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:6px;padding:5px 8px;font-size:.8rem;cursor:pointer;min-width:150px">
-          <option value="">Todos</option>
-        </select>
-      </div>
+
+
       <button class="btn-refresh" id="btn-refresh" onclick="refreshToday()">⟳ Atualizar</button>
 
       <!-- Botão Admin no header -->
@@ -517,6 +527,59 @@
     </div>
   </div>
 </header>
+
+<!-- ═══════════════ SUB-HEADER DE FILTROS ═══════════════ -->
+<div id="filter-bar" style="background:#fff;border-bottom:1px solid #E2E8F0;padding:10px 24px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:90;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+
+  <!-- Data histórica -->
+  <div style="display:flex;flex-direction:column;gap:3px">
+    <label style="font-size:.72rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">📅 Data</label>
+    <input type="date" id="date-picker"
+      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.82rem;color:#1E293B;background:#F8FAFC;cursor:pointer"
+      onchange="onFilterChange('date', this.value)">
+  </div>
+
+  <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
+
+  <!-- Município -->
+  <div style="display:flex;flex-direction:column;gap:3px">
+    <label style="font-size:.72rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">🏙️ Município</label>
+    <select id="mun-filter" onchange="onFilterChange('municipio', this.value)"
+      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.82rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:180px">
+      <option value="">Todos os municípios</option>
+    </select>
+  </div>
+
+  <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
+
+  <!-- Competência (Prestação de Contas) -->
+  <div style="display:flex;flex-direction:column;gap:3px">
+    <label style="font-size:.72rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">📋 Competência</label>
+    <div style="display:flex;gap:6px;align-items:center">
+      <select id="fb-mes" onchange="onFilterChange('mes', this.value)"
+        style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.82rem;color:#1E293B;background:#F8FAFC;cursor:pointer">
+        <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+        <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+        <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+        <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+      </select>
+      <select id="fb-ano" onchange="onFilterChange('ano', this.value)"
+        style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.82rem;color:#1E293B;background:#F8FAFC;cursor:pointer">
+      </select>
+    </div>
+  </div>
+
+  <!-- Limpar filtros -->
+  <div style="margin-left:auto;align-self:flex-end">
+    <button onclick="clearFilters()"
+      style="padding:7px 16px;background:#F1F5F9;border:1px solid #CBD5E0;color:#475569;border-radius:7px;font-size:.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s"
+      onmouseover="this.style.background='#E2E8F0'" onmouseout="this.style.background='#F1F5F9'">
+      ✕ Limpar filtros
+    </button>
+  </div>
+
+</div>
+<!-- ═══════════════ /SUB-HEADER ═══════════════ -->
 
 <main>
   <!-- KPI Cards -->
@@ -650,16 +713,41 @@
       <div class="view-title">Prestação de Contas</div>
       <div class="view-subtitle">Certidões e Obrigações por Município • Fonte: TCE-SC / e-Sfinge / CAUC</div>
 
-      <!-- Sub-abas principais: Estadual | Federal -->
-      <div style="display:flex;gap:8px;margin:12px 0 0;border-bottom:2px solid #E2E8F0">
-        <button id="tce-tab-estadual" class="tce-tab-btn tce-tab-active" onclick="switchTCETab('estadual')"
-          style="padding:9px 20px;background:none;border:none;border-bottom:3px solid var(--accent);font-weight:700;font-size:.9rem;color:var(--accent);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
-          Estadual
-        </button>
-        <button id="tce-tab-federal" class="tce-tab-btn" onclick="switchTCETab('federal')"
-          style="padding:9px 20px;background:none;border:none;border-bottom:3px solid transparent;font-weight:700;font-size:.9rem;color:var(--text-muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
-          Federal
-        </button>
+      <!-- Cards de navegação: Estadual | Federal -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 0">
+
+        <!-- Card Estadual -->
+        <div id="card-esfera-estadual" onclick="switchTCETab('estadual')" style="border:2px solid var(--accent);border-radius:12px;padding:16px 20px;cursor:pointer;background:#EFF6FF;transition:all .18s;position:relative;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:2rem;line-height:1">🏛️</div>
+            <div>
+              <div style="font-weight:800;font-size:1rem;color:#1E40AF">Estadual</div>
+              <div style="font-size:.78rem;color:#3B82F6;margin-top:2px">TCE-SC • e-Sfinge</div>
+            </div>
+            <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <div id="card-est-cnd" style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#DBEAFE;color:#1E40AF">CND —</div>
+              <div id="card-est-envio" style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEF3C7;color:#92400E">Envio —</div>
+            </div>
+          </div>
+          <div id="card-est-indicator" style="position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--accent)"></div>
+        </div>
+
+        <!-- Card Federal -->
+        <div id="card-esfera-federal" onclick="switchTCETab('federal')" style="border:2px solid #E2E8F0;border-radius:12px;padding:16px 20px;cursor:pointer;background:#F8FAFC;transition:all .18s;position:relative;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:2rem;line-height:1">🇧🇷</div>
+            <div>
+              <div style="font-weight:800;font-size:1rem;color:#374151">Federal</div>
+              <div style="font-size:.78rem;color:#6B7280;margin-top:2px">PGFN • FGTS • SICONFI</div>
+            </div>
+            <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <div id="card-fed-regular" style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#D1FAE5;color:#065F46">Regular —</div>
+              <div id="card-fed-atencao" style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEF3C7;color:#92400E">Atenção —</div>
+            </div>
+          </div>
+          <div id="card-fed-indicator" style="position:absolute;bottom:0;left:0;right:0;height:3px;background:transparent"></div>
+        </div>
+
       </div>
 
       <!-- Painel: Estadual -->
@@ -1258,6 +1346,7 @@ async function loadAllData() {
   renderActiveView();
   renderFederal();
   populateMunicipioFilter();
+  setTimeout(updateEsferaCards, 100);
   showLoading(false);
   document.getElementById('btn-refresh').disabled = false;
 
@@ -3679,12 +3768,23 @@ function showLoading(show) {
 // ============================================================
 // INICIALIZAÇÃO
 // ============================================================
-(function initDatePicker() {
-  const dp  = document.getElementById('date-picker');
-  const today = new Date().toISOString().slice(0, 10);
-  if (dp) { dp.max = today; dp.value = today; }
+// Inicializar filter bar (restaura localStorage ou defaults de hoje)
+initFilterBar();
+
+// Definir max do date-picker
+(function() {
+  const dp = document.getElementById('date-picker');
+  if (dp) dp.max = new Date().toISOString().slice(0, 10);
 })();
-loadAllData();
+
+// Carregar dados — usa date-picker.value já definido pelo initFilterBar
+const _savedDate = document.getElementById('date-picker')?.value;
+if (_savedDate && _savedDate !== new Date().toISOString().slice(0, 10)) {
+  // Estava em modo histórico — restaurar
+  onDateChange(_savedDate);
+} else {
+  loadAllData();
+}
 
 // ADMIN — Google Auth + Firestore CRUD
 // ============================================================
@@ -4039,27 +4139,35 @@ async function adminColabProcessCSV(input) {
 
 // ── TCE SC / eSfinge funções ──────────────────────────────────────────
 function switchTCETab(tab) {
-  const estadualBtn  = document.getElementById('tce-tab-estadual');
-  const federalBtn   = document.getElementById('tce-tab-federal');
   const estadualPane = document.getElementById('tce-pane-estadual');
   const federalPane  = document.getElementById('tce-pane-federal');
-  if (!estadualBtn) return;
+  const cardEst      = document.getElementById('card-esfera-estadual');
+  const cardFed      = document.getElementById('card-esfera-federal');
+  const indEst       = document.getElementById('card-est-indicator');
+  const indFed       = document.getElementById('card-fed-indicator');
+  if (!estadualPane) return;
+
+  state.tceActiveTab = tab;
 
   if (tab === 'estadual') {
     estadualPane.style.display = 'block';
     federalPane.style.display  = 'none';
-    estadualBtn.style.borderBottomColor = 'var(--accent)';
-    estadualBtn.style.color             = 'var(--accent)';
-    federalBtn.style.borderBottomColor  = 'transparent';
-    federalBtn.style.color              = 'var(--text-muted)';
+    // Card Estadual: ativo
+    if (cardEst) { cardEst.style.borderColor = 'var(--accent)'; cardEst.style.background = '#EFF6FF'; }
+    if (indEst)  indEst.style.background = 'var(--accent)';
+    // Card Federal: inativo
+    if (cardFed) { cardFed.style.borderColor = '#E2E8F0'; cardFed.style.background = '#F8FAFC'; }
+    if (indFed)  indFed.style.background = 'transparent';
     initEnvioPanel();
   } else {
     estadualPane.style.display = 'none';
     federalPane.style.display  = 'block';
-    estadualBtn.style.borderBottomColor = 'transparent';
-    estadualBtn.style.color             = 'var(--text-muted)';
-    federalBtn.style.borderBottomColor  = 'var(--accent)';
-    federalBtn.style.color              = 'var(--accent)';
+    // Card Federal: ativo
+    if (cardFed) { cardFed.style.borderColor = '#3B82F6'; cardFed.style.background = '#EFF6FF'; }
+    if (indFed)  indFed.style.background = '#3B82F6';
+    // Card Estadual: inativo
+    if (cardEst) { cardEst.style.borderColor = '#E2E8F0'; cardEst.style.background = '#F8FAFC'; }
+    if (indEst)  indEst.style.background = 'transparent';
     renderFederal();
   }
 }
@@ -4082,6 +4190,145 @@ async function _loadMunicipios() {
   }
   return _MUN_CACHE.docs;
 }
+
+// Atualiza os chips de resumo nos cards Estadual/Federal
+function updateEsferaCards() {
+  // Estadual — CND
+  const cndEl = document.getElementById('kpi-cnd-est');
+  const cndSub = document.getElementById('kpi-cnd-est-sub');
+  if (cndEl) {
+    const cardCnd = document.getElementById('card-est-cnd');
+    if (cardCnd) cardCnd.textContent = 'CND ' + cndEl.textContent;
+  }
+  // Estadual — Envio (busca dos cards internos do envio)
+  const cardEnvio = document.getElementById('card-est-envio');
+  const envioOk   = document.getElementById('envio-card-ok');
+  if (cardEnvio && envioOk && envioOk.textContent !== '—') {
+    cardEnvio.textContent = '✅ ' + envioOk.textContent + ' enviados';
+  }
+  // Federal — Regular/Atenção
+  const fedOk  = document.getElementById('fed-card-ok');
+  const fedAt  = document.getElementById('fed-card-atencao');
+  const cfedOk = document.getElementById('card-fed-regular');
+  const cfedAt = document.getElementById('card-fed-atencao');
+  if (cfedOk && fedOk) cfedOk.textContent = 'Regular ' + fedOk.textContent;
+  if (cfedAt && fedAt) cfedAt.textContent = 'Atenção '  + fedAt.textContent;
+}
+
+// ─── FILTER BAR (sub-header) ─────────────────────────────────────────────────
+
+const FILTER_KEY = 'pgc_filters';
+
+function _saveFilters() {
+  const d = document.getElementById('date-picker');
+  const m = document.getElementById('mun-filter');
+  const mes = document.getElementById('fb-mes');
+  const ano = document.getElementById('fb-ano');
+  try {
+    localStorage.setItem(FILTER_KEY, JSON.stringify({
+      date: d ? d.value : '',
+      municipio: m ? m.value : '',
+      mes: mes ? mes.value : '',
+      ano: ano ? ano.value : '',
+    }));
+  } catch(e) {}
+}
+
+function initFilterBar() {
+  // Preencher anos (competência)
+  const anoSel = document.getElementById('fb-ano');
+  if (anoSel) {
+    const cur = new Date().getFullYear();
+    for (let y = cur; y >= cur - 4; y--) {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      anoSel.appendChild(opt);
+    }
+  }
+
+  // Restaurar valores do localStorage ou usar defaults (hoje)
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(FILTER_KEY) || '{}'); } catch(e) {}
+
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  // Data
+  const datePicker = document.getElementById('date-picker');
+  if (datePicker) {
+    datePicker.value = saved.date || todayStr;
+  }
+
+  // Município (será re-populado após carga, mas preservar valor)
+  state.selectedMunicipio = saved.municipio || '';
+
+  // Competência
+  const fbMes = document.getElementById('fb-mes');
+  const fbAno = document.getElementById('fb-ano');
+  if (fbMes) fbMes.value = saved.mes || String(today.getMonth() + 1);
+  if (fbAno) fbAno.value = saved.ano || String(today.getFullYear());
+
+  // Sincronizar competência com os selects internos do Envio
+  _syncCompetenciaToEnvio();
+}
+
+function _syncCompetenciaToEnvio() {
+  const fbMes = document.getElementById('fb-mes');
+  const fbAno = document.getElementById('fb-ano');
+  const envioMes = document.getElementById('envio-mes');
+  const envioAno = document.getElementById('envio-ano');
+  if (fbMes && envioMes) envioMes.value = fbMes.value;
+  if (fbAno && envioAno) envioAno.value = fbAno.value;
+}
+
+function onFilterChange(type, value) {
+  if (type === 'date') {
+    onDateChange(value);
+  } else if (type === 'municipio') {
+    onMunicipioChange(value);
+  } else if (type === 'mes' || type === 'ano') {
+    // Sincronizar com selects internos do Envio
+    _syncCompetenciaToEnvio();
+    // Se já há dados carregados, buscar automaticamente
+    const fbMes = document.getElementById('fb-mes');
+    const fbAno = document.getElementById('fb-ano');
+    if (fbMes && fbAno) {
+      const key = fbAno.value + '-' + fbMes.value;
+      if (_ENVIO.cache[key]) {
+        _ENVIO.currentKey = key;
+        renderEnvioView();
+      } else {
+        buscarEnvio();
+      }
+    }
+  }
+  _saveFilters();
+}
+
+function clearFilters() {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  // Data → hoje
+  const datePicker = document.getElementById('date-picker');
+  if (datePicker) { datePicker.value = todayStr; onDateChange(todayStr); }
+
+  // Município → todos
+  const munSel = document.getElementById('mun-filter');
+  if (munSel) { munSel.value = ''; }
+  onMunicipioChange('');
+
+  // Competência → mês/ano atual
+  const fbMes = document.getElementById('fb-mes');
+  const fbAno = document.getElementById('fb-ano');
+  if (fbMes) fbMes.value = String(today.getMonth() + 1);
+  if (fbAno) fbAno.value = String(today.getFullYear());
+  _syncCompetenciaToEnvio();
+
+  // Limpar localStorage
+  try { localStorage.removeItem(FILTER_KEY); } catch(e) {}
+}
+
 
 // ─── FILTRO GLOBAL DE MUNICÍPIO ──────────────────────────────────────────────
 
@@ -4108,15 +4355,19 @@ async function populateMunicipioFilter() {
     snap.forEach(d => { const m = d.data().municipio; if (m) munsSet.add(m); });
   } catch(e) {}
   const muns = Array.from(munsSet).sort((a,b) => a.localeCompare(b, 'pt'));
-  // Manter seleção atual
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">Todos</option>';
+  // Manter seleção atual (state.selectedMunicipio ou valor salvo)
+  const cur = state.selectedMunicipio || sel.value;
+  sel.innerHTML = '<option value="">Todos os municípios</option>';
   muns.forEach(m => {
     const opt = document.createElement('option');
     opt.value = m; opt.textContent = m;
     if (m === cur) opt.selected = true;
     sel.appendChild(opt);
   });
+  // Garantir que o state reflita o select
+  if (sel.value !== state.selectedMunicipio) {
+    sel.value = state.selectedMunicipio;
+  }
 }
 
 // ─── FEDERAL (DADOS FICTÍCIOS) ────────────────────────────────────────────────
@@ -4205,6 +4456,7 @@ function renderFederal() {
   setEl('fed-card-ok',       countStatus('regular'));
   setEl('fed-card-atencao',  countStatus('atencao'));
   setEl('fed-card-irregular',countStatus('irregular'));
+  updateEsferaCards();
 }
 
 
