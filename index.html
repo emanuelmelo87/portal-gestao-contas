@@ -467,7 +467,19 @@
       .chart-wrap { height: 360px; }
       .chart-wrap.tall { height: 500px; }
     }
-  </style>
+  
+      /* Tabelas Federal */
+      .fed-table { border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+      .fed-row { display:grid; grid-template-columns:1fr 140px 130px 120px; align-items:center; padding:9px 14px; border-bottom:1px solid var(--border); font-size:.82rem; }
+      .fed-row:last-child { border-bottom:none; }
+      .fed-row:nth-child(even) { background:#FAFBFC; }
+      .fed-row-header { background:#F1F5F9 !important; font-weight:700; font-size:.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.03em; }
+      .fed-badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:.72rem; font-weight:700; }
+      .fed-badge.regular { background:#C6F6D5; color:#276749; }
+      .fed-badge.atencao { background:#FEFCBF; color:#7B6F00; }
+      .fed-badge.irregular { background:#FED7D7; color:#9B2335; }
+      .fed-badge.pendente { background:#EDF2F7; color:#4A5568; }
+</style>
 </head>
 <body>
 
@@ -477,7 +489,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 36" width="100" height="36" aria-label="Betha Sistemas">
         <text x="0" y="27" font-family="DM Sans, sans-serif" font-size="28" font-weight="700" fill="#ffffff" letter-spacing="-0.5">betha</text>
       </svg>
-      <span style="width:1px;height:28px;background:rgba(255,255,255,0.35);display:inline-block;margin:0 14px;vertical-align:middle;"></span><h1>Portal de Gestão de Contas <span>eSfinge e Indicadores</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
+      <span style="width:1px;height:28px;background:rgba(255,255,255,0.35);display:inline-block;margin:0 14px;vertical-align:middle;"></span><h1>Portal de Gestão de Contas <span>Prestação de Contas</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
     </div>
     <div class="header-meta">
       <div class="sync-info">
@@ -488,6 +500,13 @@
       <div class="date-picker-wrapper">
         <label for="date-picker">📅</label>
         <input type="date" id="date-picker" class="date-picker-input" onchange="onDateChange(this.value)">
+      </div>
+      <div class="date-picker-wrapper" style="min-width:160px">
+        <label for="mun-filter" style="opacity:.8;font-size:.75rem">🏙️ Município</label>
+        <select id="mun-filter" onchange="onMunicipioChange(this.value)"
+          style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:6px;padding:5px 8px;font-size:.8rem;cursor:pointer;min-width:150px">
+          <option value="">Todos</option>
+        </select>
       </div>
       <button class="btn-refresh" id="btn-refresh" onclick="refreshToday()">⟳ Atualizar</button>
 
@@ -628,138 +647,186 @@
 
     <!-- View: CND (pos 4) -->
     <div class="view" id="view-2">
-      <div class="view-title">TCE SC / eSfinge</div>
-      <div class="view-subtitle">Certidões e Status de Envio de Obrigações • Fonte: TCE-SC / e-Sfinge SC</div>
+      <div class="view-title">Prestação de Contas</div>
+      <div class="view-subtitle">Certidões e Obrigações por Município • Fonte: TCE-SC / e-Sfinge / CAUC</div>
 
       <!-- Sub-abas principais: Estadual | Federal -->
       <div style="display:flex;gap:8px;margin:12px 0 0;border-bottom:2px solid #E2E8F0">
         <button id="tce-tab-estadual" class="tce-tab-btn tce-tab-active" onclick="switchTCETab('estadual')"
           style="padding:9px 20px;background:none;border:none;border-bottom:3px solid var(--accent);font-weight:700;font-size:.9rem;color:var(--accent);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
-          🏛️ Estadual (SC)
+          Estadual
         </button>
         <button id="tce-tab-federal" class="tce-tab-btn" onclick="switchTCETab('federal')"
           style="padding:9px 20px;background:none;border:none;border-bottom:3px solid transparent;font-weight:700;font-size:.9rem;color:var(--text-muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s">
-          🇧🇷 Federal
+          Federal
         </button>
       </div>
 
       <!-- Painel: Estadual -->
       <div id="tce-pane-estadual" style="padding-top:16px">
 
-        <!-- Card 1: CND / Certidão Negativa -->
-        <div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;border-left:4px solid #276749">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-            <div style="width:28px;height:28px;border-radius:50%;background:#C6F6D5;color:#276749;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</div>
-            <div style="font-weight:700;font-size:.9rem">Certidão Negativa de Débito — TCE-SC (e-Sfinge)</div>
+        <!-- Seção 1: CND / Certidão -->
+        <div style="margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
+            <span style="background:#C6F6D5;color:#276749;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">CERTIDÃO</span>
+            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Certidão Negativa de Débito — TCE-SC (e-Sfinge)</span>
           </div>
           <div id="cnd-estadual-status" style="margin-bottom:12px"></div>
           <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start"></div>
           <div id="cnd-estadual-table" style="margin-top:16px"></div>
         </div>
 
-        <!-- Card 2: Status de Envio (Prestação de Contas) -->
-        <div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:4px solid #B7791F">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-            <div style="width:28px;height:28px;border-radius:50%;background:#FEEBC8;color:#7B341E;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</div>
-            <div style="font-weight:700;font-size:.9rem">Prestação de Contas — Status de Envio (e-Sfinge)</div>
+        <!-- Seção 2: Prestação de Contas / Status de Envio -->
+        <div style="margin-top:28px;padding-top:20px;border-top:2px solid #E2E8F0">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <span style="background:#FEEBC8;color:#7B341E;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">ENVIO</span>
+            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Prestação de Contas — Status de Envio (e-Sfinge)</span>
           </div>
-          <div id="tce-pane-envio-inner">
 
-            <!-- Barra de filtros -->
-            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
-              <div>
-                <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Competência</label>
-                <div style="display:flex;gap:5px;align-items:center">
-                  <select id="envio-mes" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-                    <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
-                    <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
-                    <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
-                    <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
-                  </select>
-                  <select id="envio-ano" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)"></select>
-                  <button onclick="buscarEnvio()" id="envio-buscar-btn" style="padding:7px 16px;background:var(--accent);border:none;color:#fff;border-radius:6px;font-size:.83rem;font-weight:600;cursor:pointer">🔍 Buscar</button>
-                </div>
-              </div>
-              <div style="width:1px;background:var(--border);align-self:stretch"></div>
-              <div>
-                <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Escopo</label>
-                <select id="envio-scope" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-                  <option value="portfolio">Portfólio</option>
-                  <option value="todos">Todos</option>
+          <!-- Barra de filtros -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
+            <div>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Competência</label>
+              <div style="display:flex;gap:5px;align-items:center">
+                <select id="envio-mes" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                  <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+                  <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
+                  <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+                  <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
                 </select>
+                <select id="envio-ano" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)"></select>
+                <button onclick="buscarEnvio()" id="envio-buscar-btn" style="padding:7px 16px;background:var(--accent);border:none;color:#fff;border-radius:6px;font-size:.83rem;font-weight:600;cursor:pointer">🔍 Buscar</button>
               </div>
-              <div>
-                <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Região</label>
-                <select id="envio-regiao" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-                  <option value="">Todas</option>
-                </select>
-              </div>
-              <div>
-                <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Status</label>
-                <select id="envio-status-filter" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-                  <option value="">Todos</option>
-                  <option value="completo">✅ Completo</option>
-                  <option value="parcial">⚠️ Parcial</option>
-                  <option value="nenhum">❌ Não enviou</option>
-                </select>
-              </div>
-              <div>
-                <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Município</label>
-                <input id="envio-search" type="text" placeholder="Filtrar nome…" oninput="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;width:130px;background:#fff">
-              </div>
-              <span id="envio-info" style="font-size:.75rem;color:var(--text-muted);align-self:flex-end;padding-bottom:2px;margin-left:auto"></span>
             </div>
+            <div style="width:1px;background:var(--border);align-self:stretch"></div>
+            <div>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Região</label>
+              <select id="envio-regiao" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Status</label>
+              <select id="envio-status-filter" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                <option value="">Todos</option>
+                <option value="completo">✅ Completo</option>
+                <option value="parcial">⚠️ Parcial</option>
+                <option value="nenhum">❌ Não enviou</option>
+              </select>
+            </div>
+            <span id="envio-info" style="font-size:.75rem;color:var(--text-muted);align-self:flex-end;padding-bottom:2px;margin-left:auto"></span>
+          </div>
 
-            <!-- Cards de resumo -->
-            <div id="envio-cards" style="display:none;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
-              <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='';renderEnvioView()">
-                <div id="envio-card-total" style="font-size:1.5rem;font-weight:700;color:var(--text)">—</div>
-                <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px">municípios</div>
-              </div>
-              <div style="background:#F0FFF4;border:1px solid #9AE6B4;border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='completo';renderEnvioView()">
-                <div id="envio-card-ok" style="font-size:1.5rem;font-weight:700;color:#276749">—</div>
-                <div style="font-size:.72rem;color:#276749;margin-top:2px">✅ Completo</div>
-              </div>
-              <div style="background:#FFFFF0;border:1px solid #F6E05E;border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='parcial';renderEnvioView()">
-                <div id="envio-card-parcial" style="font-size:1.5rem;font-weight:700;color:#7B6F00">—</div>
-                <div style="font-size:.72rem;color:#7B6F00;margin-top:2px">⚠️ Parcial</div>
-              </div>
-              <div style="background:#FFF5F5;border:1px solid #FEB2B2;border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='nenhum';renderEnvioView()">
-                <div id="envio-card-err" style="font-size:1.5rem;font-weight:700;color:#9B2335">—</div>
-                <div style="font-size:.72rem;color:#9B2335;margin-top:2px">❌ Não enviou</div>
-              </div>
+          <!-- Cards de resumo -->
+          <div id="envio-cards" style="display:none;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+            <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='';renderEnvioView()">
+              <div id="envio-card-total" style="font-size:1.5rem;font-weight:700;color:var(--text)">—</div>
+              <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px">municípios</div>
             </div>
+            <div style="background:#F0FFF4;border:1px solid #9AE6B4;border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='completo';renderEnvioView()">
+              <div id="envio-card-ok" style="font-size:1.5rem;font-weight:700;color:#276749">—</div>
+              <div style="font-size:.72rem;color:#276749;margin-top:2px">✅ Completo</div>
+            </div>
+            <div style="background:#FFFFF0;border:1px solid #F6E05E;border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='parcial';renderEnvioView()">
+              <div id="envio-card-parcial" style="font-size:1.5rem;font-weight:700;color:#7B6F00">—</div>
+              <div style="font-size:.72rem;color:#7B6F00;margin-top:2px">⚠️ Parcial</div>
+            </div>
+            <div style="background:#FFF5F5;border:1px solid #FEB2B2;border-radius:8px;padding:12px 14px;cursor:pointer" onclick="document.getElementById('envio-status-filter').value='nenhum';renderEnvioView()">
+              <div id="envio-card-err" style="font-size:1.5rem;font-weight:700;color:#9B2335">—</div>
+              <div style="font-size:.72rem;color:#9B2335;margin-top:2px">❌ Não enviou</div>
+            </div>
+          </div>
 
-            <!-- Estado inicial -->
-            <div id="envio-hint" style="text-align:center;padding:48px;color:var(--text-muted)">
-              <div style="font-size:2rem;margin-bottom:8px">📅</div>
-              <div>Selecione a competência e clique em <strong>Buscar</strong>.</div>
-            </div>
-
-            <!-- Lista de municípios -->
-            <div id="envio-list" style="display:none;border:1px solid var(--border);border-radius:8px;overflow:hidden"></div>
-
-            <div id="envio-empty" style="display:none;text-align:center;padding:48px;color:var(--text-muted)">
-              <div style="font-size:2rem;margin-bottom:8px">📭</div>
-              <div id="envio-empty-msg">Nenhum dado encontrado.</div>
-              <div style="font-size:.75rem;margin-top:8px">Execute a extensão eSfinge Updater para importar dados.</div>
-            </div>
-            <div id="envio-loading" style="display:none;text-align:center;padding:48px;color:var(--text-muted)">
-              <div style="font-size:2rem;margin-bottom:8px">⏳</div>
-              <span id="envio-loading-msg">Carregando dados…</span>
-            </div>
-          </div><!-- /tce-pane-envio-inner -->
+          <div id="envio-hint" style="text-align:center;padding:36px;color:var(--text-muted)">
+            <div style="font-size:2rem;margin-bottom:8px">📅</div>
+            <div>Selecione a competência e clique em <strong>Buscar</strong>.</div>
+          </div>
+          <div id="envio-list" style="display:none;border:1px solid var(--border);border-radius:8px;overflow:hidden"></div>
+          <div id="envio-empty" style="display:none;text-align:center;padding:36px;color:var(--text-muted)">
+            <div style="font-size:2rem;margin-bottom:8px">📭</div>
+            <div id="envio-empty-msg">Nenhum dado encontrado.</div>
+            <div style="font-size:.75rem;margin-top:8px">Execute a extensão eSfinge Updater para importar dados.</div>
+          </div>
+          <div id="envio-loading" style="display:none;text-align:center;padding:36px;color:var(--text-muted)">
+            <div style="font-size:2rem;margin-bottom:8px">⏳</div>
+            <span id="envio-loading-msg">Carregando dados…</span>
+          </div>
         </div>
 
       </div><!-- /tce-pane-estadual -->
 
       <!-- Painel: Federal (placeholder — integração futura) -->
       <div id="tce-pane-federal" style="display:none;padding-top:16px">
-        <div style="text-align:center;padding:48px 24px;color:var(--text-muted);border:1px dashed var(--border);border-radius:10px">
-          <div style="font-size:2.5rem;margin-bottom:12px">🇧🇷</div>
-          <div style="font-weight:700;font-size:1rem;margin-bottom:6px;color:var(--text)">Federal — em breve</div>
-          <div style="font-size:.85rem">Integração com a API do CAUC / SICONFI será implementada em breve.<br>Os dados federais (PGFN, FGTS, Transferegov) aparecerão aqui.</div>
+
+        <!-- Resumo Federal -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px" id="federal-resumo-cards">
+          <div style="flex:1;min-width:160px;background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 16px">
+            <div style="font-size:1.6rem;font-weight:700;color:#276749" id="fed-card-ok">—</div>
+            <div style="font-size:.75rem;color:#276749;margin-top:2px">✅ Regular</div>
+          </div>
+          <div style="flex:1;min-width:160px;background:#FFFFF0;border:1px solid #F6E05E;border-radius:10px;padding:14px 16px">
+            <div style="font-size:1.6rem;font-weight:700;color:#7B6F00" id="fed-card-atencao">—</div>
+            <div style="font-size:.75rem;color:#7B6F00;margin-top:2px">⚠️ Atenção</div>
+          </div>
+          <div style="flex:1;min-width:160px;background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 16px">
+            <div style="font-size:1.6rem;font-weight:700;color:#9B2335" id="fed-card-irregular">—</div>
+            <div style="font-size:.75rem;color:#9B2335;margin-top:2px">❌ Irregular</div>
+          </div>
+          <div style="flex:1;min-width:160px;background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 16px">
+            <div style="font-size:1.6rem;font-weight:700;color:#1A365D" id="fed-card-total">—</div>
+            <div style="font-size:.75rem;color:#1A365D;margin-top:2px">📊 Total municípios</div>
+          </div>
         </div>
+
+        <!-- Grupo 1: PGFN / Dívida Ativa da União -->
+        <div style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
+            <span style="background:#FED7D7;color:#9B2335;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">PGFN</span>
+            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Procuradoria-Geral da Fazenda Nacional — Dívida Ativa</span>
+          </div>
+          <div class="fed-table" id="fed-table-pgfn"></div>
+        </div>
+
+        <!-- Grupo 2: FGTS / Caixa -->
+        <div style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
+            <span style="background:#C6F6D5;color:#276749;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">FGTS</span>
+            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Fundo de Garantia do Tempo de Serviço — Caixa Econômica</span>
+          </div>
+          <div class="fed-table" id="fed-table-fgts"></div>
+        </div>
+
+        <!-- Grupo 3: Transferegov / Convênios -->
+        <div style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
+            <span style="background:#BEE3F8;color:#1A365D;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">TRANSFEREGOV</span>
+            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Transferegov — Convênios e Instrumentos de Repasse</span>
+          </div>
+          <div class="fed-table" id="fed-table-transferegov"></div>
+        </div>
+
+        <!-- Grupo 4: SICONFI / Transparência -->
+        <div style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
+            <span style="background:#E9D8FD;color:#44337A;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">SICONFI</span>
+            <span style="font-size:.85rem;font-weight:700;color:var(--text)">SICONFI — Prestação de Contas / LRF</span>
+          </div>
+          <div class="fed-table" id="fed-table-siconfi"></div>
+        </div>
+
+        <!-- Grupo 5: CAUC / Cadastro Único de Convenentes -->
+        <div style="margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
+            <span style="background:#FEEBC8;color:#7B341E;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">CAUC</span>
+            <span style="font-size:.85rem;font-weight:700;color:var(--text)">CAUC — Cadastro de Regularidade Fiscal e Trabalhista</span>
+          </div>
+          <div class="fed-table" id="fed-table-cauc"></div>
+        </div>
+
+        <div style="font-size:.72rem;color:var(--text-muted);margin-top:12px;text-align:right;padding-top:8px;border-top:1px solid var(--border)">
+          ⚠️ Dados ilustrativos — integração com APIs federais em desenvolvimento
+        </div>
+
       </div><!-- /tce-pane-federal -->
 
 
@@ -876,7 +943,7 @@ const CONFIG = {
 // ============================================================
 // ESTADO
 // ============================================================
-const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndFederal: [], cndSubTab: 'estadual', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
+const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndFederal: [], cndSubTab: 'estadual', selectedMunicipio: '', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
 // Abas que possuem versão histórica no servidor
 const HIST_SHEETS = ['Jira_Chamados', 'Jira_Chamados_Suporte', 'Jira_Implantacoes', 'NPS_Calculado', 'CND_Municipios', 'CND_Federal', 'CND_Estadual', 'Risco de Exclusão', 'Colaboradores'];
 
@@ -1189,6 +1256,8 @@ async function loadAllData() {
 
   updateKPIs();
   renderActiveView();
+  renderFederal();
+  populateMunicipioFilter();
   showLoading(false);
   document.getElementById('btn-refresh').disabled = false;
 
@@ -2390,8 +2459,13 @@ function renderCNDEstadual() {
   const statusFonte = state.cndEstadual[0].status_fonte || '';
   renderCNDStatusFonte('cnd-estadual-status', statusFonte, 'e-Sfinge TCE/SC');
 
+  // Aplicar filtro de município global
+  const cndSource = state.selectedMunicipio
+    ? state.cndEstadual.filter(r => normMun(r.municipio) === normMun(state.selectedMunicipio))
+    : state.cndEstadual;
+
   // Agrupar por município
-  const ordenados = [...state.cndEstadual].sort((a, b) => {
+  const ordenados = [...cndSource].sort((a, b) => {
     const mdiff = a.municipio.localeCompare(b.municipio, 'pt-BR');
     if (mdiff !== 0) return mdiff;
     return (a.entidade || '').localeCompare(b.entidade || '', 'pt-BR');
@@ -2412,7 +2486,7 @@ function renderCNDEstadual() {
       return !items.some(r => r[key] === 'Sem CND') && items.some(r => r[key] === 'Com CND');
     }).length;
     const semOrAusente = munKeys.filter(k => grupos[k].items.some(r => r[key] === 'Sem CND')).length;
-    const hasAnyData = state.cndEstadual.some(r => r[key] === 'Com CND' || r[key] === 'Sem CND');
+    const hasAnyData = cndSource.some(r => r[key] === 'Com CND' || r[key] === 'Sem CND');
     return { com, sem: semOrAusente, total: totalMuns, hasData: hasAnyData };
   };
 
@@ -3986,6 +4060,7 @@ function switchTCETab(tab) {
     estadualBtn.style.color             = 'var(--text-muted)';
     federalBtn.style.borderBottomColor  = 'var(--accent)';
     federalBtn.style.color              = 'var(--accent)';
+    renderFederal();
   }
 }
 
@@ -4007,6 +4082,131 @@ async function _loadMunicipios() {
   }
   return _MUN_CACHE.docs;
 }
+
+// ─── FILTRO GLOBAL DE MUNICÍPIO ──────────────────────────────────────────────
+
+function onMunicipioChange(val) {
+  state.selectedMunicipio = val || '';
+  // Re-renderiza CND e Envio
+  renderCNDEstadual();
+  renderEnvioView();
+  // Atualiza federal se visível
+  renderFederal();
+}
+
+async function populateMunicipioFilter() {
+  const sel = document.getElementById('mun-filter');
+  if (!sel) return;
+  // Obter lista de municípios do Firestore ou dos dados de CND carregados
+  let munsSet = new Set();
+  if (state.cndEstadual && state.cndEstadual.length) {
+    state.cndEstadual.forEach(r => { if (r.municipio) munsSet.add(r.municipio); });
+  }
+  // Complementar com coleção municipios do Firestore
+  try {
+    const snap = await _db.collection('municipios').get();
+    snap.forEach(d => { const m = d.data().municipio; if (m) munsSet.add(m); });
+  } catch(e) {}
+  const muns = Array.from(munsSet).sort((a,b) => a.localeCompare(b, 'pt'));
+  // Manter seleção atual
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Todos</option>';
+  muns.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m;
+    if (m === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+// ─── FEDERAL (DADOS FICTÍCIOS) ────────────────────────────────────────────────
+
+const FEDERAL_DATA = [
+  // { grupo, municipio, item, validade, status }
+  // PGFN
+  { grupo:'pgfn', municipio:'Florianópolis', item:'CND — Tributos Federais e DÍVIDA ATIVA', validade:'2025-12-31', status:'regular' },
+  { grupo:'pgfn', municipio:'Joinville',      item:'CND — Tributos Federais e DÍVIDA ATIVA', validade:'2025-11-30', status:'regular' },
+  { grupo:'pgfn', municipio:'Blumenau',       item:'CND — Tributos Federais e DÍVIDA ATIVA', validade:'2025-09-30', status:'atencao' },
+  { grupo:'pgfn', municipio:'Chapecó',        item:'CND — Tributos Federais e DÍVIDA ATIVA', validade:'—',          status:'irregular' },
+  { grupo:'pgfn', municipio:'Lages',          item:'CND — Tributos Federais e DÍVIDA ATIVA', validade:'2025-10-31', status:'regular' },
+  { grupo:'pgfn', municipio:'Criciúma',       item:'CND — Tributos Federais e DÍVIDA ATIVA', validade:'2025-08-31', status:'atencao' },
+  // FGTS
+  { grupo:'fgts', municipio:'Florianópolis', item:'CRF — Regularidade FGTS', validade:'2025-12-15', status:'regular' },
+  { grupo:'fgts', municipio:'Joinville',     item:'CRF — Regularidade FGTS', validade:'2025-11-15', status:'regular' },
+  { grupo:'fgts', municipio:'Blumenau',      item:'CRF — Regularidade FGTS', validade:'2025-10-15', status:'regular' },
+  { grupo:'fgts', municipio:'Chapecó',       item:'CRF — Regularidade FGTS', validade:'2025-09-15', status:'atencao' },
+  { grupo:'fgts', municipio:'Lages',         item:'CRF — Regularidade FGTS', validade:'—',          status:'irregular' },
+  { grupo:'fgts', municipio:'Criciúma',      item:'CRF — Regularidade FGTS', validade:'2025-12-15', status:'regular' },
+  // Transferegov
+  { grupo:'transferegov', municipio:'Florianópolis', item:'Adimplência Convênios',    validade:'—', status:'regular' },
+  { grupo:'transferegov', municipio:'Joinville',     item:'Adimplência Convênios',    validade:'—', status:'regular' },
+  { grupo:'transferegov', municipio:'Blumenau',      item:'Adimplência Convênios',    validade:'—', status:'irregular' },
+  { grupo:'transferegov', municipio:'Chapecó',       item:'Adimplência Convênios',    validade:'—', status:'regular' },
+  { grupo:'transferegov', municipio:'Lages',         item:'Adimplência Convênios',    validade:'—', status:'atencao' },
+  { grupo:'transferegov', municipio:'Criciúma',      item:'Adimplência Convênios',    validade:'—', status:'regular' },
+  // SICONFI
+  { grupo:'siconfi', municipio:'Florianópolis', item:'RREO — Bimestre 3/2025',  validade:'—', status:'regular' },
+  { grupo:'siconfi', municipio:'Joinville',     item:'RREO — Bimestre 3/2025',  validade:'—', status:'regular' },
+  { grupo:'siconfi', municipio:'Blumenau',      item:'RREO — Bimestre 3/2025',  validade:'—', status:'pendente' },
+  { grupo:'siconfi', municipio:'Chapecó',       item:'RGF — Quadrimestre 1/2025',validade:'—', status:'regular' },
+  { grupo:'siconfi', municipio:'Lages',         item:'RGF — Quadrimestre 1/2025',validade:'—', status:'atencao' },
+  { grupo:'siconfi', municipio:'Criciúma',      item:'RGF — Quadrimestre 1/2025',validade:'—', status:'regular' },
+  // CAUC
+  { grupo:'cauc', municipio:'Florianópolis', item:'Situação CAUC Global', validade:'—', status:'regular' },
+  { grupo:'cauc', municipio:'Joinville',     item:'Situação CAUC Global', validade:'—', status:'regular' },
+  { grupo:'cauc', municipio:'Blumenau',      item:'Situação CAUC Global', validade:'—', status:'atencao' },
+  { grupo:'cauc', municipio:'Chapecó',       item:'Situação CAUC Global', validade:'—', status:'irregular' },
+  { grupo:'cauc', municipio:'Lages',         item:'Situação CAUC Global', validade:'—', status:'regular' },
+  { grupo:'cauc', municipio:'Criciúma',      item:'Situação CAUC Global', validade:'—', status:'regular' },
+];
+
+const STATUS_LABEL = {
+  regular:   { badge:'regular',   text:'✅ Regular' },
+  atencao:   { badge:'atencao',   text:'⚠️ Atenção' },
+  irregular: { badge:'irregular', text:'❌ Irregular' },
+  pendente:  { badge:'pendente',  text:'— Pendente' },
+};
+
+function renderFedTable(containerId, rows) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!rows.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:.82rem">Nenhum dado para exibir.</div>';
+    return;
+  }
+  let html = '<div class="fed-row fed-row-header"><span>Município</span><span>Item</span><span>Validade</span><span>Status</span></div>';
+  rows.forEach(r => {
+    const s = STATUS_LABEL[r.status] || STATUS_LABEL.pendente;
+    html += `<div class="fed-row">
+      <span style="font-weight:600">${r.municipio}</span>
+      <span style="color:var(--text-muted)">${r.item}</span>
+      <span style="color:var(--text-muted)">${r.validade}</span>
+      <span><span class="fed-badge ${s.badge}">${s.text}</span></span>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderFederal() {
+  const mun = state.selectedMunicipio || '';
+  const filtered = mun ? FEDERAL_DATA.filter(r => r.municipio === mun) : FEDERAL_DATA;
+
+  const grupos = ['pgfn','fgts','transferegov','siconfi','cauc'];
+  grupos.forEach(g => {
+    renderFedTable('fed-table-' + g, filtered.filter(r => r.grupo === g));
+  });
+
+  // Atualizar cards resumo
+  const all = filtered;
+  const total = new Set(all.map(r => r.municipio)).size;
+  const countStatus = (s) => new Set(all.filter(r => r.status === s).map(r => r.municipio)).size;
+  const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  setEl('fed-card-total', total);
+  setEl('fed-card-ok',       countStatus('regular'));
+  setEl('fed-card-atencao',  countStatus('atencao'));
+  setEl('fed-card-irregular',countStatus('irregular'));
+}
+
 
 function initEnvioPanel() {
   const anoSel = document.getElementById('envio-ano');
@@ -4080,8 +4280,14 @@ function _populateRegiaoFilter() {
 
 function renderEnvioView() {
   if (!_ENVIO.currentKey) return;
-  const allDocs = _ENVIO.cache[_ENVIO.currentKey] || [];
+  let allDocs = _ENVIO.cache[_ENVIO.currentKey] || [];
   const [ano, mes] = _ENVIO.currentKey.split('-').map(Number);
+
+  // Filtro global de município (header)
+  if (state.selectedMunicipio) {
+    const munNorm = state.selectedMunicipio.toLowerCase().trim();
+    allDocs = allDocs.filter(d => (d.municipio||'').toLowerCase().trim() === munNorm);
+  }
 
   document.getElementById('envio-loading').style.display = 'none';
 
