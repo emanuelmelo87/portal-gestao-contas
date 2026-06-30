@@ -3729,8 +3729,6 @@ async function adminLoadCollection(col) {
   if (colabActions) colabActions.style.display = (col === 'colaboradores') ? 'flex' : 'none';
   const munActions = document.getElementById('admin-mun-actions');
   if (munActions) munActions.style.display = (col === 'municipios') ? 'flex' : 'none';
-  const munActions = document.getElementById('admin-mun-actions');
-  if (munActions) munActions.style.display = (col === 'municipios') ? 'flex' : 'none';
   _adminRenderTable();
 }
 
