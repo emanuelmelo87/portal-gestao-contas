@@ -13,8 +13,8 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- defer: página renderiza enquanto scripts baixam em paralelo -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <!-- firebase-auth carregado sob demanda em adminOpen() -->
   <style>
     /* ===== Reset & Base ===== */
@@ -518,30 +518,30 @@
       <div class="kpi-value" id="kpi-cnd-est">—</div>
       <div class="kpi-sub" id="kpi-cnd-est-sub">Carregando…</div>
     </div>
-    <div class="kpi-card green" id="kpi-cnd-fed-card" style="display:none">
+    <div class="kpi-card green" id="kpi-cnd-fed-card">
       <div class="kpi-label">CND Federal</div>
       <div class="kpi-value" id="kpi-cnd-fed">—</div>
       <div class="kpi-sub" id="kpi-cnd-fed-sub">Carregando…</div>
     </div>
-    <div class="kpi-card red">
+    <div class="kpi-card red" style="display:none">
       <div class="kpi-label">Clientes em Risco</div>
       <div class="kpi-value" id="kpi-risco">—</div>
       <div class="kpi-sub" id="kpi-risco-sub">Carregando…</div>
     </div>
-    <div class="kpi-card yellow">
+    <div class="kpi-card yellow" style="display:none">
       <div class="kpi-label">NPS do Portfólio</div>
       <div class="kpi-value" id="kpi-nps">—</div>
       <div class="kpi-sub" id="kpi-nps-sub">Carregando…</div>
     </div>
-    <div class="kpi-card purple" style="cursor:pointer" onclick="switchTab(1)" title="Ver detalhe das implantações">
+    <div class="kpi-card purple" style="display:none" onclick="switchTab(1)" title="Ver detalhe das implantações">
       <div class="kpi-label">Implantações Pendentes</div>
       <div class="kpi-value" id="kpi-impl" style="color:#7C3AED">—</div>
       <div class="kpi-sub" id="kpi-impl-sub">Carregando…</div>
     </div>
   </div>
 
-  <!-- Comparativo Semanal -->
-  <div id="weekly-comparison" style="margin:12px 0 20px;background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px 20px;box-shadow:0 1px 4px rgba(0,0,0,0.05)">
+  <!-- Comparativo Semanal — oculto -->
+  <div id="weekly-comparison" style="display:none">
     <div style="text-align:center;color:var(--text-muted);font-size:.8rem">Carregando comparativo semanal…</div>
   </div>
 
@@ -841,19 +841,8 @@ const FIREBASE_CONFIG = {
   messagingSenderId: '403708882905',
   appId:             '1:403708882905:web:ad8e706f9357d232cc73c8'
 };
-// _db inicializado após scripts defer carregarem (via DOMContentLoaded)
-let _db;
-document.addEventListener('DOMContentLoaded', function() {
-  firebase.initializeApp(FIREBASE_CONFIG);
-  _db = firebase.firestore();
-  // Inicializa o date picker e dispara o load principal
-  (function initDatePicker() {
-    const dp  = document.getElementById('date-picker');
-    const today = new Date().toISOString().slice(0, 10);
-    if (dp) { dp.max = today; dp.value = today; }
-  })();
-  loadAllData();
-});
+firebase.initializeApp(FIREBASE_CONFIG);
+const _db = firebase.firestore();
 
 
 // Busca todos os docs de uma coleção do Firestore (inclui _id para CRUD)
@@ -3624,7 +3613,14 @@ function showLoading(show) {
 }
 
 // ============================================================
-// INICIALIZAÇÃO — movida para o DOMContentLoaded acima (junto com firebase.initializeApp)
+// INICIALIZAÇÃO
+// ============================================================
+(function initDatePicker() {
+  const dp  = document.getElementById('date-picker');
+  const today = new Date().toISOString().slice(0, 10);
+  if (dp) { dp.max = today; dp.value = today; }
+})();
+loadAllData();
 
 // ADMIN — Google Auth + Firestore CRUD
 // ============================================================
