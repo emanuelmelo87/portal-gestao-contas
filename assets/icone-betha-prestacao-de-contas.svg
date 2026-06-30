@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.55" y2="1">
+      <stop offset="0" stop-color="#2a7bff"></stop>
+      <stop offset="1" stop-color="#0761FF"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="229" fill="url(#bg)"></rect>
+  <g transform="translate(205,205) scale(6.14)">
+    <path d="M46 14 L78 36 L14 36 Z" fill="#CDEEFF"></path>
+    <rect x="16" y="38" width="60" height="6" rx="2" fill="#F6F7FB"></rect>
+    <rect x="22" y="46" width="8" height="24" rx="1.5" fill="#F6F7FB"></rect>
+    <rect x="36" y="46" width="8" height="24" rx="1.5" fill="#F6F7FB"></rect>
+    <rect x="50" y="46" width="8" height="24" rx="1.5" fill="#F6F7FB"></rect>
+    <rect x="12" y="72" width="64" height="7" rx="3" fill="#F6F7FB"></rect>
+    <circle cx="70" cy="68" r="16" fill="#F6F7FB" stroke="#0761FF" stroke-width="3.5"></circle>
+    <text x="70" y="68" text-anchor="middle" dominant-baseline="central" font-family="Plus Jakarta Sans, Helvetica, Arial, sans-serif" font-weight="800" font-size="20" fill="#0761FF">B</text>
+  </g>
+</svg>

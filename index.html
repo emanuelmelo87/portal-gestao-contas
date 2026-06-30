@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="assets/icone-betha-prestacao-de-contas.svg">
+  <link rel="apple-touch-icon" href="assets/icone-betha-180.png">
   <title>Portal de Gestão de Contas</title>
   <!-- Preconnect para reduzir latência dos CDNs -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -503,59 +505,70 @@
 
       /* Header mobile */
       @media (max-width: 768px) {
-        .header-content { flex-direction: column; gap: 8px; padding: 10px 16px; }
-        .header-logo { justify-content: center; }
-        .header-meta { flex-wrap: wrap; justify-content: center; gap: 8px; }
+        .header-inner { flex-direction: column; gap: 8px; }
+        .header-title { flex-wrap: wrap; justify-content: flex-start; }
+        .header-meta { flex-wrap: wrap; justify-content: flex-end; gap: 8px; width: 100%; }
         .sync-info { display: none; }
-        h1 { font-size: 1rem !important; }
-        h1 span { font-size: .75rem !important; }
+        header h1 { font-size: .95rem !important; }
+        header h1 span { font-size: .72rem !important; }
       }
 
       /* Filter bar mobile */
       @media (max-width: 768px) {
-        #filter-bar { flex-wrap: wrap; gap: 10px; padding: 10px 14px; }
-        #filter-bar > div { width: 100%; }
-        #filter-bar > div[style*="width:1px"] { display: none !important; }
+        #filter-bar > div { padding: 0 14px; }
+        #filter-bar > div > div { width: 100%; }
+        #filter-bar div[style*="width:1px"][style*="height:36px"] { display: none !important; }
         #filter-bar select, #filter-bar input[type="date"] { width: 100%; font-size: .9rem; padding: 8px 10px; }
+        #filter-bar > div > div[style*="margin-left:auto"] { margin-left: 0 !important; width: 100%; }
         #filter-bar button { width: 100%; justify-content: center; padding: 10px; }
       }
 
       /* Chart panel mobile */
       @media (max-width: 768px) {
-        .chart-panel { padding: 12px; border-radius: 0; margin: 0; }
-        .view-title { font-size: 1.1rem !important; }
-        .view-subtitle { font-size: .78rem !important; }
+        .chart-panel { padding: 14px; }
+        main { padding: 14px 14px 32px; }
+        .view-title { font-size: 1rem !important; }
+        .view-subtitle { font-size: .75rem !important; margin-bottom: 12px !important; }
       }
 
-      /* Toggle pill mobile */
+      /* Toggle pill mobile: full width */
       @media (max-width: 768px) {
         #tce-pill-wrapper { width: 100% !important; }
-        #tce-pill-estadual, #tce-pill-federal { flex: 1; text-align: center; }
+        #tce-pill-estadual, #tce-pill-federal { flex: 1; text-align: center; padding: 9px 10px; }
       }
 
       /* Envio filtros mobile */
       @media (max-width: 768px) {
-        #envio-filter-bar { flex-direction: column !important; gap: 10px !important; }
-        #envio-filter-bar > div[style*="width:1px"] { display: none !important; }
+        #envio-filter-bar { flex-direction: column !important; }
+        #envio-filter-bar div[style*="width:1px"] { display: none !important; }
         #envio-filter-bar select, #envio-filter-bar input { width: 100%; }
+        #envio-filter-bar > span { margin-left: 0 !important; }
         #envio-cards { grid-template-columns: repeat(2, 1fr) !important; }
       }
 
       /* Tabela Federal mobile */
       @media (max-width: 768px) {
-        .fed-row { grid-template-columns: 1fr 1fr !important; row-gap: 2px; }
-        .fed-row > span:nth-child(2) { grid-column: 1 / -1; font-size: .75rem; }
+        .fed-row { grid-template-columns: 1fr 1fr !important; }
+        .fed-row > span:nth-child(2) { grid-column: 1 / -1; color: var(--text-muted); font-size: .75rem; }
         .fed-row > span:nth-child(3) { display: none; }
       }
 
       /* CND donuts mobile */
       @media (max-width: 768px) {
-        #cnd-estadual-donuts { flex-direction: column !important; align-items: center !important; }
+        #cnd-estadual-donuts { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
       }
 
-      /* Geral: max-width centrado */
-      .chart-panel, #filter-bar, header .header-content { max-width: 1200px; }
-      main { max-width: 1200px; margin: 0 auto; }
+      /* Federal resumo cards mobile */
+      @media (max-width: 768px) {
+        #federal-resumo-cards { grid-template-columns: repeat(2,1fr) !important; display: grid !important; }
+      }
+
+      /* Geral: simetria */
+      header { padding: 0; }
+      .header-inner { padding: 14px 24px; }
+      @media (max-width: 768px) {
+        .header-inner { padding: 12px 16px; }
+      }
 </style>
 </head>
 <body>
@@ -563,10 +576,21 @@
 <header>
   <div class="header-inner">
     <div class="header-title">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 36" width="100" height="36" aria-label="Betha Sistemas">
-        <text x="0" y="27" font-family="DM Sans, sans-serif" font-size="28" font-weight="700" fill="#ffffff" letter-spacing="-0.5">betha</text>
+      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 1024 1024" aria-label="Portal de Gestão de Contas" style="border-radius:10px;flex-shrink:0">
+        <defs><linearGradient id="icbg" x1="0" y1="0" x2="0.55" y2="1"><stop offset="0" stop-color="#2a7bff"/><stop offset="1" stop-color="#0761FF"/></linearGradient></defs>
+        <rect width="1024" height="1024" rx="229" fill="url(#icbg)"/>
+        <g transform="translate(205,205) scale(6.14)">
+          <path d="M46 14 L78 36 L14 36 Z" fill="#CDEEFF"/>
+          <rect x="16" y="38" width="60" height="6" rx="2" fill="#F6F7FB"/>
+          <rect x="22" y="46" width="8" height="24" rx="1.5" fill="#F6F7FB"/>
+          <rect x="36" y="46" width="8" height="24" rx="1.5" fill="#F6F7FB"/>
+          <rect x="50" y="46" width="8" height="24" rx="1.5" fill="#F6F7FB"/>
+          <rect x="12" y="72" width="64" height="7" rx="3" fill="#F6F7FB"/>
+          <circle cx="70" cy="68" r="16" fill="#F6F7FB" stroke="#0761FF" stroke-width="3.5"/>
+          <text x="70" y="68" text-anchor="middle" dominant-baseline="central" font-family="Plus Jakarta Sans, Helvetica, Arial, sans-serif" font-weight="800" font-size="20" fill="#0761FF">B</text>
+        </g>
       </svg>
-      <span style="width:1px;height:28px;background:rgba(255,255,255,0.35);display:inline-block;margin:0 14px;vertical-align:middle;"></span><h1>Portal de Gestão de Contas <span>Prestação de Contas</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
+      <span style="width:1px;height:32px;background:rgba(255,255,255,0.25);display:inline-block;margin:0 12px;flex-shrink:0"></span><h1>Portal de Gestão de Contas <span>Prestação de Contas</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
     </div>
     <div class="header-meta">
       <div class="sync-info">
@@ -587,7 +611,8 @@
 </header>
 
 <!-- ═══════════════ SUB-HEADER DE FILTROS ═══════════════ -->
-<div id="filter-bar" style="background:#fff;border-bottom:1px solid #E2E8F0;padding:10px 24px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:90;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+<div id="filter-bar" style="background:#fff;border-bottom:1px solid #E2E8F0;padding:10px 0;position:sticky;top:0;z-index:90;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+<div style="max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;width:100%">
 
   <!-- Data histórica -->
   <div style="display:flex;flex-direction:column;gap:3px">
@@ -636,6 +661,7 @@
     </button>
   </div>
 
+</div><!-- /inner -->
 </div>
 <!-- ═══════════════ /SUB-HEADER ═══════════════ -->
 
