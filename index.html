@@ -3976,7 +3976,7 @@ function adminSignOut() {
 }
 
 async function _adminLoadCounts() {
-  for (const col of ['jira_chamados','jira_chamados_issues','municipios','status_envio','_meta','colaboradores']) {
+  for (const col of ['jira_chamados','jira_chamados_issues','tipos_cliente','equipes_atendimento','municipios','status_envio','_meta','colaboradores']) {
     try {
       const snap = await _db.collection(col).get();
       const el = document.getElementById('card-count-' + col);
@@ -4009,6 +4009,10 @@ async function adminLoadCollection(col) {
   if (munActions) munActions.style.display = (col === 'municipios') ? 'flex' : 'none';
   const envioActions = document.getElementById('admin-envio-actions');
   if (envioActions) envioActions.style.display = (col === 'status_envio') ? 'flex' : 'none';
+  const tipoActions = document.getElementById('admin-tipo-actions');
+  if (tipoActions) tipoActions.style.display = (col === 'tipos_cliente') ? 'flex' : 'none';
+  const equipeActions = document.getElementById('admin-equipe-actions');
+  if (equipeActions) equipeActions.style.display = (col === 'equipes_atendimento') ? 'flex' : 'none';
   _adminRenderTable();
 }
 
@@ -4030,7 +4034,11 @@ function _adminRenderTable() {
     : _adminData.collection === 'colaboradores'
     ? ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','whatsapp','whatsapp_prof','gestor']
     : _adminData.collection === 'municipios'
-    ? ['municipio','regiao']
+    ? ['municipio','associacao','uf','tipo_conta','portfolio','equipe_atendimento','consultor_comercial','coordenador','analista_cs']
+    : _adminData.collection === 'tipos_cliente'
+    ? ['tipo']
+    : _adminData.collection === 'equipes_atendimento'
+    ? ['equipe','tipo_cliente']
     : _adminData.collection === 'status_envio'
     ? ['municipio','regiao','ano','modulo','jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez','ratificado_ate']
     : Object.keys(rows[0] || {});
@@ -4058,13 +4066,13 @@ function _adminRenderTable() {
       }).join('') +
       (`<td style="padding:8px 14px;white-space:nowrap">` +
       `<button onclick="adminOpenEdit('${docId}')" style="padding:4px 12px;background:#0761FF;border:none;color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;font-weight:600;margin-right:4px">Editar</button>` +
-      (['colaboradores','municipios','status_envio'].includes(_adminData.collection) ?
+      (['colaboradores','municipios','status_envio','tipos_cliente','equipes_atendimento'].includes(_adminData.collection) ?
         `<button onclick="adminDeleteDoc('${docId}')" style="padding:4px 10px;background:#E53E3E;border:none;color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;font-weight:600">&#x1F5D1;</button>` : '') +
       `</td></tr>`);
   }).join('');
 }
 
-function adminOpenEdit(docId) {
+async function adminOpenEdit(docId) {
   _editDocId = docId;
   const docIdx = _adminData.docIds.indexOf(docId);
   const data   = _adminData.docs[docIdx] || {};
@@ -4084,6 +4092,48 @@ function adminOpenEdit(docId) {
       const v = data[k] !== undefined ? String(data[k]) : '';
       return `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${COLAB_LABELS[k]||k}</label><input data-field="${k}" value="${v.replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`;
     }).join('');
+  } else if (_adminData.collection === 'municipios') {
+    // Schema novo com equipe_atendimento obrigatório
+    let equipes = [];
+    try {
+      const snap = await _db.collection('equipes_atendimento').get();
+      snap.forEach(d => equipes.push(d.data().equipe || d.id));
+      equipes.sort((a,b) => a.localeCompare(b,'pt'));
+    } catch(e) {}
+    const MUN_FIELDS = ['municipio','associacao','uf','tipo_conta','portfolio','consultor_comercial','coordenador','analista_cs'];
+    const MUN_LABELS = {
+      municipio:'Município', associacao:'Associação', uf:'UF', tipo_conta:'Tipo de Conta',
+      portfolio:'Portfólio', consultor_comercial:'Consultor Comercial',
+      coordenador:'Coordenador', analista_cs:'Analista de CS'
+    };
+    const curEquipe = data.equipe_atendimento || '';
+    const eqOpts = equipes.map(e => `<option value="${e}"${e===curEquipe?' selected':''}>${e}</option>`).join('');
+    fieldsHtml = `<div style="margin-bottom:14px">
+      <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Equipe de Atendimento <span style="color:#FC8181">*</span></label>
+      <select data-field="equipe_atendimento" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem">
+        <option value="">— Selecione —</option>${eqOpts}
+      </select></div>` +
+      MUN_FIELDS.map(k => `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${MUN_LABELS[k]||k}</label><input data-field="${k}" value="${(data[k]||'').toString().replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`).join('');
+  } else if (_adminData.collection === 'tipos_cliente') {
+    fieldsHtml = `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Tipo de Cliente</label><input data-field="tipo" value="${(data.tipo||'').replace(/"/g,'&quot;')}" placeholder="Ex: Betha" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`;
+  } else if (_adminData.collection === 'equipes_atendimento') {
+    // Carregar tipos de cliente disponíveis
+    let tipos = [];
+    try {
+      const snap = await _db.collection('tipos_cliente').get();
+      snap.forEach(d => tipos.push(d.data().tipo || d.id));
+      tipos.sort((a,b) => a.localeCompare(b,'pt'));
+    } catch(e) {}
+    const curTipo = data.tipo_cliente || '';
+    const tipoOpts = tipos.map(t => `<option value="${t}"${t===curTipo?' selected':''}>${t}</option>`).join('');
+    fieldsHtml = `<div style="margin-bottom:14px">
+      <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Nome da Equipe</label>
+      <input data-field="equipe" value="${(data.equipe||'').replace(/"/g,'&quot;')}" placeholder="Ex: Equipe Norte" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>
+      <div style="margin-bottom:14px">
+      <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Tipo de Cliente <span style="color:#FC8181">*</span></label>
+      <select data-field="tipo_cliente" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem">
+        <option value="">— Selecione —</option>${tipoOpts}
+      </select></div>`;
   } else {
     fieldsHtml = Object.entries(data)
       .filter(([k]) => !SKIP.includes(k))
@@ -4099,7 +4149,7 @@ function adminCloseEdit() {
 }
 
 async function adminSaveEdit() {
-  const inputs  = document.querySelectorAll('#admin-edit-fields input[data-field]');
+  const inputs  = document.querySelectorAll('#admin-edit-fields input[data-field], #admin-edit-fields select[data-field]');
   const updates = {};
   inputs.forEach(inp => {
     const k = inp.dataset.field, v = inp.value;
@@ -4123,7 +4173,14 @@ async function adminSaveEdit() {
       if (col === 'colaboradores') {
         docId = (updates.nome||Date.now().toString()).toLowerCase()
           .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+      } else if (col === 'tipos_cliente') {
+        if (!updates.tipo) { statusEl.style.color='#FC8181'; statusEl.textContent='❌ Tipo é obrigatório.'; return; }
+        docId = updates.tipo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+      } else if (col === 'equipes_atendimento') {
+        if (!updates.tipo_cliente) { statusEl.style.color='#FC8181'; statusEl.textContent='❌ Tipo de cliente é obrigatório.'; return; }
+        docId = (updates.equipe||Date.now().toString()).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
       } else if (col === 'municipios') {
+        if (!updates.equipe_atendimento) { statusEl.style.color='#FC8181'; statusEl.textContent='❌ Equipe de atendimento é obrigatória.'; return; }
         docId = (updates.municipio||Date.now().toString()).toLowerCase()
           .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
         _MUN_CACHE.docs = []; _MUN_CACHE.loaded = false;
@@ -4165,21 +4222,93 @@ function adminExportCollectionCSV() {
 
 // ── Admin: Colaboradores CRUD ─────────────────────────────────────────────
 
-// ── Admin: Municípios ─────────────────────────────────────────────────────
+// ── Admin: Tipos de Cliente ───────────────────────────────────────────────────
 
-function adminMunAdd() {
+function adminTipoClienteAdd() {
   _editDocId = null;
-  document.getElementById('admin-edit-title').textContent = 'Novo Município';
+  document.getElementById('admin-edit-title').textContent = 'Novo Tipo de Cliente';
   document.getElementById('admin-edit-status').textContent = '';
   document.getElementById('admin-edit-fields').innerHTML = `
     <div style="margin-bottom:14px">
-      <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Município</label>
-      <input data-field="municipio" value="" placeholder="Ex: Florianópolis" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem">
+      <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Tipo de Cliente</label>
+      <input data-field="tipo" value="" placeholder="Ex: Betha" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem">
+    </div>`;
+  document.getElementById('admin-edit-modal').style.display = 'flex';
+}
+
+// ── Admin: Equipes de Atendimento ─────────────────────────────────────────────
+
+async function adminEquipeAdd() {
+  _editDocId = null;
+  // Carregar tipos de cliente
+  let tipos = [];
+  try {
+    const snap = await _db.collection('tipos_cliente').get();
+    snap.forEach(d => tipos.push(d.data().tipo || d.id));
+    tipos.sort((a,b) => a.localeCompare(b,'pt'));
+  } catch(e) { console.warn('adminEquipeAdd tipos:', e); }
+
+  document.getElementById('admin-edit-title').textContent = 'Nova Equipe de Atendimento';
+  document.getElementById('admin-edit-status').textContent = '';
+  const tipoOptions = tipos.length
+    ? tipos.map(t => `<option value="${t}">${t}</option>`).join('')
+    : '<option value="">Nenhum tipo cadastrado</option>';
+  document.getElementById('admin-edit-fields').innerHTML = `
+    <div style="margin-bottom:14px">
+      <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Nome da Equipe</label>
+      <input data-field="equipe" value="" placeholder="Ex: Equipe Norte" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem">
     </div>
     <div style="margin-bottom:14px">
-      <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Região</label>
-      <input data-field="regiao" value="" placeholder="Ex: Grande Florianópolis" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem">
+      <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Tipo de Cliente <span style="color:#FC8181">*</span></label>
+      <select data-field="tipo_cliente" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem">
+        <option value="">— Selecione —</option>
+        ${tipoOptions}
+      </select>
     </div>`;
+  document.getElementById('admin-edit-modal').style.display = 'flex';
+}
+
+// ── Admin: Municípios ─────────────────────────────────────────────────────
+
+async function adminMunAdd() {
+  _editDocId = null;
+  // Carregar equipes disponíveis
+  let equipes = [];
+  try {
+    const snap = await _db.collection('equipes_atendimento').get();
+    snap.forEach(d => equipes.push(d.data().equipe || d.id));
+    equipes.sort((a,b) => a.localeCompare(b,'pt'));
+  } catch(e) { console.warn('adminMunAdd equipes:', e); }
+
+  document.getElementById('admin-edit-title').textContent = 'Novo Município';
+  document.getElementById('admin-edit-status').textContent = '';
+  const FIELDS = [
+    { k:'municipio',           label:'Município',             placeholder:'Ex: Florianópolis', required:false },
+    { k:'associacao',          label:'Associação',            placeholder:'Ex: GRANFPOLIS',     required:false },
+    { k:'uf',                  label:'UF',                    placeholder:'SC',                 required:false },
+    { k:'tipo_conta',          label:'Tipo de Conta',         placeholder:'Ex: Prefeitura',     required:false },
+    { k:'portfolio',           label:'Portfólio',             placeholder:'Ex: Gestão Pública', required:false },
+    { k:'consultor_comercial', label:'Consultor Comercial',   placeholder:'',                   required:false },
+    { k:'coordenador',         label:'Coordenador',           placeholder:'',                   required:false },
+    { k:'analista_cs',         label:'Analista de CS',        placeholder:'',                   required:false },
+  ];
+  const equipeOptions = equipes.length
+    ? equipes.map(e => `<option value="${e}">${e}</option>`).join('')
+    : '<option value="">Nenhuma equipe cadastrada</option>';
+
+  document.getElementById('admin-edit-fields').innerHTML =
+    `<div style="margin-bottom:14px">
+      <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Equipe de Atendimento <span style="color:#FC8181">*</span></label>
+      <select data-field="equipe_atendimento" required style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem">
+        <option value="">— Selecione —</option>
+        ${equipeOptions}
+      </select>
+    </div>` +
+    FIELDS.map(f =>
+      `<div style="margin-bottom:14px">
+        <label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${f.label}</label>
+        <input data-field="${f.k}" value="" placeholder="${f.placeholder}" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem">
+      </div>`).join('');
   document.getElementById('admin-edit-modal').style.display = 'flex';
 }
 
@@ -5193,9 +5322,21 @@ function adminExportCSV() {
         <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">jira_chamados_issues</div>
         <div id="card-count-jira_chamados_issues" style="color:#0761FF;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
       </div>
+      <div onclick="adminLoadCollection('tipos_cliente')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:10px;padding:20px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#D69E2E'" onmouseout="this.style.borderColor='#2D3748'">
+        <div style="font-size:1.6rem;margin-bottom:8px">🏷️</div>
+        <div style="color:#fff;font-weight:700;font-size:1rem">Tipos de Cliente</div>
+        <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">tipos_cliente</div>
+        <div id="card-count-tipos_cliente" style="color:#D69E2E;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
+      </div>
+      <div onclick="adminLoadCollection('equipes_atendimento')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:10px;padding:20px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0BC5EA'" onmouseout="this.style.borderColor='#2D3748'">
+        <div style="font-size:1.6rem;margin-bottom:8px">👥</div>
+        <div style="color:#fff;font-weight:700;font-size:1rem">Equipes de Atendimento</div>
+        <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">equipes_atendimento</div>
+        <div id="card-count-equipes_atendimento" style="color:#0BC5EA;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
+      </div>
       <div onclick="adminLoadCollection('municipios')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:10px;padding:20px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'">
         <div style="font-size:1.6rem;margin-bottom:8px">🗺️</div>
-        <div style="color:#fff;font-weight:700;font-size:1rem">Municípios × Região</div>
+        <div style="color:#fff;font-weight:700;font-size:1rem">Municípios</div>
         <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">municipios</div>
         <div id="card-count-municipios" style="color:#0761FF;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
       </div>
@@ -5239,6 +5380,12 @@ function adminExportCSV() {
         </span>
         <span id="admin-envio-actions" style="display:none;gap:8px;align-items:center">
           <button onclick="adminEnvioAdd()" style="padding:6px 14px;background:#38A169;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">+ Adicionar</button>
+        </span>
+        <span id="admin-tipo-actions" style="display:none;gap:8px;align-items:center">
+          <button onclick="adminTipoClienteAdd()" style="padding:6px 14px;background:#D69E2E;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">+ Adicionar Tipo</button>
+        </span>
+        <span id="admin-equipe-actions" style="display:none;gap:8px;align-items:center">
+          <button onclick="adminEquipeAdd()" style="padding:6px 14px;background:#0BC5EA;color:#1C1A23;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">+ Adicionar Equipe</button>
         </span>
         <span id="admin-table-count" style="color:rgba(255,255,255,.4);font-size:.78rem;margin-left:auto"></span>
       </div>
