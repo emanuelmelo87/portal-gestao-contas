@@ -4731,7 +4731,7 @@ function onFilterChange(type, value) {
     const fbAno = document.getElementById('fb-ano');
     if (fbMes && fbAno) {
       const key = fbAno.value + '-' + fbMes.value;
-      if (_ENVIO.cache[key]) { _ENVIO.currentKey = key; renderEnvioView(); }
+      if (_ENVIO.cache[key]) { _ENVIO.currentKey = key; renderEnvioView(); renderSummaryChart(); }
       else buscarEnvio();
     }
   }
@@ -4906,70 +4906,236 @@ function _populateMunicipioFilter2() {
 // ─── GRÁFICO DE VISÃO GERAL ──────────────────────────────────────────────────
 
 let _summaryChart = null;
+let _chartMode = 'cnd';
+
+function switchChartMode(mode) {
+  _chartMode = mode;
+  const btnCND   = document.getElementById('chart-btn-cnd');
+  const btnEnvio = document.getElementById('chart-btn-envio');
+  if (btnCND) {
+    btnCND.style.background = mode === 'cnd' ? 'var(--accent)' : 'transparent';
+    btnCND.style.color      = mode === 'cnd' ? '#fff' : '#64748B';
+  }
+  if (btnEnvio) {
+    btnEnvio.style.background = mode === 'envio' ? 'var(--accent)' : 'transparent';
+    btnEnvio.style.color      = mode === 'envio' ? '#fff' : '#64748B';
+  }
+  renderSummaryChart();
+}
 
 function renderSummaryChart() {
-  if (typeof Chart === 'undefined') return; // Chart.js ainda não carregou
-  const groupBy = document.getElementById('chart-group-by')?.value || 'equipe_atendimento';
-  const muns = _getFilteredMuns();
-  const emptyEl = document.getElementById('pca-chart-empty');
-  const wrapEl  = document.getElementById('pca-chart-wrap');
+  if (typeof Chart === 'undefined') return;
+  const groupBy      = document.getElementById('chart-group-by')?.value || 'equipe_atendimento';
+  const filteredMuns = _getFilteredMuns();
+  const munMetaMap   = {};
+  filteredMuns.forEach(d => { munMetaMap[(d.municipio||'').toLowerCase().trim()] = d; });
+  const filteredMunNames = new Set(Object.keys(munMetaMap));
 
-  if (!muns.length) {
-    if (emptyEl) emptyEl.style.display = 'block';
-    if (wrapEl)  wrapEl.style.display  = 'none';
-    if (_summaryChart) { _summaryChart.destroy(); _summaryChart = null; }
-    return;
+  if (_chartMode === 'cnd') {
+    _renderCNDChart(filteredMuns, munMetaMap, filteredMunNames, groupBy);
+  } else {
+    _renderEnvioChart(filteredMuns, munMetaMap, filteredMunNames, groupBy);
   }
-  if (emptyEl) emptyEl.style.display = 'none';
-  if (wrapEl)  wrapEl.style.display  = 'block';
+}
 
-  // Agrupar por dimensão
-  const counts = {};
-  muns.forEach(d => {
-    const key = (d[groupBy] || 'Não definido').trim();
-    counts[key] = (counts[key] || 0) + 1;
-  });
-  const sorted  = Object.entries(counts).sort((a,b) => b[1] - a[1]);
-  const labels  = sorted.map(e => e[0]);
-  const values  = sorted.map(e => e[1]);
+function _getCNDPeriodKey() {
+  if (!state.cndEstadual.length) return null;
+  const labels = [
+    { key: 'periodo1', label: state.cndEstadual[0].p1_label || '' },
+    { key: 'periodo2', label: state.cndEstadual[0].p2_label || '' },
+    { key: 'periodo3', label: state.cndEstadual[0].p3_label || '' },
+  ];
+  const parseSD = (lbl) => {
+    const m = lbl.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+    if (!m) return null;
+    const yy = m[3].length === 2 ? 2000 + parseInt(m[3]) : parseInt(m[3]);
+    return new Date(yy, parseInt(m[2]) - 1, parseInt(m[1]));
+  };
+  let idx = 0;
+  labels.forEach((p, i) => { const d = parseSD(p.label); if (d && d <= new Date()) idx = i; });
+  while (idx > 0) {
+    const hasData = state.cndEstadual.some(r => { const v = r[labels[idx].key]; return v === 'Com CND' || v === 'Sem CND'; });
+    if (hasData) break;
+    idx--;
+  }
+  return labels[idx];
+}
 
-  const PALETTE = ['#0761FF','#38A169','#D69E2E','#805AD5','#E53E3E','#0BC5EA','#ED8936','#48BB78','#F687B3','#4299E1','#68D391','#FC8181'];
-
-  const ctx = document.getElementById('summary-chart-canvas');
-  if (!ctx) return;
+function _drawChart(ctx, labels, datasets, stackedX) {
   if (_summaryChart) { _summaryChart.destroy(); _summaryChart = null; }
-
+  const wrap = document.getElementById('pca-chart-wrap');
+  if (wrap) wrap.style.height = Math.max(200, labels.length * 38 + 60) + 'px';
   _summaryChart = new Chart(ctx, {
     type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Municípios',
-        data: values,
-        backgroundColor: labels.map((_, i) => PALETTE[i % PALETTE.length] + 'BB'),
-        borderColor:     labels.map((_, i) => PALETTE[i % PALETTE.length]),
-        borderWidth: 1.5,
-        borderRadius: 5,
-      }]
-    },
+    data: { labels, datasets },
     options: {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: c => ` ${c.parsed.x} município${c.parsed.x !== 1 ? 's' : ''}`
-          }
-        }
+        legend: { position: 'top', labels: { font: { size: 11 }, padding: 12, usePointStyle: true } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.x} município${c.parsed.x !== 1 ? 's' : ''}` } }
       },
       scales: {
-        x: { beginAtZero: true, grid: { color: '#F1F5F9' }, ticks: { stepSize: 1, font: { size: 11 } } },
-        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+        x: { stacked: stackedX, beginAtZero: true, grid: { color: '#F1F5F9' }, ticks: { stepSize: 1, font: { size: 11 } } },
+        y: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } }
       }
     }
   });
+}
+
+function _setSummaryCards(html) {
+  const el = document.getElementById('pca-summary-cards');
+  if (el) el.innerHTML = html;
+}
+
+function _setChartEmpty(msg) {
+  const emptyEl = document.getElementById('pca-chart-empty');
+  const wrapEl  = document.getElementById('pca-chart-wrap');
+  if (emptyEl) { emptyEl.style.display = 'block'; emptyEl.textContent = msg; }
+  if (wrapEl)  wrapEl.style.display = 'none';
+  if (_summaryChart) { _summaryChart.destroy(); _summaryChart = null; }
+}
+
+function _setChartVisible() {
+  const emptyEl = document.getElementById('pca-chart-empty');
+  const wrapEl  = document.getElementById('pca-chart-wrap');
+  if (emptyEl) emptyEl.style.display = 'none';
+  if (wrapEl)  wrapEl.style.display = 'block';
+}
+
+function _cardHtml(count, label, bg, border, textColor) {
+  return `<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 16px;min-width:90px;text-align:center">
+    <div style="font-size:1.5rem;font-weight:700;color:${textColor}">${count}</div>
+    <div style="font-size:.71rem;color:${textColor};margin-top:2px">${label}</div>
+  </div>`;
+}
+
+function _renderCNDChart(filteredMuns, munMetaMap, filteredMunNames, groupBy) {
+  if (!state.cndEstadual.length || !filteredMuns.length) {
+    _setSummaryCards('');
+    _setChartEmpty(filteredMuns.length ? 'Sem dados de CND disponíveis.' : 'Nenhum município no filtro atual.');
+    return;
+  }
+  const period = _getCNDPeriodKey();
+  if (!period) { _setChartEmpty('Período CND não detectado.'); return; }
+
+  // Lookup municipio_lc → pior status CND
+  const cndLookup = {};
+  state.cndEstadual.forEach(r => {
+    const k = (r.municipio||'').toLowerCase().trim();
+    if (!filteredMunNames.has(k)) return;
+    const v = r[period.key];
+    if (v === 'Sem CND') { cndLookup[k] = 'Sem CND'; }
+    else if (v === 'Com CND' && cndLookup[k] !== 'Sem CND') { cndLookup[k] = 'Com CND'; }
+    else if (!cndLookup[k]) { cndLookup[k] = 'Sem dados'; }
+  });
+  filteredMunNames.forEach(k => { if (!cndLookup[k]) cndLookup[k] = 'Sem dados'; });
+
+  const comCND   = Object.values(cndLookup).filter(v => v === 'Com CND').length;
+  const semCND   = Object.values(cndLookup).filter(v => v === 'Sem CND').length;
+  const semDados = Object.values(cndLookup).filter(v => v === 'Sem dados').length;
+  const total    = filteredMuns.length;
+
+  _setSummaryCards(
+    _cardHtml(comCND,   '✅ Com CND',    '#F0FFF4', '#9AE6B4', '#276749') +
+    _cardHtml(semCND,   '❌ Sem CND',    '#FFF5F5', '#FEB2B2', '#9B2335') +
+    _cardHtml(semDados, '⚪ Sem dados',  '#F7FAFC', '#CBD5E0', '#718096') +
+    _cardHtml(total,    '🏙️ Total',      '#EBF8FF', '#90CDF4', '#2B6CB0') +
+    (period.label ? `<div style="font-size:.72rem;color:#64748B;align-self:center;padding:4px 10px;background:#F1F5F9;border-radius:6px">📅 ${period.label}</div>` : '')
+  );
+
+  const groups = {};
+  filteredMuns.forEach(d => {
+    const k   = (d.municipio||'').toLowerCase().trim();
+    const grp = (d[groupBy] || 'Não definido').trim();
+    if (!groups[grp]) groups[grp] = { com: 0, sem: 0, semDados: 0 };
+    const s = cndLookup[k] || 'Sem dados';
+    if (s === 'Com CND') groups[grp].com++;
+    else if (s === 'Sem CND') groups[grp].sem++;
+    else groups[grp].semDados++;
+  });
+
+  const sorted = Object.entries(groups).sort((a,b) => (b[1].com) - (a[1].com));
+  const labels = sorted.map(e => e[0]);
+
+  _setChartVisible();
+  const ctx = document.getElementById('summary-chart-canvas');
+  if (!ctx) return;
+  _drawChart(ctx, labels, [
+    { label: 'Com CND',   data: sorted.map(e => e[1].com),      backgroundColor: '#38A16988', borderColor: '#38A169', borderWidth: 1.5, borderRadius: 4 },
+    { label: 'Sem CND',   data: sorted.map(e => e[1].sem),      backgroundColor: '#E53E3E88', borderColor: '#E53E3E', borderWidth: 1.5, borderRadius: 4 },
+    { label: 'Sem dados', data: sorted.map(e => e[1].semDados), backgroundColor: '#CBD5E088', borderColor: '#A0AEC0', borderWidth: 1,   borderRadius: 4 },
+  ], true);
+}
+
+function _renderEnvioChart(filteredMuns, munMetaMap, filteredMunNames, groupBy) {
+  if (!_ENVIO.currentKey || !(_ENVIO.cache[_ENVIO.currentKey]?.length)) {
+    _setSummaryCards(`<div style="font-size:.8rem;color:#64748B;align-self:center;padding:8px 12px;background:#F1F5F9;border-radius:8px">Selecione uma competência e clique em 🔍 Buscar para ver os dados de envio</div>`);
+    _setChartEmpty('Busque uma competência para ver os dados de envio.');
+    return;
+  }
+
+  let allDocs = (_ENVIO.cache[_ENVIO.currentKey] || [])
+    .filter(d => filteredMunNames.has((d.municipio||'').toLowerCase().trim()));
+
+  const munIdx = {};
+  allDocs.forEach(d => {
+    const k = (d.municipio||'').toLowerCase().trim();
+    if (!munIdx[k]) munIdx[k] = {};
+    munIdx[k][d.modulo || ''] = d.qtd_pacotes;
+  });
+
+  const modulos = [...new Set(allDocs.map(d => d.modulo).filter(Boolean))];
+
+  function calcSt(k) {
+    const mods = munIdx[k] || {};
+    let ok = 0, fail = 0;
+    modulos.forEach(m => { const q = mods[m]; if (q > 0) ok++; else if (q === 0) fail++; });
+    if (!modulos.length) return 'nenhum';
+    if (ok === modulos.length) return 'completo';
+    if (ok > 0) return 'parcial';
+    return 'nenhum';
+  }
+
+  const envioStatus = {};
+  filteredMunNames.forEach(k => { envioStatus[k] = 'nenhum'; });
+  Object.keys(munIdx).forEach(k => { envioStatus[k] = calcSt(k); });
+
+  const nCompleto = Object.values(envioStatus).filter(s => s === 'completo').length;
+  const nParcial  = Object.values(envioStatus).filter(s => s === 'parcial').length;
+  const nNenhum   = Object.values(envioStatus).filter(s => s === 'nenhum').length;
+  const total     = filteredMuns.length;
+  const [ano, mes] = _ENVIO.currentKey.split('-');
+  const mesLabel = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(mes)-1] || mes;
+
+  _setSummaryCards(
+    _cardHtml(nCompleto, '✅ Completo',    '#F0FFF4', '#9AE6B4', '#276749') +
+    _cardHtml(nParcial,  '⚠️ Parcial',     '#FFFFF0', '#F6E05E', '#7B6F00') +
+    _cardHtml(nNenhum,   '❌ Não enviou',  '#FFF5F5', '#FEB2B2', '#9B2335') +
+    _cardHtml(total,     '🏙️ Total',       '#EBF8FF', '#90CDF4', '#2B6CB0') +
+    `<div style="font-size:.72rem;color:#64748B;align-self:center;padding:4px 10px;background:#F1F5F9;border-radius:6px">📅 ${mesLabel}/${ano}</div>`
+  );
+
+  const groups = {};
+  filteredMuns.forEach(d => {
+    const k   = (d.municipio||'').toLowerCase().trim();
+    const grp = (d[groupBy] || 'Não definido').trim();
+    if (!groups[grp]) groups[grp] = { completo: 0, parcial: 0, nenhum: 0 };
+    groups[grp][envioStatus[k] || 'nenhum']++;
+  });
+
+  const sorted = Object.entries(groups).sort((a,b) => b[1].completo - a[1].completo);
+  const labels = sorted.map(e => e[0]);
+
+  _setChartVisible();
+  const ctx = document.getElementById('summary-chart-canvas');
+  if (!ctx) return;
+  _drawChart(ctx, labels, [
+    { label: 'Completo',   data: sorted.map(e => e[1].completo), backgroundColor: '#38A16988', borderColor: '#38A169', borderWidth: 1.5, borderRadius: 4 },
+    { label: 'Parcial',    data: sorted.map(e => e[1].parcial),  backgroundColor: '#D69E2E88', borderColor: '#D69E2E', borderWidth: 1.5, borderRadius: 4 },
+    { label: 'Não enviou', data: sorted.map(e => e[1].nenhum),   backgroundColor: '#E53E3E88', borderColor: '#E53E3E', borderWidth: 1.5, borderRadius: 4 },
+  ], true);
 }
 
 let _REGIAO_CACHE = [];
@@ -5253,6 +5419,7 @@ async function buscarEnvio() {
     await _loadMunicipios();
     _populateRegiaoFilter();
     renderEnvioView();
+    renderSummaryChart();
     return;
   }
 
@@ -5271,6 +5438,7 @@ async function buscarEnvio() {
     _ENVIO.currentKey = key;
     _populateRegiaoFilter();
     renderEnvioView();
+    renderSummaryChart();
   } catch(e) {
     document.getElementById('envio-loading').style.display = 'none';
     document.getElementById('envio-empty').style.display = 'block';
