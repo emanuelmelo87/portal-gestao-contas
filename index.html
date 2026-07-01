@@ -4379,28 +4379,119 @@ async function adminMunProcessCSV(input) {
   if (!input.files.length) return;
   const text = await input.files[0].text();
   input.value = '';
-  const lines = text.split(/\r?\n/).filter(Boolean);
-  const header = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
-  const iMun    = header.indexOf('municipio');
-  const iRegiao = header.indexOf('regiao');
-  if (iMun < 0 || iRegiao < 0) { alert('CSV deve ter colunas: municipio,regiao'); return; }
 
-  let ok = 0, err = 0;
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g,''));
-    const mun    = cols[iMun]    || '';
-    const regiao = cols[iRegiao] || '';
-    if (!mun) continue;
-    try {
-      const docId = mun.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
-      await _db.collection('municipios').doc(docId).set({ municipio: mun, regiao }, { merge: true });
-      ok++;
-    } catch(e) { err++; console.error('Municipio import err:', e); }
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { alert('CSV vazio ou sem dados.'); return; }
+
+  // Detectar separador
+  const SEP = lines[0].includes(';') ? ';' : ',';
+  const headers = lines[0].split(SEP).map(h => h.trim().replace(/^"|"$/g,'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''));
+
+  // Campos aceitos (novo schema)
+  const NEW_FIELDS = ['equipe_atendimento','municipio','associacao','uf','tipo_conta',
+                      'portfolio','consultor_comercial','coordenador','analista_cs'];
+  // Aceitar também header antigo (municipio, regiao)
+  const iMun = headers.indexOf('municipio');
+  if (iMun < 0) { alert('CSV deve ter coluna "municipio".'); return; }
+
+  // Parsear todas as linhas
+  const rows = lines.slice(1).map(line => {
+    const vals = line.split(SEP).map(v => v.trim().replace(/^"|"$/g,'').trim());
+    const obj = {};
+    headers.forEach((h, i) => {
+      if (NEW_FIELDS.includes(h) && vals[i] !== undefined) obj[h] = vals[i];
+    });
+    // retrocompat: se tiver regiao mas não equipe_atendimento
+    if (!obj.equipe_atendimento) {
+      const iReg = headers.indexOf('regiao');
+      if (iReg >= 0) obj.equipe_atendimento = vals[iReg] || '';
+    }
+    obj.atualizado_em = new Date().toISOString();
+    return obj;
+  }).filter(r => r.municipio);
+
+  if (!rows.length) { alert('Nenhuma linha válida no CSV.'); return; }
+
+  // Coletar equipes e tipos únicos para auto-criar no Firestore
+  const equipesSet = new Set(rows.map(r => r.equipe_atendimento).filter(Boolean));
+  const tiposSet   = new Set(rows.map(r => r.tipo_conta).filter(Boolean));
+
+  if (!confirm(
+    `Importar ${rows.length} municípios?\n\n` +
+    `Serão também criados automaticamente:\n` +
+    `• ${tiposSet.size} Tipos de Cliente: ${[...tiposSet].join(', ')}\n` +
+    `• ${equipesSet.size} Equipes de Atendimento\n\n` +
+    `Registros existentes serão atualizados (merge).`
+  )) return;
+
+  // Mostrar progresso
+  const statusEl = document.getElementById('admin-edit-status');
+  const areaEl   = document.getElementById('admin-table-area');
+
+  let progress = 0;
+  const total = rows.length + tiposSet.size + equipesSet.size;
+
+  function showProgress(msg) {
+    progress++;
+    if (statusEl) { statusEl.style.color = '#68D391'; statusEl.textContent = msg; }
+    const pct = Math.round((progress / total) * 100);
+    if (areaEl) {
+      const existing = document.getElementById('admin-import-bar');
+      const bar = existing || document.createElement('div');
+      bar.id = 'admin-import-bar';
+      bar.style.cssText = 'position:fixed;top:0;left:0;height:3px;background:#38A169;z-index:99999;transition:width .2s';
+      bar.style.width = pct + '%';
+      if (!existing) document.body.appendChild(bar);
+    }
   }
-  alert('Importação concluída: ' + ok + ' ok, ' + err + ' erros.');
-  // Limpar cache de municípios para recarregar
-  _MUN_CACHE.docs = [];
-  _MUN_CACHE.loaded = false;
+
+  // 1. Criar tipos_cliente
+  for (const tipo of tiposSet) {
+    try {
+      const docId = tipo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+      await _db.collection('tipos_cliente').doc(docId).set({ tipo, atualizado_em: new Date().toISOString() }, { merge: true });
+    } catch(e) { console.warn('tipo_cliente import:', tipo, e); }
+    showProgress(`Tipos de cliente: ${tipo}\u2026`);
+  }
+
+  // 2. Criar equipes_atendimento (com tipo_cliente inferido do tipo_conta mais comum da equipe)
+  const equipeToTipo = {};
+  rows.forEach(r => {
+    if (r.equipe_atendimento && r.tipo_conta) {
+      // última ocorrência define o tipo (poderia ser mais sofisticado)
+      equipeToTipo[r.equipe_atendimento] = r.tipo_conta;
+    }
+  });
+  for (const equipe of equipesSet) {
+    try {
+      const docId = equipe.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+      const tipo_cliente = equipeToTipo[equipe] || '';
+      await _db.collection('equipes_atendimento').doc(docId).set({ equipe, tipo_cliente, atualizado_em: new Date().toISOString() }, { merge: true });
+    } catch(e) { console.warn('equipe import:', equipe, e); }
+    showProgress(`Equipes: ${equipe}\u2026`);
+  }
+
+  // 3. Importar municípios
+  let ok = 0, err = 0;
+  for (const r of rows) {
+    try {
+      const docId = r.municipio.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+      await _db.collection('municipios').doc(docId).set(r, { merge: true });
+      ok++;
+    } catch(e) { err++; console.error('municipio import err:', r.municipio, e); }
+    showProgress(`Municípios: ${r.municipio}\u2026`);
+  }
+
+  // Remover barra de progresso
+  const bar = document.getElementById('admin-import-bar');
+  if (bar) bar.remove();
+
+  // Invalidar caches
+  _MUN_CACHE.docs = []; _MUN_CACHE.loaded = false;
+  _REGIAO_CACHE = [];
+
+  alert(`\u2705 Importação concluída!\n\n${ok} municípios importados\n${err} erros\n${tiposSet.size} tipos de cliente\n${equipesSet.size} equipes de atendimento`);
   adminLoadCollection('municipios');
 }
 
@@ -5376,6 +5467,7 @@ function adminExportCSV() {
         <span id="admin-mun-actions" style="display:none;gap:8px;align-items:center">
           <button onclick="adminMunAdd()" style="padding:6px 14px;background:#38A169;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">+ Adicionar</button>
           <button onclick="adminMunImportCSV()" style="padding:6px 14px;background:#805AD5;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">&#x1F4C2; Importar CSV</button>
+          <span style="font-size:.72rem;color:rgba(255,255,255,.4)">equipe_atendimento, municipio, associacao, uf, tipo_conta, portfolio, consultor_comercial, coordenador, analista_cs</span>
           <input id="admin-mun-csv-input" type="file" accept=".csv" style="display:none" onchange="adminMunProcessCSV(this)">
         </span>
         <span id="admin-envio-actions" style="display:none;gap:8px;align-items:center">
