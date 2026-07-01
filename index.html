@@ -590,7 +590,7 @@
           <text x="70" y="68" text-anchor="middle" dominant-baseline="central" font-family="Plus Jakarta Sans, Helvetica, Arial, sans-serif" font-weight="800" font-size="20" fill="#0761FF">B</text>
         </g>
       </svg>
-      <span style="width:1px;height:32px;background:rgba(255,255,255,0.25);display:inline-block;margin:0 12px;flex-shrink:0"></span><h1>Portal de Gestão de Contas <span>Prestação de Contas</span><span class="hist-badge" id="hist-badge">HISTÓRICO</span></h1>
+      <span style="width:1px;height:32px;background:rgba(255,255,255,0.25);display:inline-block;margin:0 12px;flex-shrink:0"></span><h1>Portal de Gestão de Contas <span>Prestação de Contas</span></h1>
     </div>
     <div class="header-meta">
       <div class="sync-info">
@@ -600,7 +600,15 @@
       </div>
 
 
-      <button class="btn-refresh" id="btn-refresh" onclick="refreshToday()">⟳ Atualizar</button>
+      <!-- Data / Histórico no header -->
+      <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border-radius:8px;padding:4px 10px">
+        <label for="date-picker" style="font-size:.72rem;color:rgba(255,255,255,.7);white-space:nowrap;cursor:pointer">📅</label>
+        <input type="date" id="date-picker"
+          style="padding:3px 6px;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:.78rem;color:#fff;background:rgba(255,255,255,.12);cursor:pointer"
+          onchange="onFilterChange('date', this.value)">
+        <span class="hist-badge" id="hist-badge">HISTÓRICO</span>
+      </div>
+      <button class="btn-refresh" id="btn-refresh" onclick="refreshToday()" title="Recarregar dados de hoje" style="padding:5px 11px;font-size:.82rem">⟳</button>
 
       <!-- Botão Admin no header -->
       <button class="btn-admin-login" onclick="adminOpen()" title="Painel Admin">
@@ -611,77 +619,67 @@
 </header>
 
 <!-- ═══════════════ SUB-HEADER DE FILTROS ═══════════════ -->
-<div id="filter-bar" style="background:#fff;border-bottom:1px solid #E2E8F0;padding:10px 0;position:sticky;top:0;z-index:90;box-shadow:0 1px 4px rgba(0,0,0,.06)">
-<div style="max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;width:100%">
-
-  <!-- Data -->
-  <div style="display:flex;flex-direction:column;gap:3px">
-    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">📅 Data</label>
-    <input type="date" id="date-picker"
-      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer"
-      onchange="onFilterChange('date', this.value)">
-  </div>
-
-  <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
+<div id="filter-bar" style="background:#fff;border-bottom:1px solid #E2E8F0;padding:6px 0;position:sticky;top:0;z-index:90;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+<div style="max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:flex-end;gap:6px;flex-wrap:nowrap;width:100%;overflow-x:auto">
 
   <!-- Tipo de Conta -->
   <div style="display:flex;flex-direction:column;gap:3px">
-    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">🏷️ Tipo de Conta</label>
+    <label style="font-size:.64rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.03em">🏷️ Tipo de Conta</label>
     <select id="tipo-conta-filter" onchange="onFilterChange('tipo_conta', this.value)"
-      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:110px">
+      style="padding:5px 7px;border:1px solid #CBD5E0;border-radius:6px;font-size:.79rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:90px">
       <option value="">Todos</option>
     </select>
   </div>
 
-  <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
+  <div style="width:1px;height:28px;background:#E2E8F0;align-self:center;flex-shrink:0"></div>
 
   <!-- Equipe de Atendimento -->
   <div style="display:flex;flex-direction:column;gap:3px">
-    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">👥 Equipe</label>
+    <label style="font-size:.64rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.03em">👥 Equipe</label>
     <select id="equipe-filter" onchange="onFilterChange('equipe', this.value)"
-      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:150px">
+      style="padding:5px 7px;border:1px solid #CBD5E0;border-radius:6px;font-size:.79rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:95px">
       <option value="">Todas</option>
     </select>
   </div>
 
-  <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
+  <div style="width:1px;height:28px;background:#E2E8F0;align-self:center;flex-shrink:0"></div>
 
   <!-- Portfólio -->
   <div style="display:flex;flex-direction:column;gap:3px">
-    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">📁 Portfólio</label>
+    <label style="font-size:.64rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.03em">📁 Portfólio</label>
     <select id="portfolio-filter" onchange="onFilterChange('portfolio', this.value)"
-      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:150px">
+      style="padding:5px 7px;border:1px solid #CBD5E0;border-radius:6px;font-size:.79rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:95px">
       <option value="">Todos</option>
     </select>
   </div>
 
-  <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
+  <div style="width:1px;height:28px;background:#E2E8F0;align-self:center;flex-shrink:0"></div>
 
   <!-- Associação -->
   <div style="display:flex;flex-direction:column;gap:3px">
-    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">🤝 Associação</label>
+    <label style="font-size:.64rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.03em">🤝 Associação</label>
     <select id="associacao-filter" onchange="onFilterChange('associacao', this.value)"
-      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:120px">
+      style="padding:5px 7px;border:1px solid #CBD5E0;border-radius:6px;font-size:.79rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:95px">
       <option value="">Todas</option>
     </select>
   </div>
 
-  <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
+  <div style="width:1px;height:28px;background:#E2E8F0;align-self:center;flex-shrink:0"></div>
 
   <!-- Município -->
   <div style="display:flex;flex-direction:column;gap:3px">
-    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">🏙️ Município</label>
+    <label style="font-size:.64rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.03em">🏙️ Município</label>
     <select id="mun-filter" onchange="onFilterChange('municipio', this.value)"
-      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:160px">
+      style="padding:5px 7px;border:1px solid #CBD5E0;border-radius:6px;font-size:.79rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:120px">
       <option value="">Todos</option>
     </select>
   </div>
 
-  <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
+  <div style="width:1px;height:28px;background:#E2E8F0;align-self:center;flex-shrink:0"></div>
 
   <!-- Competência -->
   <div style="display:flex;flex-direction:column;gap:3px">
-    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">📋 Competência</label>
+    <label style="font-size:.64rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.03em">📋 Competência</label>
     <div style="display:flex;gap:6px;align-items:center">
       <select id="fb-mes" onchange="onFilterChange('mes', this.value)"
         style="padding:6px 8px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer">
@@ -1005,19 +1003,19 @@
 
         <!-- Resumo Federal -->
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px" id="federal-resumo-cards">
-          <div style="flex:1;min-width:160px;background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 16px">
+          <div style="flex:1;min-width:120px;background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 16px">
             <div style="font-size:1.6rem;font-weight:700;color:#276749" id="fed-card-ok">—</div>
             <div style="font-size:.75rem;color:#276749;margin-top:2px">✅ Regular</div>
           </div>
-          <div style="flex:1;min-width:160px;background:#FFFFF0;border:1px solid #F6E05E;border-radius:10px;padding:14px 16px">
+          <div style="flex:1;min-width:120px;background:#FFFFF0;border:1px solid #F6E05E;border-radius:10px;padding:14px 16px">
             <div style="font-size:1.6rem;font-weight:700;color:#7B6F00" id="fed-card-atencao">—</div>
             <div style="font-size:.75rem;color:#7B6F00;margin-top:2px">⚠️ Atenção</div>
           </div>
-          <div style="flex:1;min-width:160px;background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 16px">
+          <div style="flex:1;min-width:120px;background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 16px">
             <div style="font-size:1.6rem;font-weight:700;color:#9B2335" id="fed-card-irregular">—</div>
             <div style="font-size:.75rem;color:#9B2335;margin-top:2px">❌ Irregular</div>
           </div>
-          <div style="flex:1;min-width:160px;background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 16px">
+          <div style="flex:1;min-width:120px;background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 16px">
             <div style="font-size:1.6rem;font-weight:700;color:#1A365D" id="fed-card-total">—</div>
             <div style="font-size:.75rem;color:#1A365D;margin-top:2px">📊 Total municípios</div>
           </div>
@@ -2459,7 +2457,7 @@ function _renderChamadosTab(source, container) {
   const filaSlo      = cfg.pie2.issues.filter(r => (r.slo_horas || '').startsWith('-')).length;
 
   const kpi = (val, label, bg, bd, fg, lc) => `
-    <div style="background:${bg};border:1px solid ${bd};border-radius:8px;padding:12px 20px;text-align:center;min-width:110px">
+    <div style="background:${bg};border:1px solid ${bd};border-radius:8px;padding:12px 20px;text-align:center;min-width:90px">
       <div style="font-size:2rem;font-weight:700;color:${fg};line-height:1">${val}</div>
       <div style="font-size:.68rem;font-weight:600;color:${lc};text-transform:uppercase;margin-top:4px">${label}</div>
     </div>`;
@@ -3661,7 +3659,7 @@ function renderImplantacoes() {
       <div style="display:flex;flex-direction:column;gap:3px">
         <label style="font-size:.72rem;font-weight:600;color:#4A5568;text-transform:uppercase">Vertical <span style="font-size:.65rem;font-weight:400;color:#94A3B8">(Ctrl+clique p/ múltiplas)</span></label>
         <div style="display:flex;gap:5px;align-items:flex-start">
-          <select id="impl-f-vert" multiple size="4" style="${inputStyle};min-width:160px;height:auto" onchange="_implRefresh()">
+          <select id="impl-f-vert" multiple size="4" style="${inputStyle};min-width:120px;height:auto" onchange="_implRefresh()">
             ${vertOpts}
           </select>
           ${modeBtn('impl-f-vert-mode')}
@@ -5558,7 +5556,7 @@ function renderEnvioView() {
       <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'table':'none';this.querySelector('.envio-chev').textContent=this.nextElementSibling.style.display!=='none'?'▼':'▶'"
            style="display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;user-select:none" onmouseover="this.style.background='#F7FAFC'" onmouseout="this.style.background=''">
         <span class="envio-chev" style="font-size:.7rem;color:#A0AEC0;width:12px">▶</span>
-        <span style="font-weight:600;font-size:.85rem;min-width:160px">${mun}</span>${regiao}
+        <span style="font-weight:600;font-size:.85rem;min-width:120px">${mun}</span>${regiao}
         <span style="padding:2px 8px;border-radius:20px;font-size:.72rem;font-weight:600;${badgeStyle}">${badgeTxt}</span>
         <div style="flex:1;display:flex;align-items:center;gap:8px;max-width:180px">
           <div style="flex:1;height:5px;background:#EDF2F7;border-radius:3px;overflow:hidden">
