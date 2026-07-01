@@ -1500,13 +1500,19 @@ async function loadAllData() {
   document.getElementById('sync-impl').textContent = implTS
     ? new Date(implTS).toLocaleString('pt-BR') : (state.implantacoes.length ? now : 'Indisponível');
 
-  updateKPIs();
-  renderActiveView();
-  renderFederal();
-  populateMainFilters();
-  setTimeout(updateEsferaCards, 100);
-  showLoading(false);
-  document.getElementById('btn-refresh').disabled = false;
+  try {
+    updateKPIs();
+    renderActiveView();
+    renderFederal();
+    populateMainFilters();
+    setTimeout(updateEsferaCards, 100);
+  } catch(e) {
+    console.error('loadAllData render error:', e);
+  } finally {
+    showLoading(false);
+    const btn2 = document.getElementById('btn-refresh');
+    if (btn2) btn2.disabled = false;
+  }
 
   // Comparativo semanal: adiado 4s para não competir com a carga inicial
   setTimeout(() => {
@@ -4654,6 +4660,9 @@ function _saveFilters() {
     }));
   } catch(e) {}
 }
+
+// Stub: competência agora é um único seletor no header (fb-mes/fb-ano), nada a sincronizar
+function _syncCompetenciaToEnvio() {}
 
 function initFilterBar() {
   // Preencher anos
