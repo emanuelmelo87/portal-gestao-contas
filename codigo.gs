@@ -33,8 +33,6 @@ const FIRESTORE_BASE = 'https://firestore.googleapis.com/v1/projects/' + FIRESTO
 const COL_CHAMADOS        = 'jira_chamados';
 const COL_CHAMADOS_ISSUES = 'jira_chamados_issues';
 const COL_META            = '_meta';
-const COL_HIST_PREFIX     = 'jira_chamados_hist'; // snapshots diários: jira_chamados_hist/{YYYY-MM-DD}
-const HIST_RETENTION_DAYS = 90;
 
 // ────────────────────────────────────────────────────────────
 // JIRA — constantes
@@ -51,12 +49,7 @@ const JQL = 'category = "Projetos ativos de atendimento - Filial" AND resolution
 // TRIGGER PRINCIPAL
 // ============================================================
 function onTimeTrigger() {
-  // ⚠️ COLETA JIRA PAUSADA — reativar quando chamados voltarem ao escopo
-  Logger.log('⏸ onTimeTrigger: coleta Jira pausada. Nenhum dado foi atualizado.');
-  /*
   const inicio = new Date();
-  const hora   = Number(Utilities.formatDate(inicio, Session.getScriptTimeZone(), 'H'));
-  const dateStr = Utilities.formatDate(inicio, Session.getScriptTimeZone(), 'yyyy-MM-dd');
   Logger.log('▶ Iniciando coleta: ' + inicio.toLocaleString('pt-BR'));
   try {
     const issues = fetchJiraIssues(JQL);
@@ -67,20 +60,11 @@ function onTimeTrigger() {
 
     writeJiraChamadosToFirestore(rows, issues);
 
-    // ── Snapshot histórico diário (somente no trigger das 23h) ──────────────
-    if (hora === 23) {
-      Logger.log('  Salvando snapshot histórico para ' + dateStr + '...');
-      saveHistoricalSnapshot(rows, dateStr);
-      cleanupOldSnapshots();
-      Logger.log('  Snapshot salvo e limpeza concluída.');
-    }
-
     Logger.log('✅ Concluído em ' + Math.round((new Date() - inicio) / 1000) + 's');
   } catch (e) {
     Logger.log('❌ ERRO: ' + e.message);
     throw e;
   }
-  */
 }
 
 // ============================================================
@@ -213,21 +197,28 @@ function writeJiraChamadosToFirestore(rows, issues) {
 // FIRESTORE — utilitários REST
 // ============================================================
 
+// Serializa qualquer valor JS para o formato de campo do Firestore REST API
+function _toFirestoreValue(val) {
+  if (val === null || val === undefined)   return { nullValue: null };
+  if (typeof val === 'boolean')            return { booleanValue: val };
+  if (typeof val === 'number') {
+    return Number.isInteger(val) ? { integerValue: String(val) } : { doubleValue: val };
+  }
+  if (Array.isArray(val)) {
+    return { arrayValue: { values: val.map(_toFirestoreValue) } };
+  }
+  if (typeof val === 'object') {
+    var mf = {};
+    Object.keys(val).forEach(function(k) { mf[k] = _toFirestoreValue(val[k]); });
+    return { mapValue: { fields: mf } };
+  }
+  return { stringValue: String(val) };
+}
+
 // Converte um objeto JS plano em Fields do Firestore
 function _toFirestoreFields(obj) {
   var fields = {};
-  Object.keys(obj).forEach(function(key) {
-    var val = obj[key];
-    if (val === null || val === undefined) {
-      fields[key] = { nullValue: null };
-    } else if (typeof val === 'boolean') {
-      fields[key] = { booleanValue: val };
-    } else if (typeof val === 'number') {
-      fields[key] = Number.isInteger(val) ? { integerValue: String(val) } : { doubleValue: val };
-    } else {
-      fields[key] = { stringValue: String(val) };
-    }
-  });
+  Object.keys(obj).forEach(function(key) { fields[key] = _toFirestoreValue(obj[key]); });
   return fields;
 }
 
@@ -310,57 +301,6 @@ function clearFirestoreCollection(collectionName) {
   }
   Logger.log('    "' + collectionName + '": ' + ids.length + ' docs deletados.');
   return ids.length;
-}
-
-// ============================================================
-// HISTÓRICO — snapshot diário e limpeza
-// ============================================================
-
-// Salva um snapshot dos dados agregados em jira_chamados_hist/{date}
-function saveHistoricalSnapshot(rows, dateStr) {
-  if (!rows || rows.length === 0) return;
-  const colPath = COL_HIST_PREFIX + '/' + dateStr;
-  // Apaga snapshot anterior do mesmo dia (se houver) e regrava
-  clearFirestoreCollection(colPath);
-  const docsMap = {};
-  rows.forEach(function(r) {
-    const docId = _normDocId(r.municipio + '__' + r.vertical);
-    docsMap[docId] = r;
-  });
-  _writeCollectionDocs(colPath, docsMap);
-  Logger.log('  Snapshot "' + colPath + '": ' + rows.length + ' docs gravados.');
-
-  // Registra a data disponível no metadado
-  const metaDocs = {};
-  metaDocs['last_snapshot'] = { date: dateStr, count: rows.length, saved_at: new Date().toISOString() };
-  _writeCollectionDocs(COL_META, metaDocs);
-}
-
-// Remove snapshots com mais de HIST_RETENTION_DAYS dias
-function cleanupOldSnapshots() {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - HIST_RETENTION_DAYS);
-  const cutoffStr = Utilities.formatDate(cutoff, Session.getScriptTimeZone(), 'yyyy-MM-dd');
-
-  // Lista documentos de primeiro nível em COL_HIST_PREFIX (são as datas)
-  const token = ScriptApp.getOAuthToken();
-  const url   = FIRESTORE_BASE + '/' + COL_HIST_PREFIX + '?pageSize=300';
-  const resp  = UrlFetchApp.fetch(url, {
-    headers: { Authorization: 'Bearer ' + token },
-    muteHttpExceptions: true
-  });
-  if (resp.getResponseCode() !== 200) return;
-  const result = JSON.parse(resp.getContentText());
-  if (!result.documents) return;
-
-  result.documents.forEach(function(doc) {
-    const dateId = doc.name.split('/').pop(); // ex: "2026-03-01"
-    if (dateId <= cutoffStr) {
-      // Apaga todos os docs do snapshot antigo
-      clearFirestoreCollection(COL_HIST_PREFIX + '/' + dateId);
-      Logger.log('  Snapshot antigo removido: ' + dateId);
-    }
-  });
 }
 
 // ============================================================
@@ -464,12 +404,40 @@ function testarConexaoJira() {
 function testarFirestore() {
   try {
     // Tenta ler a coleção _meta (pode estar vazia)
-    const ids = _listCollectionDocIds(COL_META);
-    Logger.log('✅ Conexão Firestore OK! Docs em "_meta": ' + ids.length);
-    // Tenta escrever um documento de teste
-    _writeCollectionDocs('_meta', { test: { ok: true, ts: new Date().toISOString() } });
-    Logger.log('✅ Escrita no Firestore OK!');
-  } catch(e) {
-    Logger.log('❌ Erro Firestore: ' + e.message);
+    const ids = _listCollectionDocIds(COL_MET
+// ────────────────────────────────────────────────────────────
+// WEB APP — doPost: recebe dados da extensão eSfinge Updater
+// POST JSON: { action: 'writeStatusEnvio'|'writeRatificacoes', docs: [...] }
+// Cada doc deve ter um campo 'id' que vira o nome do documento Firestore.
+// Todos os outros campos são serializados automaticamente (string, int,
+// boolean, null, array) via _toFirestoreValue().
+// ────────────────────────────────────────────────────────────
+function doPost(e) {
+  try {
+    var body = JSON.parse(e.postData.contents);
+    if (!Array.isArray(body.docs)) {
+      return _jsonResp({ ok: false, error: 'docs deve ser array' });
+    }
+    var collection;
+    if      (body.action === 'writeStatusEnvio')   collection = 'status_envio';
+    else if (body.action === 'writeRatificacoes')  collection = 'ratificacoes';
+    else return _jsonResp({ ok: false, error: 'Ação inválida: ' + body.action });
+
+    var docsMap = {};
+    body.docs.forEach(function(d) {
+      var doc = {};
+      Object.keys(d).forEach(function(k) { if (k !== 'id') doc[k] = d[k]; });
+      docsMap[d.id] = doc;
+    });
+    _writeCollectionDocs(collection, docsMap);
+    return _jsonResp({ ok: true, count: body.docs.length });
+  } catch (err) {
+    return _jsonResp({ ok: false, error: err.message });
   }
+}
+
+function _jsonResp(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
