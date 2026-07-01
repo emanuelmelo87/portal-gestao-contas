@@ -5332,22 +5332,27 @@ function initEnvioPanel() {
     for (let y = anoAtual; y >= anoAtual - 3; y--) anoSel.add(new Option(y, y));
     anoSel.value = anoAtual;
   }
-  // Restaurar última competência consultada
+  // Restaurar última competência consultada no cabeçalho
   try {
     const saved = JSON.parse(localStorage.getItem('pgc_competencia') || 'null');
     if (saved) {
       if (anoSel) anoSel.value = saved.ano;
       const mesSel = document.getElementById('fb-mes');
       if (mesSel) mesSel.value = saved.mes;
+      // Auto-buscar só se já há cache para essa competência (sem hit de rede)
+      const key = saved.ano + '-' + saved.mes;
+      if (_ENVIO.cache[key]) {
+        _ENVIO.currentKey = key;
+        renderEnvioView();
+        renderSummaryChart();
+        return;
+      }
     } else {
       const mesSel = document.getElementById('fb-mes');
       if (mesSel) mesSel.value = new Date().getMonth() || 12;
     }
   } catch(e) {}
-  // Auto-buscar se há competência salva e dados não carregados
-  if (!_ENVIO.currentKey) {
-    buscarEnvio();
-  }
+  // Sem cache disponível: mostrar hint para o usuário clicar em Buscar
   if (!_ENVIO.currentKey) {
     document.getElementById('envio-hint').style.display    = 'block';
     document.getElementById('envio-cards').style.display   = 'none';
