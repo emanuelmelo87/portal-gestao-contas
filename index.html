@@ -910,13 +910,7 @@
                 <button onclick="buscarEnvio()" id="envio-buscar-btn" style="padding:7px 16px;background:var(--accent);border:none;color:#fff;border-radius:6px;font-size:.83rem;font-weight:600;cursor:pointer">🔍 Buscar</button>
               </div>
             </div>
-            <div style="width:1px;background:var(--border);align-self:stretch"></div>
-            <div>
-              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Região</label>
-              <select id="envio-regiao" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-                <option value="">Todas</option>
-              </select>
-            </div>
+
             <div>
               <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Status</label>
               <select id="envio-status-filter" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
@@ -5415,9 +5409,7 @@ async function buscarEnvio() {
 
   if (_ENVIO.cache[key]) {
     _ENVIO.currentKey = key;
-    // Garantir que municípios já foram carregados (para filtro por região)
     await _loadMunicipios();
-    _populateRegiaoFilter();
     renderEnvioView();
     renderSummaryChart();
     return;
@@ -5436,7 +5428,6 @@ async function buscarEnvio() {
     ]);
     _ENVIO.cache[key] = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
     _ENVIO.currentKey = key;
-    _populateRegiaoFilter();
     renderEnvioView();
     renderSummaryChart();
   } catch(e) {
@@ -5469,10 +5460,7 @@ function renderEnvioView() {
 
   document.getElementById('envio-loading').style.display = 'none';
 
-  const scope        = document.getElementById('envio-scope')?.value || 'portfolio';
-  const regiaoFil    = document.getElementById('envio-regiao')?.value || '';
   const statusFil    = document.getElementById('envio-status-filter')?.value || '';
-  const search       = (document.getElementById('envio-search')?.value || '').toLowerCase().trim();
 
   // Construir mapa municipio → regiao a partir do _MUN_CACHE
   const munMeta = {};
@@ -5512,15 +5500,6 @@ function renderEnvioView() {
   // Lista de municípios filtrada
   let municipios = Object.keys(munIdx).sort((a,b) => a.localeCompare(b,'pt-BR'));
 
-  if (scope === 'portfolio') {
-    municipios = municipios.filter(m => portfolioSet.has(m.toLowerCase().trim()));
-  }
-  if (regiaoFil) {
-    municipios = municipios.filter(m => {
-      const meta = munMeta[m.toLowerCase().trim()];
-      return meta && meta.regiao === regiaoFil;
-    });
-  }
   if (search) municipios = municipios.filter(m => m.toLowerCase().includes(search));
 
   // Contagens para cards
