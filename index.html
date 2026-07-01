@@ -841,23 +841,37 @@
 
       <!-- Gráfico de Visão Geral -->
       <div id="pca-chart-section" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
-          <span style="font-size:.88rem;font-weight:700;color:var(--text)">📊 Visão Geral — Municípios</span>
+        <!-- Header: toggle CND/Envio + group-by -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+          <div style="display:flex;gap:5px;background:#F1F5F9;border-radius:8px;padding:3px">
+            <button id="chart-btn-cnd" onclick="switchChartMode('cnd')"
+              style="padding:6px 16px;border:none;border-radius:6px;font-size:.82rem;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;transition:all .15s">
+              📄 Certidão CND
+            </button>
+            <button id="chart-btn-envio" onclick="switchChartMode('envio')"
+              style="padding:6px 16px;border:none;border-radius:6px;font-size:.82rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
+              📦 Status de Envio
+            </button>
+          </div>
           <div style="display:flex;align-items:center;gap:8px">
             <label style="font-size:.73rem;color:var(--text-muted);white-space:nowrap">Agrupar por:</label>
             <select id="chart-group-by" onchange="renderSummaryChart()"
               style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:.8rem;background:#F8FAFC;color:var(--text)">
-              <option value="equipe_atendimento">Equipe de Atendimento</option>
+              <option value="equipe_atendimento">Equipe</option>
               <option value="portfolio">Portfólio</option>
               <option value="tipo_conta">Tipo de Conta</option>
               <option value="associacao">Associação</option>
             </select>
           </div>
         </div>
+        <!-- Cards de resumo (preenchidos por JS) -->
+        <div id="pca-summary-cards" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
+        <!-- Estado vazio -->
         <div id="pca-chart-empty" style="display:none;text-align:center;padding:30px;color:var(--text-muted);font-size:.84rem">
           Importe municípios para ver o gráfico.
         </div>
-        <div style="position:relative;height:220px" id="pca-chart-wrap">
+        <!-- Canvas do gráfico -->
+        <div style="position:relative;height:240px" id="pca-chart-wrap">
           <canvas id="summary-chart-canvas"></canvas>
         </div>
       </div>
@@ -5133,47 +5147,6 @@ function _renderEnvioChart(filteredMuns, munMetaMap, filteredMunNames, groupBy) 
 }
 
 let _REGIAO_CACHE = [];
-
-async function populateRegiaoFilter() {
-  // Carregar regiões únicas do Firestore municipios
-  if (!_REGIAO_CACHE.length) {
-    try {
-      const snap = await _db.collection('municipios').get();
-      const set = new Set();
-      snap.forEach(d => { const r = d.data().regiao; if (r) set.add(r); });
-      _REGIAO_CACHE = Array.from(set).sort((a,b) => a.localeCompare(b,'pt'));
-    } catch(e) { console.warn('populateRegiaoFilter:', e); }
-  }
-
-  // Preencher header
-  const sel = document.getElementById('regiao-filter');
-  if (sel) {
-    const cur = state.selectedRegiao || sel.value;
-    sel.innerHTML = '<option value="">Todas as regiões</option>';
-    _REGIAO_CACHE.forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r; opt.textContent = r;
-      if (r === cur) opt.selected = true;
-      sel.appendChild(opt);
-    });
-  }
-
-  // Preencher select de região dentro do Status de Envio
-  const envioReg = document.getElementById('envio-regiao');
-  if (envioReg) {
-    const cur2 = state.selectedRegiao || envioReg.value;
-    envioReg.innerHTML = '<option value="">Todas</option>';
-    _REGIAO_CACHE.forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r; opt.textContent = r;
-      if (r === cur2) opt.selected = true;
-      envioReg.appendChild(opt);
-    });
-    // Sincronizar com state
-    if (state.selectedRegiao) envioReg.value = state.selectedRegiao;
-  }
-}
-
 function populateCNDFilters() {
   // Região no filtro da CND
   const cndReg = document.getElementById('cnd-regiao-filter');
@@ -5206,30 +5179,6 @@ function populateCNDFilters() {
     });
   }
 }
-
-function _filterMunicipiosByRegiao(regiao) {
-  // Filtra o select de município pelo regiao selecionada
-  // Os dados de municípios ficam no _MUN_CACHE
-  const sel = document.getElementById('mun-filter');
-  if (!sel) return;
-  const curMun = state.selectedMunicipio;
-  sel.innerHTML = '<option value="">Todos os municípios</option>';
-  let muns = _MUN_CACHE.docs || [];
-  if (regiao) muns = muns.filter(d => d.regiao === regiao);
-  muns.sort((a,b) => (a.municipio||'').localeCompare(b.municipio||'','pt'));
-  muns.forEach(d => {
-    if (!d.municipio) return;
-    const opt = document.createElement('option');
-    opt.value = d.municipio; opt.textContent = d.municipio;
-    if (d.municipio === curMun) opt.selected = true;
-    sel.appendChild(opt);
-  });
-  // Se município atual não existe na região, limpar
-  if (curMun && !muns.find(d => d.municipio === curMun)) {
-    state.selectedMunicipio = '';
-  }
-}
-
 async function populateMunicipioFilter() {
   const sel = document.getElementById('mun-filter');
   if (!sel) return;
@@ -5440,14 +5389,6 @@ async function buscarEnvio() {
     btn.textContent = '🔍 Buscar';
   }
 }
-
-function _populateRegiaoFilter() {
-  const sel = document.getElementById('envio-regiao');
-  if (!sel || sel.options.length > 1) return; // já populado
-  const regioes = [...new Set(_MUN_CACHE.docs.map(d => d.regiao).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt-BR'));
-  regioes.forEach(r => sel.add(new Option(r, r)));
-}
-
 function renderEnvioView() {
   if (!_ENVIO.currentKey) return;
   let allDocs = _ENVIO.cache[_ENVIO.currentKey] || [];
@@ -5500,7 +5441,6 @@ function renderEnvioView() {
   // Lista de municípios filtrada
   let municipios = Object.keys(munIdx).sort((a,b) => a.localeCompare(b,'pt-BR'));
 
-  if (search) municipios = municipios.filter(m => m.toLowerCase().includes(search));
 
   // Contagens para cards
   const total    = municipios.length;
@@ -5728,24 +5668,6 @@ function renderEsfingeMatrix() {
     </tr>`;
   }).join('');
 }
-
-function adminExportCSV() {
-  const rows = _adminState.filtered;
-  if (!rows.length) return;
-  const keys = Object.keys(rows[0]);
-  const csv  = [keys.join(',')].concat(rows.map(r =>
-    keys.map(k => '"' + (r[k]||'').toString().replace(/"/g,'""') + '"').join(',')
-  )).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = _adminState.collection + '_' + new Date().toISOString().slice(0,10) + '.csv';
-  a.click();
-}
-
-
-</script>
-
-
 </script>
 <div id="admin-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:#0F1117;overflow-y:auto;font-family:'DM Sans',sans-serif">
 
