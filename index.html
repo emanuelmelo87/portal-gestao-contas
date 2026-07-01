@@ -612,24 +612,57 @@
 
 <!-- ═══════════════ SUB-HEADER DE FILTROS ═══════════════ -->
 <div id="filter-bar" style="background:#fff;border-bottom:1px solid #E2E8F0;padding:10px 0;position:sticky;top:0;z-index:90;box-shadow:0 1px 4px rgba(0,0,0,.06)">
-<div style="max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;width:100%">
+<div style="max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;width:100%">
 
-  <!-- Data histórica -->
+  <!-- Data -->
   <div style="display:flex;flex-direction:column;gap:3px">
-    <label style="font-size:.72rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">📅 Data</label>
+    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">📅 Data</label>
     <input type="date" id="date-picker"
-      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.82rem;color:#1E293B;background:#F8FAFC;cursor:pointer"
+      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer"
       onchange="onFilterChange('date', this.value)">
   </div>
 
   <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
 
-  <!-- Região -->
+  <!-- Tipo de Conta -->
   <div style="display:flex;flex-direction:column;gap:3px">
-    <label style="font-size:.72rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">🗺️ Região</label>
-    <select id="regiao-filter" onchange="onFilterChange('regiao', this.value)"
-      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.82rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:140px">
-      <option value="">Todas as regiões</option>
+    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">🏷️ Tipo de Conta</label>
+    <select id="tipo-conta-filter" onchange="onFilterChange('tipo_conta', this.value)"
+      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:110px">
+      <option value="">Todos</option>
+    </select>
+  </div>
+
+  <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
+
+  <!-- Equipe de Atendimento -->
+  <div style="display:flex;flex-direction:column;gap:3px">
+    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">👥 Equipe</label>
+    <select id="equipe-filter" onchange="onFilterChange('equipe', this.value)"
+      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:150px">
+      <option value="">Todas</option>
+    </select>
+  </div>
+
+  <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
+
+  <!-- Portfólio -->
+  <div style="display:flex;flex-direction:column;gap:3px">
+    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">📁 Portfólio</label>
+    <select id="portfolio-filter" onchange="onFilterChange('portfolio', this.value)"
+      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:150px">
+      <option value="">Todos</option>
+    </select>
+  </div>
+
+  <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
+
+  <!-- Associação -->
+  <div style="display:flex;flex-direction:column;gap:3px">
+    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">🤝 Associação</label>
+    <select id="associacao-filter" onchange="onFilterChange('associacao', this.value)"
+      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:120px">
+      <option value="">Todas</option>
     </select>
   </div>
 
@@ -637,28 +670,28 @@
 
   <!-- Município -->
   <div style="display:flex;flex-direction:column;gap:3px">
-    <label style="font-size:.72rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">🏙️ Município</label>
+    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">🏙️ Município</label>
     <select id="mun-filter" onchange="onFilterChange('municipio', this.value)"
-      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.82rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:180px">
-      <option value="">Todos os municípios</option>
+      style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer;min-width:160px">
+      <option value="">Todos</option>
     </select>
   </div>
 
   <div style="width:1px;height:36px;background:#E2E8F0;align-self:center"></div>
 
-  <!-- Competência (Prestação de Contas) -->
+  <!-- Competência -->
   <div style="display:flex;flex-direction:column;gap:3px">
-    <label style="font-size:.72rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">📋 Competência</label>
+    <label style="font-size:.69rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">📋 Competência</label>
     <div style="display:flex;gap:6px;align-items:center">
       <select id="fb-mes" onchange="onFilterChange('mes', this.value)"
-        style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.82rem;color:#1E293B;background:#F8FAFC;cursor:pointer">
-        <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
-        <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
-        <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
-        <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+        style="padding:6px 8px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer">
+        <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+        <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
+        <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+        <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
       </select>
       <select id="fb-ano" onchange="onFilterChange('ano', this.value)"
-        style="padding:6px 10px;border:1px solid #CBD5E0;border-radius:7px;font-size:.82rem;color:#1E293B;background:#F8FAFC;cursor:pointer">
+        style="padding:6px 8px;border:1px solid #CBD5E0;border-radius:7px;font-size:.81rem;color:#1E293B;background:#F8FAFC;cursor:pointer">
       </select>
     </div>
   </div>
@@ -666,9 +699,9 @@
   <!-- Limpar filtros -->
   <div style="margin-left:auto;align-self:flex-end">
     <button onclick="clearFilters()"
-      style="padding:7px 16px;background:#F1F5F9;border:1px solid #CBD5E0;color:#475569;border-radius:7px;font-size:.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s"
+      style="padding:7px 14px;background:#F1F5F9;border:1px solid #CBD5E0;color:#475569;border-radius:7px;font-size:.81rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s"
       onmouseover="this.style.background='#E2E8F0'" onmouseout="this.style.background='#F1F5F9'">
-      ✕ Limpar filtros
+      ✕ Limpar
     </button>
   </div>
 
@@ -805,6 +838,30 @@
 
     <!-- View: CND (pos 4) -->
     <div class="view active" id="view-2">
+
+      <!-- Gráfico de Visão Geral -->
+      <div id="pca-chart-section" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+          <span style="font-size:.88rem;font-weight:700;color:var(--text)">📊 Visão Geral — Municípios</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="font-size:.73rem;color:var(--text-muted);white-space:nowrap">Agrupar por:</label>
+            <select id="chart-group-by" onchange="renderSummaryChart()"
+              style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:.8rem;background:#F8FAFC;color:var(--text)">
+              <option value="equipe_atendimento">Equipe de Atendimento</option>
+              <option value="portfolio">Portfólio</option>
+              <option value="tipo_conta">Tipo de Conta</option>
+              <option value="associacao">Associação</option>
+            </select>
+          </div>
+        </div>
+        <div id="pca-chart-empty" style="display:none;text-align:center;padding:30px;color:var(--text-muted);font-size:.84rem">
+          Importe municípios para ver o gráfico.
+        </div>
+        <div style="position:relative;height:220px" id="pca-chart-wrap">
+          <canvas id="summary-chart-canvas"></canvas>
+        </div>
+      </div>
+
       <div class="view-title">Prestação de Contas</div>
       <div class="view-subtitle">Certidões e Obrigações por Município • Fonte: TCE-SC / e-Sfinge / CAUC</div>
 
@@ -1133,7 +1190,7 @@ const CONFIG = {
 // ============================================================
 // ESTADO
 // ============================================================
-const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndFederal: [], cndSubTab: 'estadual', selectedMunicipio: '', selectedRegiao: '', estadualSub: 'envio', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
+const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndFederal: [], cndSubTab: 'estadual', selectedMunicipio: '', selectedRegiao: '', estadualSub: 'envio', selectedTipoConta: 'Betha', selectedEquipe: '', selectedPortfolio: '', selectedAssociacao: '', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
 // Abas que possuem versão histórica no servidor
 const HIST_SHEETS = ['Jira_Chamados', 'Jira_Chamados_Suporte', 'Jira_Implantacoes', 'NPS_Calculado', 'CND_Municipios', 'CND_Federal', 'CND_Estadual', 'Risco de Exclusão', 'Colaboradores'];
 
@@ -1447,8 +1504,7 @@ async function loadAllData() {
   updateKPIs();
   renderActiveView();
   renderFederal();
-  populateMunicipioFilter();
-  populateRegiaoFilter();
+  populateMainFilters();
   setTimeout(updateEsferaCards, 100);
   showLoading(false);
   document.getElementById('btn-refresh').disabled = false;
@@ -2660,11 +2716,9 @@ function renderCNDEstadual() {
   (_MUN_CACHE.docs || []).forEach(d => { if (d.municipio) munRegiaoMap[d.municipio.toLowerCase().trim()] = d.regiao || ''; });
 
   let cndSource = state.cndEstadual;
-  if (state.selectedMunicipio) {
-    cndSource = cndSource.filter(r => normMun(r.municipio) === normMun(state.selectedMunicipio));
-  }
-  if (regiaoFil) {
-    cndSource = cndSource.filter(r => munRegiaoMap[(r.municipio||'').toLowerCase().trim()] === regiaoFil);
+  const _validCNDNames = _getFilteredMunNames();
+  if (_validCNDNames.size > 0) {
+    cndSource = cndSource.filter(r => _validCNDNames.has((r.municipio||'').toLowerCase().trim()));
   }
 
   // Agrupar por município
@@ -4588,22 +4642,22 @@ function updateEsferaCards() {}
 const FILTER_KEY = 'pgc_filters';
 
 function _saveFilters() {
-  const d = document.getElementById('date-picker');
-  const m = document.getElementById('mun-filter');
-  const mes = document.getElementById('fb-mes');
-  const ano = document.getElementById('fb-ano');
   try {
     localStorage.setItem(FILTER_KEY, JSON.stringify({
-      date: d ? d.value : '',
-      municipio: m ? m.value : '',
-      mes: mes ? mes.value : '',
-      ano: ano ? ano.value : '',
+      date:       document.getElementById('date-picker')?.value || '',
+      tipoConta:  state.selectedTipoConta,
+      equipe:     state.selectedEquipe,
+      portfolio:  state.selectedPortfolio,
+      associacao: state.selectedAssociacao,
+      municipio:  state.selectedMunicipio,
+      mes:        document.getElementById('fb-mes')?.value || '',
+      ano:        document.getElementById('fb-ano')?.value || '',
     }));
   } catch(e) {}
 }
 
 function initFilterBar() {
-  // Preencher anos (competência)
+  // Preencher anos
   const anoSel = document.getElementById('fb-ano');
   if (anoSel) {
     const cur = new Date().getFullYear();
@@ -4614,29 +4668,27 @@ function initFilterBar() {
     }
   }
 
-  // Restaurar valores do localStorage ou usar defaults (hoje)
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(FILTER_KEY) || '{}'); } catch(e) {}
 
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
 
-  // Data
   const datePicker = document.getElementById('date-picker');
-  if (datePicker) {
-    datePicker.value = saved.date || todayStr;
-  }
+  if (datePicker) datePicker.value = saved.date || todayStr;
 
-  // Município (será re-populado após carga, mas preservar valor)
-  state.selectedMunicipio = saved.municipio || '';
+  // Restaurar filtros de hierarquia de municipios
+  state.selectedTipoConta  = saved.tipoConta  !== undefined ? saved.tipoConta  : 'Betha';
+  state.selectedEquipe     = saved.equipe     || '';
+  state.selectedPortfolio  = saved.portfolio  || '';
+  state.selectedAssociacao = saved.associacao || '';
+  state.selectedMunicipio  = saved.municipio  || '';
 
-  // Competência
   const fbMes = document.getElementById('fb-mes');
   const fbAno = document.getElementById('fb-ano');
   if (fbMes) fbMes.value = saved.mes || String(today.getMonth() + 1);
   if (fbAno) fbAno.value = saved.ano || String(today.getFullYear());
 
-  // Sincronizar competência com os selects internos do Envio
   _syncCompetenciaToEnvio();
 }
 
@@ -4652,35 +4704,35 @@ function _syncCompetenciaToEnvio() {
 function onFilterChange(type, value) {
   if (type === 'date') {
     onDateChange(value);
-  } else if (type === 'regiao') {
-    state.selectedRegiao = value;
-    // Sincronizar selects internos de região
-    const envioReg = document.getElementById('envio-regiao');
-    if (envioReg) envioReg.value = value;
-    const cndReg = document.getElementById('cnd-regiao-filter');
-    if (cndReg) cndReg.value = value;
-    // Filtrar município pelo regiao
-    _filterMunicipiosByRegiao(value);
-    // Re-renderizar
-    renderCNDEstadual();
-    renderEnvioView();
-    renderFederal();
+  } else if (type === 'tipo_conta') {
+    state.selectedTipoConta = value;
+    state.selectedEquipe = ''; state.selectedPortfolio = ''; state.selectedAssociacao = ''; state.selectedMunicipio = '';
+    _populateEquipeFilter();
+  } else if (type === 'equipe') {
+    state.selectedEquipe = value;
+    state.selectedPortfolio = ''; state.selectedAssociacao = ''; state.selectedMunicipio = '';
+    _populatePortfolioFilter();
+  } else if (type === 'portfolio') {
+    state.selectedPortfolio = value;
+    state.selectedAssociacao = ''; state.selectedMunicipio = '';
+    _populateAssociacaoFilter();
+  } else if (type === 'associacao') {
+    state.selectedAssociacao = value;
+    state.selectedMunicipio = '';
+    _populateMunicipioFilter2();
   } else if (type === 'municipio') {
-    onMunicipioChange(value);
+    state.selectedMunicipio = value;
+    renderCNDEstadual(); renderEnvioView(); renderFederal(); renderSummaryChart();
+  } else if (type === 'regiao') {
+    // Legado — ignorar
   } else if (type === 'mes' || type === 'ano') {
-    // Sincronizar com selects internos do Envio
     _syncCompetenciaToEnvio();
-    // Se já há dados carregados, buscar automaticamente
     const fbMes = document.getElementById('fb-mes');
     const fbAno = document.getElementById('fb-ano');
     if (fbMes && fbAno) {
       const key = fbAno.value + '-' + fbMes.value;
-      if (_ENVIO.cache[key]) {
-        _ENVIO.currentKey = key;
-        renderEnvioView();
-      } else {
-        buscarEnvio();
-      }
+      if (_ENVIO.cache[key]) { _ENVIO.currentKey = key; renderEnvioView(); }
+      else buscarEnvio();
     }
   }
   _saveFilters();
@@ -4690,32 +4742,26 @@ function clearFilters() {
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
 
-  // Data → hoje
   const datePicker = document.getElementById('date-picker');
   if (datePicker) { datePicker.value = todayStr; onDateChange(todayStr); }
 
-  // Região → todas
-  state.selectedRegiao = '';
-  const regSel = document.getElementById('regiao-filter');
-  if (regSel) regSel.value = '';
-  const envioReg = document.getElementById('envio-regiao');
-  if (envioReg) envioReg.value = '';
-  const cndReg = document.getElementById('cnd-regiao-filter');
-  if (cndReg) cndReg.value = '';
+  // Resetar filtros de hierarquia (Tipo de Conta volta para Betha)
+  state.selectedTipoConta  = 'Betha';
+  state.selectedEquipe     = '';
+  state.selectedPortfolio  = '';
+  state.selectedAssociacao = '';
+  state.selectedMunicipio  = '';
 
-  // Município → todos
-  const munSel = document.getElementById('mun-filter');
-  if (munSel) { munSel.value = ''; }
-  onMunicipioChange('');
-
-  // Competência → mês/ano atual
+  // Resetar competência
   const fbMes = document.getElementById('fb-mes');
   const fbAno = document.getElementById('fb-ano');
   if (fbMes) fbMes.value = String(today.getMonth() + 1);
   if (fbAno) fbAno.value = String(today.getFullYear());
   _syncCompetenciaToEnvio();
 
-  // Limpar localStorage
+  // Re-popular filtros em cascata a partir do início
+  _populateTipoContaFilter();
+
   try { localStorage.removeItem(FILTER_KEY); } catch(e) {}
 }
 
@@ -4732,6 +4778,199 @@ function onMunicipioChange(val) {
 }
 
 // ─── FILTROS DE REGIÃO ────────────────────────────────────────────────────────
+
+// ─── FILTROS HIERÁRQUICOS: Tipo de Conta → Equipe → Portfólio → Associação → Município ──
+
+function _getFilteredMuns() {
+  let muns = _MUN_CACHE.docs || [];
+  if (state.selectedTipoConta)  muns = muns.filter(d => d.tipo_conta         === state.selectedTipoConta);
+  if (state.selectedEquipe)     muns = muns.filter(d => d.equipe_atendimento === state.selectedEquipe);
+  if (state.selectedPortfolio)  muns = muns.filter(d => d.portfolio          === state.selectedPortfolio);
+  if (state.selectedAssociacao) muns = muns.filter(d => (d.associacao||'').trim() === state.selectedAssociacao);
+  if (state.selectedMunicipio)  muns = muns.filter(d => (d.municipio||'').toLowerCase().trim() === (state.selectedMunicipio||'').toLowerCase().trim());
+  return muns;
+}
+
+function _getFilteredMunNames() {
+  return new Set(_getFilteredMuns().map(d => (d.municipio||'').toLowerCase().trim()));
+}
+
+async function populateMainFilters() {
+  await _loadMunicipios();
+  _populateTipoContaFilter();
+}
+
+function _populateTipoContaFilter() {
+  const muns = _MUN_CACHE.docs || [];
+  const tipos = [...new Set(muns.map(d => d.tipo_conta).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt'));
+  const sel = document.getElementById('tipo-conta-filter');
+  if (sel) {
+    const cur = state.selectedTipoConta;
+    sel.innerHTML = '<option value="">Todos</option>';
+    tipos.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t; opt.textContent = t;
+      if (t === cur) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+  _populateEquipeFilter();
+}
+
+function _populateEquipeFilter() {
+  let muns = _MUN_CACHE.docs || [];
+  if (state.selectedTipoConta) muns = muns.filter(d => d.tipo_conta === state.selectedTipoConta);
+  const equipes = [...new Set(muns.map(d => d.equipe_atendimento).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt'));
+  const sel = document.getElementById('equipe-filter');
+  if (sel) {
+    const cur = state.selectedEquipe;
+    sel.innerHTML = '<option value="">Todas</option>';
+    equipes.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e; opt.textContent = e;
+      if (e === cur) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    if (cur && !equipes.includes(cur)) state.selectedEquipe = '';
+  }
+  _populatePortfolioFilter();
+}
+
+function _populatePortfolioFilter() {
+  let muns = _MUN_CACHE.docs || [];
+  if (state.selectedTipoConta) muns = muns.filter(d => d.tipo_conta === state.selectedTipoConta);
+  if (state.selectedEquipe)    muns = muns.filter(d => d.equipe_atendimento === state.selectedEquipe);
+  const portfolios = [...new Set(muns.map(d => d.portfolio).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt'));
+  const sel = document.getElementById('portfolio-filter');
+  if (sel) {
+    const cur = state.selectedPortfolio;
+    sel.innerHTML = '<option value="">Todos</option>';
+    portfolios.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p; opt.textContent = p;
+      if (p === cur) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    if (cur && !portfolios.includes(cur)) state.selectedPortfolio = '';
+  }
+  _populateAssociacaoFilter();
+}
+
+function _populateAssociacaoFilter() {
+  let muns = _MUN_CACHE.docs || [];
+  if (state.selectedTipoConta) muns = muns.filter(d => d.tipo_conta === state.selectedTipoConta);
+  if (state.selectedEquipe)    muns = muns.filter(d => d.equipe_atendimento === state.selectedEquipe);
+  if (state.selectedPortfolio) muns = muns.filter(d => d.portfolio === state.selectedPortfolio);
+  const assocs = [...new Set(muns.map(d => (d.associacao||'').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt'));
+  const sel = document.getElementById('associacao-filter');
+  if (sel) {
+    const cur = state.selectedAssociacao;
+    sel.innerHTML = '<option value="">Todas</option>';
+    assocs.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a; opt.textContent = a;
+      if (a === cur) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    if (cur && !assocs.includes(cur)) state.selectedAssociacao = '';
+  }
+  _populateMunicipioFilter2();
+}
+
+function _populateMunicipioFilter2() {
+  let muns = _MUN_CACHE.docs || [];
+  if (state.selectedTipoConta)  muns = muns.filter(d => d.tipo_conta === state.selectedTipoConta);
+  if (state.selectedEquipe)     muns = muns.filter(d => d.equipe_atendimento === state.selectedEquipe);
+  if (state.selectedPortfolio)  muns = muns.filter(d => d.portfolio === state.selectedPortfolio);
+  if (state.selectedAssociacao) muns = muns.filter(d => (d.associacao||'').trim() === state.selectedAssociacao);
+  muns.sort((a,b) => (a.municipio||'').localeCompare(b.municipio||'','pt'));
+  const sel = document.getElementById('mun-filter');
+  if (sel) {
+    const cur = state.selectedMunicipio;
+    sel.innerHTML = '<option value="">Todos</option>';
+    muns.forEach(d => {
+      if (!d.municipio) return;
+      const opt = document.createElement('option');
+      opt.value = d.municipio; opt.textContent = d.municipio;
+      if (d.municipio === cur) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    if (cur && !muns.find(d => d.municipio === cur)) state.selectedMunicipio = '';
+  }
+  renderSummaryChart();
+  renderCNDEstadual();
+  renderEnvioView();
+  renderFederal();
+}
+
+// ─── GRÁFICO DE VISÃO GERAL ──────────────────────────────────────────────────
+
+let _summaryChart = null;
+
+function renderSummaryChart() {
+  if (typeof Chart === 'undefined') return; // Chart.js ainda não carregou
+  const groupBy = document.getElementById('chart-group-by')?.value || 'equipe_atendimento';
+  const muns = _getFilteredMuns();
+  const emptyEl = document.getElementById('pca-chart-empty');
+  const wrapEl  = document.getElementById('pca-chart-wrap');
+
+  if (!muns.length) {
+    if (emptyEl) emptyEl.style.display = 'block';
+    if (wrapEl)  wrapEl.style.display  = 'none';
+    if (_summaryChart) { _summaryChart.destroy(); _summaryChart = null; }
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+  if (wrapEl)  wrapEl.style.display  = 'block';
+
+  // Agrupar por dimensão
+  const counts = {};
+  muns.forEach(d => {
+    const key = (d[groupBy] || 'Não definido').trim();
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  const sorted  = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+  const labels  = sorted.map(e => e[0]);
+  const values  = sorted.map(e => e[1]);
+
+  const PALETTE = ['#0761FF','#38A169','#D69E2E','#805AD5','#E53E3E','#0BC5EA','#ED8936','#48BB78','#F687B3','#4299E1','#68D391','#FC8181'];
+
+  const ctx = document.getElementById('summary-chart-canvas');
+  if (!ctx) return;
+  if (_summaryChart) { _summaryChart.destroy(); _summaryChart = null; }
+
+  _summaryChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Municípios',
+        data: values,
+        backgroundColor: labels.map((_, i) => PALETTE[i % PALETTE.length] + 'BB'),
+        borderColor:     labels.map((_, i) => PALETTE[i % PALETTE.length]),
+        borderWidth: 1.5,
+        borderRadius: 5,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: c => ` ${c.parsed.x} município${c.parsed.x !== 1 ? 's' : ''}`
+          }
+        }
+      },
+      scales: {
+        x: { beginAtZero: true, grid: { color: '#F1F5F9' }, ticks: { stepSize: 1, font: { size: 11 } } },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+}
 
 let _REGIAO_CACHE = [];
 
@@ -5055,16 +5294,15 @@ function renderEnvioView() {
   let allDocs = _ENVIO.cache[_ENVIO.currentKey] || [];
   const [ano, mes] = _ENVIO.currentKey.split('-').map(Number);
 
-  // Filtro global de município (header)
-  if (state.selectedMunicipio) {
-    const munNorm = state.selectedMunicipio.toLowerCase().trim();
-    allDocs = allDocs.filter(d => (d.municipio||'').toLowerCase().trim() === munNorm);
-  }
+  // Filtro hierárquico global (tipo_conta → equipe → portfolio → associacao → municipio)
+  const _validMunNames = _getFilteredMunNames();
+  const _hasHierFilter = _validMunNames.size > 0;
+  if (_hasHierFilter) allDocs = allDocs.filter(d => _validMunNames.has((d.municipio||'').toLowerCase().trim()));
 
   document.getElementById('envio-loading').style.display = 'none';
 
   const scope        = document.getElementById('envio-scope')?.value || 'portfolio';
-  const regiaoFil    = state.selectedRegiao || document.getElementById('envio-regiao')?.value || '';
+  const regiaoFil    = document.getElementById('envio-regiao')?.value || '';
   const statusFil    = document.getElementById('envio-status-filter')?.value || '';
   const search       = (document.getElementById('envio-search')?.value || '').toLowerCase().trim();
 
