@@ -5336,6 +5336,9 @@ async function buscarEnvio() {
   if (_ENVIO.cache[key]) {
     _ENVIO.currentKey = key;
     await _loadMunicipios();
+    if (!_RATIF.loaded) {
+      try { _RATIF.docs = await fetchFirestore('ratificacoes'); _RATIF.loaded = true; } catch(e) {}
+    }
     renderEnvioView();
     renderSummaryChart();
     return;
@@ -5347,9 +5350,13 @@ async function buscarEnvio() {
   document.getElementById('envio-loading').style.display = 'block';
 
   try {
+    const ratifPromise = _RATIF.loaded
+      ? Promise.resolve(null)
+      : fetchFirestore('ratificacoes').then(docs => { _RATIF.docs = docs; _RATIF.loaded = true; }).catch(()=>{});
     const [snap] = await Promise.all([
       _db.collection('status_envio').where('ano', '==', ano).where('mes', '==', mes).get(),
-      _loadMunicipios()
+      _loadMunicipios(),
+      ratifPromise
     ]);
     _ENVIO.cache[key] = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
     _ENVIO.currentKey = key;
@@ -5416,6 +5423,18 @@ function renderEnvioView() {
   (state.cndEstadual || []).forEach(r => {
     cndByMun[(r.municipio||'').toLowerCase().trim()] = r.periodo1 || '';
   });
+
+  // Ratificação por município (agrega: todos ok = sim, qualquer não = nao, sem dados = '')
+  const ratifByMun = {};
+  if (_RATIF.loaded) {
+    const ratifDocs = _RATIF.docs.filter(d => d.ano == ano && d.mes == mes);
+    ratifDocs.forEach(d => {
+      const k = (d.municipio||'').toLowerCase().trim();
+      if (!k) return;
+      if (ratifByMun[k] === 'nao') return;
+      ratifByMun[k] = d.ratificacao_ok ? 'sim' : 'nao';
+    });
+  }
 
   // Agrupar docs por município
   const munDocs = {};
@@ -5497,14 +5516,18 @@ function renderEnvioView() {
     const munDisplay = meta?.municipio || docs[0]?.municipio || munKey;
 
     // Cores do status de envio
-    const stC = status === 'completo' ? {c:'#276749',bg:'#F0FFF4',bd:'#9AE6B4',ico:'✅',lbl:'Completo'}
-              : status === 'parcial'  ? {c:'#7B6F00',bg:'#FFFBEB',bd:'#F6E05E',ico:'⚠️',lbl:'Parcial'}
-              :                         {c:'#9B2335',bg:'#FFF5F5',bd:'#FEB2B2',ico:'❌',lbl:'Não Enviado'};
-    // Cores do CND
-    const cC = cndSt === 'Com CND' ? {c:'#276749',bg:'#F0FFF4',bd:'#9AE6B4',ico:'✅'}
-             : cndSt === 'Sem CND' ? {c:'#9B2335',bg:'#FFF5F5',bd:'#FEB2B2',ico:'❌'}
-             :                        {c:'#64748B',bg:'#F8FAFC',bd:'#CBD5E0',ico:'—'};
-    const cndLabel = cndSt || '—';
+    const stC = status === 'completo' ? {c:'#276749',bg:'#F0FFF4',bd:'#9AE6B4',lbl:'Completo'}
+              : status === 'parcial'  ? {c:'#7B6F00',bg:'#FFFBEB',bd:'#F6E05E',lbl:'Parcial'}
+              :                         {c:'#9B2335',bg:'#FFF5F5',bd:'#FEB2B2',lbl:'Não enviou'};
+    // Ratificação
+    const ratifSt = ratifByMun[munKey] || '';
+    const rC = ratifSt === 'sim' ? {c:'#276749',bg:'#F0FFF4',bd:'#9AE6B4',lbl:'Ratif. Sim'}
+             : ratifSt === 'nao' ? {c:'#9B2335',bg:'#FFF5F5',bd:'#FEB2B2',lbl:'Ratif. Não'}
+             :                      {c:'#64748B',bg:'#F8FAFC',bd:'#CBD5E0',lbl:'Ratif. —'};
+    // CND
+    const cC = cndSt === 'Com CND' ? {c:'#276749',bg:'#F0FFF4',bd:'#9AE6B4',lbl:'CND Sim'}
+             : cndSt === 'Sem CND' ? {c:'#9B2335',bg:'#FFF5F5',bd:'#FEB2B2',lbl:'CND Não'}
+             :                        {c:'#64748B',bg:'#F8FAFC',bd:'#CBD5E0',lbl:'CND —'};
 
     // Entidades ordenadas
     const docsSorted = [...docs].sort((a,b) => {
@@ -5585,8 +5608,9 @@ function renderEnvioView() {
       <div onclick="toggleEnvioMun(this)" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;user-select:none;background:#fff;transition:background .12s" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='#fff'">
         <span class="envio-toggle" style="font-size:.75rem;color:#94A3B8;flex-shrink:0;transition:transform .18s;display:inline-block">▶</span>
         <span style="flex:1;font-size:.84rem;font-weight:700;color:#1E293B">${munDisplay}</span>
-        <span style="flex-shrink:0;padding:2px 10px;border-radius:12px;font-size:.71rem;font-weight:700;background:${stC.bg};color:${stC.c};border:1px solid ${stC.bd}">${stC.ico} ${stC.lbl}</span>
-        <span style="flex-shrink:0;padding:2px 10px;border-radius:12px;font-size:.71rem;font-weight:600;background:${cC.bg};color:${cC.c};border:1px solid ${cC.bd}">CND ${cC.ico} ${cndLabel}</span>
+        <span style="flex-shrink:0;padding:2px 10px;border-radius:12px;font-size:.71rem;font-weight:700;background:${stC.bg};color:${stC.c};border:1px solid ${stC.bd}">${stC.lbl}</span>
+        <span style="flex-shrink:0;padding:2px 10px;border-radius:12px;font-size:.71rem;font-weight:700;background:${rC.bg};color:${rC.c};border:1px solid ${rC.bd}">${rC.lbl}</span>
+        <span style="flex-shrink:0;padding:2px 10px;border-radius:12px;font-size:.71rem;font-weight:700;background:${cC.bg};color:${cC.c};border:1px solid ${cC.bd}">${cC.lbl}</span>
       </div>
       <div class="envio-detail" style="display:none;border-top:1px solid #EDF2F7">
         ${entityHtml || '<div style="padding:12px 40px;font-size:.78rem;color:#94A3B8">Sem entidades registradas.</div>'}
