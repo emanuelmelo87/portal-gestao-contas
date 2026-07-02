@@ -5799,70 +5799,20 @@ function renderRatifTable() {
   <div id="admin-data-panel" style="display:none;padding:28px;max-width:1400px;margin:0 auto">
 
     <!-- Cards das coleções -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:28px">
-      <div onclick="adminLoadCollection('jira_chamados')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:7px 10px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:.85rem;margin-bottom:1px">📊</div>
-        <div style="color:#fff;font-weight:700;font-size:.72rem">Chamados</div>
-        <div style="color:rgba(255,255,255,.4);font-size:.62rem;margin-top:0">jira_chamados</div>
-        <div id="card-count-jira_chamados" style="color:#0761FF;font-size:.9rem;font-weight:700;margin-top:3px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('jira_chamados_issues')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:7px 10px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:.85rem;margin-bottom:1px">🎫</div>
-        <div style="color:#fff;font-weight:700;font-size:.72rem">Issues</div>
-        <div style="color:rgba(255,255,255,.4);font-size:.62rem;margin-top:0">jira_chamados_issues</div>
-        <div id="card-count-jira_chamados_issues" style="color:#0761FF;font-size:.9rem;font-weight:700;margin-top:3px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('tipos_cliente')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:7px 10px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#D69E2E'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:.85rem;margin-bottom:1px">🏷️</div>
-        <div style="color:#fff;font-weight:700;font-size:.72rem">Tipos de Cliente</div>
-        <div style="color:rgba(255,255,255,.4);font-size:.62rem;margin-top:0">tipos_cliente</div>
-        <div id="card-count-tipos_cliente" style="color:#D69E2E;font-size:.9rem;font-weight:700;margin-top:3px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('equipes_atendimento')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:7px 10px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0BC5EA'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:.85rem;margin-bottom:1px">👥</div>
-        <div style="color:#fff;font-weight:700;font-size:.72rem">Equipes de Atendimento</div>
-        <div style="color:rgba(255,255,255,.4);font-size:.62rem;margin-top:0">equipes_atendimento</div>
-        <div id="card-count-equipes_atendimento" style="color:#0BC5EA;font-size:.9rem;font-weight:700;margin-top:3px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('municipios')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:7px 10px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:.85rem;margin-bottom:1px">🗺️</div>
-        <div style="color:#fff;font-weight:700;font-size:.72rem">Municípios</div>
-        <div style="color:rgba(255,255,255,.4);font-size:.62rem;margin-top:0">municipios</div>
-        <div id="card-count-municipios" style="color:#0761FF;font-size:.9rem;font-weight:700;margin-top:3px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('status_envio')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:7px 10px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:.85rem;margin-bottom:1px">📋</div>
-        <div style="color:#fff;font-weight:700;font-size:.72rem">Status de Envio</div>
-        <div style="color:rgba(255,255,255,.4);font-size:.62rem;margin-top:0">status_envio</div>
-        <div id="card-count-status_envio" style="color:#0761FF;font-size:.9rem;font-weight:700;margin-top:3px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('_meta')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:7px 10px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:.85rem;margin-bottom:1px">⚙️</div>
-        <div style="color:#fff;font-weight:700;font-size:.72rem">Metadados</div>
-        <div style="color:rgba(255,255,255,.4);font-size:.62rem;margin-top:0">_meta</div>
-        <div id="card-count-_meta" style="color:#0761FF;font-size:.9rem;font-weight:700;margin-top:3px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('colaboradores')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:7px 10px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#38A169'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:.85rem;margin-bottom:1px">👥</div>
-        <div style="color:#fff;font-weight:700;font-size:.72rem">Colaboradores</div>
-        <div style="color:rgba(255,255,255,.4);font-size:.62rem;margin-top:0">colaboradores</div>
-        <div id="card-count-colaboradores" style="color:#38A169;font-size:.9rem;font-weight:700;margin-top:3px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('ratificacoes')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:7px 10px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#805AD5'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:.85rem;margin-bottom:1px">✅</div>
-        <div style="color:#fff;font-weight:700;font-size:.72rem">Ratificações</div>
-        <div style="color:rgba(255,255,255,.4);font-size:.62rem;margin-top:0">ratificacoes</div>
-        <div id="card-count-ratificacoes" style="color:#805AD5;font-size:.9rem;font-weight:700;margin-top:3px">—</div>
-      </div>
-      <div onclick="adminLoadCollection('cnd_estadual')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:7px 10px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0EA5E9'" onmouseout="this.style.borderColor='#2D3748'">
-        <div style="font-size:.85rem;margin-bottom:1px">📄</div>
-        <div style="color:#fff;font-weight:700;font-size:.72rem">CND Estadual</div>
-        <div style="color:rgba(255,255,255,.4);font-size:.62rem;margin-top:0">cnd_estadual</div>
-        <div id="card-count-cnd_estadual" style="color:#0EA5E9;font-size:.9rem;font-weight:700;margin-top:3px">—</div>
-      </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin-bottom:20px">
+<div onclick="adminLoadCollection('jira_chamados')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">📊</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Chamados</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">jira_chamados</div></div><div id="card-count-jira_chamados" style="color:#0761FF;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
+<div onclick="adminLoadCollection('jira_chamados_issues')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">🎫</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Issues</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">jira_chamados_issues</div></div><div id="card-count-jira_chamados_issues" style="color:#0761FF;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
+<div onclick="adminLoadCollection('tipos_cliente')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#D69E2E'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">🏷️</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tipos de Cliente</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">tipos_cliente</div></div><div id="card-count-tipos_cliente" style="color:#D69E2E;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
+<div onclick="adminLoadCollection('equipes_atendimento')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#0BC5EA'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">👥</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Equipes</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">equipes_atendimento</div></div><div id="card-count-equipes_atendimento" style="color:#0BC5EA;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
+<div onclick="adminLoadCollection('municipios')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">🗺️</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Municípios</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">municipios</div></div><div id="card-count-municipios" style="color:#0761FF;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
+<div onclick="adminLoadCollection('status_envio')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">📋</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Status de Envio</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">status_envio</div></div><div id="card-count-status_envio" style="color:#0761FF;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
+<div onclick="adminLoadCollection('_meta')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">⚙️</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Metadados</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">_meta</div></div><div id="card-count-_meta" style="color:#0761FF;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
+<div onclick="adminLoadCollection('colaboradores')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#38A169'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">👥</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Colaboradores</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">colaboradores</div></div><div id="card-count-colaboradores" style="color:#38A169;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
+<div onclick="adminLoadCollection('ratificacoes')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#805AD5'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">✅</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ratificações</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">ratificacoes</div></div><div id="card-count-ratificacoes" style="color:#805AD5;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
+<div onclick="adminLoadCollection('cnd_estadual')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#0EA5E9'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">📄</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CND Estadual</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">cnd_estadual</div></div><div id="card-count-cnd_estadual" style="color:#0EA5E9;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
     </div>
 
-    <!-- Área da tabela -->
+    <!-- Área da tabela --><!-- Área da tabela -->
     <div id="admin-table-area" style="display:none;background:#1C1A23;border:1px solid #2D3748;border-radius:10px;overflow:hidden">
       <!-- Toolbar -->
       <div style="padding:16px 20px;border-bottom:1px solid #2D3748;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
