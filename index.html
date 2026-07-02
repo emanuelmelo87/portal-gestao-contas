@@ -5413,9 +5413,10 @@ function calcDocScore(d, mes) {
   let modAplic = 0, modOk = 0;
   REGRAS_EV.forEach(r => {
     if (!regraAplic(r, tipo, mes)) return;
-    modAplic++;
     const v = d[r.campo];
-    if (v !== null && v !== undefined && r.ok(v)) modOk++;
+    if (v === null || v === undefined) return; // "—" não conta no score
+    modAplic++;
+    if (r.ok(v)) modOk++;
   });
   return { modAplic, modOk, isOk: modAplic > 0 && modOk === modAplic };
 }
