@@ -5099,28 +5099,26 @@ function _renderEnvioChart(filteredMuns, munMetaMap, filteredMunNames, groupBy) 
   let allDocs = (_ENVIO.cache[_ENVIO.currentKey] || [])
     .filter(d => filteredMunNames.has((d.municipio||'').toLowerCase().trim()));
 
-  const munIdx = {};
+  // Agrupar por município (nova estrutura: um doc por entidade)
+  const munDocsMap = {};
   allDocs.forEach(d => {
     const k = (d.municipio||'').toLowerCase().trim();
-    if (!munIdx[k]) munIdx[k] = {};
-    munIdx[k][d.modulo || ''] = d.qtd_pacotes;
+    if (!munDocsMap[k]) munDocsMap[k] = [];
+    munDocsMap[k].push(d);
   });
 
-  const modulos = [...new Set(allDocs.map(d => d.modulo).filter(Boolean))];
-
   function calcSt(k) {
-    const mods = munIdx[k] || {};
-    let ok = 0, fail = 0;
-    modulos.forEach(m => { const q = mods[m]; if (q > 0) ok++; else if (q === 0) fail++; });
-    if (!modulos.length) return 'nenhum';
-    if (ok === modulos.length) return 'completo';
-    if (ok > 0) return 'parcial';
+    const docs = munDocsMap[k] || [];
+    const active = docs.filter(d => (d.modulos_aplicaveis || 0) > 0);
+    if (active.length === 0) return 'nenhum';
+    if (active.every(d => d.status_ok)) return 'completo';
+    if (active.some(d => d.status_ok || (d.modulos_ok || 0) > 0)) return 'parcial';
     return 'nenhum';
   }
 
   const envioStatus = {};
   filteredMunNames.forEach(k => { envioStatus[k] = 'nenhum'; });
-  Object.keys(munIdx).forEach(k => { envioStatus[k] = calcSt(k); });
+  Object.keys(munDocsMap).forEach(k => { envioStatus[k] = calcSt(k); });
 
   const nCompleto = Object.values(envioStatus).filter(s => s === 'completo').length;
   const nParcial  = Object.values(envioStatus).filter(s => s === 'parcial').length;
@@ -5440,46 +5438,36 @@ function renderEnvioView() {
   const munMeta = {};
   _MUN_CACHE.docs.forEach(d => { if (d.municipio) munMeta[d.municipio.toLowerCase().trim()] = d; });
 
-  // Portfólio = municípios que constam no Firestore municipios (ou fallback ao ESF_PORTFOLIO se banco vazio)
+  // Portfólio = municípios que constam no Firestore municipios
   const portfolioSet = _MUN_CACHE.loaded && _MUN_CACHE.docs.length > 0
     ? new Set(_MUN_CACHE.docs.map(d => (d.municipio||'').toLowerCase().trim()))
     : new Set(ESF_PORTFOLIO.map(m => m.toLowerCase().trim()));
 
-  // Agrupar docs por municipio
-  const munIdx = {}; // municipio → { modulo → qtd_pacotes }
+  // Nova estrutura: um documento por entidade — agrupar por município
+  const munDocs = {}; // municipio → [docs de entidade]
   allDocs.forEach(d => {
     const mun = d.municipio || '';
-    if (!munIdx[mun]) munIdx[mun] = {};
-    munIdx[mun][d.modulo || ''] = d.qtd_pacotes;
+    if (!munDocs[mun]) munDocs[mun] = [];
+    munDocs[mun].push(d);
   });
 
-  // Módulos únicos — todos presentes no período
-  const modulos = [...new Set(allDocs.map(d => d.modulo).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt-BR'));
-
-  // Função de status por município
+  // Status por município baseado em entidades
   function calcStatus(mun) {
-    const mods = munIdx[mun] || {};
-    let ok = 0, fail = 0;
-    modulos.forEach(m => {
-      const q = mods[m];
-      if (q > 0) ok++;
-      else if (q === 0) fail++;
-    });
-    if (ok === modulos.length) return 'completo';
-    if (ok === 0 && fail === 0) return 'nenhum'; // sem registro algum
-    if (ok > 0) return 'parcial';
+    const docs   = munDocs[mun] || [];
+    const active = docs.filter(d => (d.modulos_aplicaveis || 0) > 0);
+    if (active.length === 0) return 'nenhum';
+    if (active.every(d => d.status_ok)) return 'completo';
+    if (active.some(d => d.status_ok || (d.modulos_ok || 0) > 0)) return 'parcial';
     return 'nenhum';
   }
 
-  // Lista de municípios filtrada
-  let municipios = Object.keys(munIdx).sort((a,b) => a.localeCompare(b,'pt-BR'));
-
+  let municipios = Object.keys(munDocs).sort((a,b) => a.localeCompare(b,'pt-BR'));
 
   // Contagens para cards
   const total    = municipios.length;
   const nOk      = municipios.filter(m => calcStatus(m) === 'completo').length;
   const nParcial = municipios.filter(m => calcStatus(m) === 'parcial').length;
-  const nNenhum  = municipios.filter(m => ['nenhum'].includes(calcStatus(m))).length;
+  const nNenhum  = municipios.filter(m => calcStatus(m) === 'nenhum').length;
 
   document.getElementById('envio-card-total').textContent   = total;
   document.getElementById('envio-card-ok').textContent      = nOk;
@@ -5498,7 +5486,7 @@ function renderEnvioView() {
 
   const mesLabel = MESES_LABEL[mes-1];
   document.getElementById('envio-info').textContent =
-    municipios.length + '/' + total + ' municípios · ' + modulos.length + ' módulos · ' + mesLabel + '/' + ano;
+    municipios.length + '/' + total + ' municípios · ' + mesLabel + '/' + ano;
 
   if (municipios.length === 0) {
     document.getElementById('envio-list').style.display  = 'none';
@@ -5512,19 +5500,21 @@ function renderEnvioView() {
   document.getElementById('envio-empty').style.display = 'none';
   document.getElementById('envio-list').style.display  = 'block';
 
-  // Renderizar lista de municípios
+  const TIPO_COLORS_EV = { Prefeitura:'#1e40af', CM:'#7c3aed', CI:'#b45309', Consorcio:'#0f766e', Outros:'#475569' };
+  const TIPO_ORD_EV    = { Prefeitura:0, CM:1, CI:2, Consorcio:3, Outros:4 };
+
   const listEl = document.getElementById('envio-list');
   listEl.innerHTML = municipios.map((mun, rowIdx) => {
-    const mods    = munIdx[mun] || {};
+    const docs    = munDocs[mun] || [];
+    const active  = docs.filter(d => (d.modulos_aplicaveis || 0) > 0);
     const status  = calcStatus(mun);
-    let okCount   = 0, failCount = 0;
-    modulos.forEach(m => {
-      const q = mods[m];
-      if (q > 0) okCount++;
-      else if (q === 0) failCount++;
-    });
-    const pct = modulos.length ? Math.round(okCount / modulos.length * 100) : 0;
-    const barColor  = status === 'completo' ? '#38A169' : status === 'parcial' ? '#D69E2E' : '#E53E3E';
+
+    // Totais agregados
+    const totalOk    = active.reduce((s, d) => s + (d.modulos_ok || 0), 0);
+    const totalAplic = active.reduce((s, d) => s + (d.modulos_aplicaveis || 0), 0);
+    const pct = totalAplic ? Math.round(totalOk / totalAplic * 100) : 0;
+
+    const barColor   = status === 'completo' ? '#38A169' : status === 'parcial' ? '#D69E2E' : '#E53E3E';
     const badgeStyle = status === 'completo'
       ? 'background:#F0FFF4;color:#276749;border:1px solid #9AE6B4'
       : status === 'parcial'
@@ -5532,32 +5522,35 @@ function renderEnvioView() {
       : 'background:#FFF5F5;color:#9B2335;border:1px solid #FEB2B2';
     const badgeTxt = status === 'completo' ? '✅ Completo' : status === 'parcial' ? '⚠️ Parcial' : '❌ Não enviou';
 
-    // Módulos faltando (para hint)
-    const faltando = modulos.filter(m => {
-      const q = mods[m];
-      return q === 0 || q === undefined || q === null;
-    });
+    // Hint de faltando — agrega modulos_faltantes de todas as entidades
+    const faltando = [...new Set(active.flatMap(d => d.modulos_faltantes || []))];
     const faltandoHint = faltando.length > 0 && faltando.length <= 3
       ? 'Falta: ' + faltando.join(', ')
       : faltando.length > 3
       ? 'Falta: ' + faltando.slice(0,2).join(', ') + ' +' + (faltando.length-2)
       : '';
 
-    const meta = munMeta[mun.toLowerCase().trim()];
+    const meta   = munMeta[mun.toLowerCase().trim()];
     const regiao = meta?.regiao ? `<span style="font-size:.7rem;color:#718096;margin-left:6px">${meta.regiao}</span>` : '';
+    const rowBg  = rowIdx % 2 === 0 ? '#fff' : '#FAFAFA';
 
-    const rowBg = rowIdx % 2 === 0 ? '#fff' : '#FAFAFA';
+    // Linhas de entidade (expandível) — ordenadas por tipo
+    const docsSorted = [...docs].sort((a, b) => {
+      const ta = TIPO_ORD_EV[a.entidade] ?? 5, tb = TIPO_ORD_EV[b.entidade] ?? 5;
+      return ta !== tb ? ta - tb : (a.nomeUnidade||'').localeCompare(b.nomeUnidade||'', 'pt-BR');
+    });
 
-    // Linhas de detalhe (módulos)
-    const detailRows = modulos.map(m => {
-      const q = mods[m];
-      const qLabel = q === undefined || q === null ? '—' : String(q);
-      const stIcon  = q === undefined || q === null ? '<span style="color:#A0AEC0">—</span>'
-                    : q > 0 ? '✅' : '<span style="color:#E53E3E">❌</span>';
+    const detailRows = docsSorted.map(d => {
+      const tc = TIPO_COLORS_EV[d.entidade] || '#475569';
+      const tipoBadge = `<span style="background:${tc}18;color:${tc};border:1px solid ${tc}44;border-radius:4px;padding:1px 5px;font-size:.68rem;font-weight:700;margin-right:6px">${d.entidade||'?'}</span>`;
+      const entOk    = d.modulos_ok || 0;
+      const entAplic = d.modulos_aplicaveis || 0;
+      const entIcon  = entAplic === 0 ? '<span style="color:#A0AEC0">—</span>'
+                     : d.status_ok ? '✅' : '<span style="color:#E53E3E">❌</span>';
       return `<tr style="border-top:1px solid #EDF2F7">
-        <td style="padding:6px 12px 6px 48px;font-size:.8rem;color:#4A5568">${m}</td>
-        <td style="padding:6px 14px;font-size:.8rem;text-align:right;color:#718096">${qLabel}</td>
-        <td style="padding:6px 14px;font-size:.85rem;text-align:center">${stIcon}</td>
+        <td style="padding:6px 12px 6px 48px;font-size:.8rem;color:#4A5568">${tipoBadge}${d.nomeUnidade||''}</td>
+        <td style="padding:6px 14px;font-size:.8rem;text-align:right;color:#718096">${entOk}/${entAplic}</td>
+        <td style="padding:6px 14px;font-size:.85rem;text-align:center">${entIcon}</td>
       </tr>`;
     }).join('');
 
@@ -5571,14 +5564,14 @@ function renderEnvioView() {
           <div style="flex:1;height:5px;background:#EDF2F7;border-radius:3px;overflow:hidden">
             <div style="width:${pct}%;height:100%;background:${barColor};border-radius:3px"></div>
           </div>
-          <span style="font-size:.72rem;color:#718096;white-space:nowrap">${okCount}/${modulos.length}</span>
+          <span style="font-size:.72rem;color:#718096;white-space:nowrap">${totalOk}/${totalAplic}</span>
         </div>
         <span style="font-size:.72rem;color:#A0AEC0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${faltandoHint}</span>
       </div>
       <table style="display:none;width:100%;border-collapse:collapse;background:#FAFCFF">
         <tr style="background:#F1F5F9">
-          <th style="padding:5px 12px 5px 48px;font-size:.7rem;font-weight:600;color:#718096;text-align:left">Módulo</th>
-          <th style="padding:5px 14px;font-size:.7rem;font-weight:600;color:#718096;text-align:right">Pacotes</th>
+          <th style="padding:5px 12px 5px 48px;font-size:.7rem;font-weight:600;color:#718096;text-align:left">Entidade</th>
+          <th style="padding:5px 14px;font-size:.7rem;font-weight:600;color:#718096;text-align:right">Módulos OK</th>
           <th style="padding:5px 14px;font-size:.7rem;font-weight:600;color:#718096;text-align:center">Status</th>
         </tr>
         ${detailRows}
