@@ -2674,150 +2674,91 @@ function renderCNDEstadual() {
   const tableDiv  = document.getElementById('cnd-estadual-table');
 
   if (!state.cndEstadual.length) {
-    donutsDiv.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--text-muted)">Dados CND Estadual indisponíveis.</div>';
+    donutsDiv.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted)">Dados CND Estadual indisponíveis.</div>';
     tableDiv.innerHTML = '';
     renderCNDStatusFonte('cnd-estadual-status', '', '');
     return;
   }
 
-  const labels = [
-    { key: 'periodo1', label: state.cndEstadual[0].p1_label || 'Período 1' },
-    { key: 'periodo2', label: state.cndEstadual[0].p2_label || 'Período 2' },
-    { key: 'periodo3', label: state.cndEstadual[0].p3_label || 'Período 3' },
-  ];
-  const parseStartDate = (lbl) => {
-    const m = lbl.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
-    if (!m) return null;
-    const yy = m[3].length === 2 ? 2000 + parseInt(m[3]) : parseInt(m[3]);
-    return new Date(yy, parseInt(m[2]) - 1, parseInt(m[1]));
-  };
-
-  // Detectar o período cronologicamente atual
-  const hoje = new Date();
-  let curIdx = 0;
-  labels.forEach((p, i) => { const d = parseStartDate(p.label); if (d && d <= hoje) curIdx = i; });
-
-  // Período atual (cronológico) e anterior
-  const curPeriod  = labels[curIdx];
-  const prevPeriod = curIdx > 0 ? labels[curIdx - 1] : null;
-
+  // Data de atualização (status_fonte = atualizado_em)
   const statusFonte = state.cndEstadual[0].status_fonte || '';
-  renderCNDStatusFonte('cnd-estadual-status', statusFonte, 'e-Sfinge TCE/SC');
+  renderCNDStatusFonte('cnd-estadual-status', statusFonte, 'eSfinge TCE/SC');
 
-  // Aplicar filtros: município global + região (header ou filtro CND interno)
-  const regiaoFil = state.selectedRegiao || document.getElementById('cnd-regiao-filter')?.value || '';
+  // ── Filtros ──────────────────────────────────────────────────────
+  const regiaoFil    = state.selectedRegiao || document.getElementById('cnd-regiao-filter')?.value || '';
   const statusCNDFil = document.getElementById('cnd-status-filter')?.value || '';
-
-  // Mapa municipio → regiao
   const munRegiaoMap = {};
   (_MUN_CACHE.docs || []).forEach(d => { if (d.municipio) munRegiaoMap[d.municipio.toLowerCase().trim()] = d.regiao || ''; });
 
-  let cndSource = state.cndEstadual;
-  const _validCNDNames = _getFilteredMunNames();
-  if (_validCNDNames.size > 0) {
-    cndSource = cndSource.filter(r => _validCNDNames.has((r.municipio||'').toLowerCase().trim()));
-  }
+  let src = state.cndEstadual;
+  const _validNames = _getFilteredMunNames();
+  if (_validNames.size > 0) src = src.filter(r => _validNames.has((r.municipio||'').toLowerCase().trim()));
+  if (regiaoFil)    src = src.filter(r => munRegiaoMap[(r.municipio||'').toLowerCase().trim()] === regiaoFil);
+  if (statusCNDFil) src = src.filter(r => r.periodo1 === statusCNDFil);
+  src = [...src].sort((a,b) => (a.municipio||'').localeCompare(b.municipio||'', 'pt-BR'));
 
-  // Agrupar por município
-  const ordenados = [...cndSource].sort((a, b) => {
-    const mdiff = a.municipio.localeCompare(b.municipio, 'pt-BR');
-    if (mdiff !== 0) return mdiff;
-    return (a.entidade || '').localeCompare(b.entidade || '', 'pt-BR');
-  });
-  const grupos = {};
-  ordenados.forEach(r => {
-    const key = normMun(r.municipio);
-    if (!grupos[key]) grupos[key] = { nome: r.municipio, items: [] };
-    grupos[key].items.push(r);
-  });
-  const munKeys = Object.keys(grupos).sort((a, b) => grupos[a].nome.localeCompare(grupos[b].nome, 'pt-BR'));
-  const totalMuns = munKeys.length;
+  const total = src.length;
+  const comCND = src.filter(r => r.periodo1 === 'Com CND').length;
+  const semCND = src.filter(r => r.periodo1 === 'Sem CND').length;
 
-  // Conta municípios Com / Sem CND para um dado período
-  const countPeriod = (key) => {
-    const com = munKeys.filter(k => {
-      const items = grupos[k].items;
-      return !items.some(r => r[key] === 'Sem CND') && items.some(r => r[key] === 'Com CND');
-    }).length;
-    const semOrAusente = munKeys.filter(k => grupos[k].items.some(r => r[key] === 'Sem CND')).length;
-    const hasAnyData = cndSource.some(r => r[key] === 'Com CND' || r[key] === 'Sem CND');
-    return { com, sem: semOrAusente, total: totalMuns, hasData: hasAnyData };
-  };
+  // ── KPI summary ──────────────────────────────────────────────────
+  const bimLabel = state.cndEstadual[0].p1_label || '';
+  donutsDiv.innerHTML = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px">
+      <div style="flex:1;min-width:120px;background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 18px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:800;color:#276749">${comCND}</div>
+        <div style="font-size:.75rem;color:#276749;font-weight:600;margin-top:2px">✓ Com CND</div>
+      </div>
+      <div style="flex:1;min-width:120px;background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 18px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:800;color:#C53030">${semCND}</div>
+        <div style="font-size:.75rem;color:#C53030;font-weight:600;margin-top:2px">✗ Sem CND</div>
+      </div>
+      <div style="flex:1;min-width:120px;background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 18px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:800;color:#2B6CB0">${total}</div>
+        <div style="font-size:.75rem;color:#2B6CB0;font-weight:600;margin-top:2px">Total municípios</div>
+      </div>
+      ${bimLabel ? `<div style="flex:2;min-width:160px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:center">
+        <span style="font-size:.82rem;color:var(--text-muted)">Referência: </span>
+        <span style="font-size:.85rem;font-weight:700;color:var(--text);margin-left:6px">${bimLabel}</span>
+      </div>` : ''}
+    </div>`;
 
-  // ── Donuts ──────────────────────────────────────────────────────
-  const makeDonutBlock = (title, label, key, canvasId, highlight) => {
-    const { com, sem, hasData } = countPeriod(key);
-    const donutEl = hasData
-      ? `<div class="chart-wrap short"><canvas id="${canvasId}"></canvas></div>`
-      : `<div style="height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
-           <div style="width:80px;height:80px;border-radius:50%;border:10px solid #E2E8F0;display:flex;align-items:center;justify-content:center">
-             <span style="font-size:.7rem;color:#A0AEC0;font-weight:600;text-align:center">Em<br>andamento</span>
-           </div>
-         </div>`;
-    return { html: `
-      <div style="max-width:220px;margin:0 auto;text-align:center">
-        <div style="font-size:.82rem;font-weight:700;color:var(--accent);margin-bottom:2px">${title}</div>
-        <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:8px">${label}</div>
-        ${donutEl}
-      </div>`, com, sem, hasData };
-  };
-
-  let donutsHTML = '';
-  const donuts = [];
-
-  if (prevPeriod) {
-    const b = makeDonutBlock('Período Anterior', prevPeriod.label, prevPeriod.key, 'cnd-est-prev', false);
-    donuts.push({ id: 'cnd-est-prev', com: b.com, sem: b.sem, hasData: b.hasData, highlight: false });
-    donutsHTML += b.html;
-  }
-  const bCur = makeDonutBlock('Período Atual', curPeriod.label, curPeriod.key, 'cnd-est-cur', true);
-  donuts.push({ id: 'cnd-est-cur', com: bCur.com, sem: bCur.sem, hasData: bCur.hasData, highlight: true });
-  donutsHTML += bCur.html;
-
-  donutsDiv.innerHTML = `<div style="display:flex;justify-content:center;gap:32px;align-items:start;flex-wrap:wrap">${donutsHTML}</div>`;
-  donuts.forEach(d => { if (d.hasData) makeCNDDonutGeneric(d.id, d.com, d.sem, { highlight: d.highlight }); });
-
-  // ── Badges ──────────────────────────────────────────────────────
-  const badgeMun = (v, isCurrentPeriod) => {
-    if (v === 'Com CND') return `<span style="background:#C6F6D5;color:#276749;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;white-space:nowrap">✓ Com CND</span>`;
-    if (v === 'Sem CND') return `<span style="background:#FED7D7;color:#C53030;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;white-space:nowrap">✗ Sem CND</span>`;
-    if (isCurrentPeriod) return `<span style="background:#EDF2F7;color:#718096;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:600;white-space:nowrap">Em andamento</span>`;
-    return `<span style="color:#A0AEC0;font-size:.78rem">—</span>`;
-  };
-
-  // ── Tabela com 2 colunas de período ─────────────────────────────
-  const prevCol = prevPeriod
-    ? `<th style="padding:10px 12px;font-size:.73rem;white-space:nowrap">Anterior<br><span style="font-weight:400;font-size:.68rem">${prevPeriod.label}</span></th>`
-    : '';
-  const rows = munKeys.map((k, gi) => {
-    const { nome: mun, items } = grupos[k];
-    const bg = gi % 2 === 0 ? '#fff' : '#F8FAFC';
-    const r = items[0];
-    const prevCell = prevPeriod
-      ? `<td style="padding:8px 12px;text-align:center">${badgeMun(r[prevPeriod.key], false)}</td>`
-      : '';
-    return `<tr style="background:${bg}">
-      <td style="padding:8px 12px;font-size:.82rem;font-weight:600">${mun}</td>
-      ${prevCell}
-      <td style="padding:8px 12px;text-align:center">${badgeMun(r[curPeriod.key], true)}</td>
+  // ── Tabela estilo TCE ─────────────────────────────────────────────
+  const TH = 'padding:10px 14px;font-size:.73rem;font-weight:700;text-align:left;white-space:nowrap;background:#1a3a5c;color:#fff;border-right:1px solid rgba(255,255,255,.1)';
+  const rows = src.map((r, i) => {
+    const bg = i % 2 === 0 ? '#fff' : '#F7FAFC';
+    const numBadge = r.numero
+      ? `<span style="display:inline-block;background:#1a3a5c;color:#fff;padding:3px 12px;border-radius:6px;font-size:.8rem;font-weight:600;letter-spacing:.02em">● ${r.numero}</span>`
+      : '<span style="color:#A0AEC0;font-size:.8rem">—</span>';
+    const statusBadge = r.periodo1 === 'Com CND'
+      ? '<span style="background:#C6F6D5;color:#276749;padding:2px 10px;border-radius:10px;font-size:.75rem;font-weight:700">✓ Regular</span>'
+      : '<span style="background:#FED7D7;color:#C53030;padding:2px 10px;border-radius:10px;font-size:.75rem;font-weight:700">✗ Irregular</span>';
+    const validade = r.validade ? 'Até ' + r.validade : '—';
+    return `<tr style="background:${bg};border-bottom:1px solid #EDF2F7">
+      <td style="padding:9px 14px;font-size:.83rem;font-weight:600">${r.municipio||'—'}</td>
+      <td style="padding:9px 14px;font-size:.8rem;color:#4A5568">${r.p1_label||'—'}</td>
+      <td style="padding:9px 14px;font-size:.8rem;color:#4A5568">Certidão Bimestral</td>
+      <td style="padding:9px 14px;font-size:.8rem;color:#4A5568">${validade}</td>
+      <td style="padding:9px 14px">${numBadge}</td>
+      <td style="padding:9px 14px">${statusBadge}</td>
     </tr>`;
   }).join('');
 
   tableDiv.innerHTML = `
-    <h4 style="font-size:.85rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">
-      Situação CND Estadual
-    </h4>
-    <div style="overflow-x:auto;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
-    <table style="width:100%;border-collapse:collapse;font-family:inherit">
-      <thead>
-        <tr style="background:var(--header-bg);color:#fff;text-align:center">
-          <th style="padding:10px 12px;text-align:left;font-size:.76rem">Município</th>
-          ${prevCol}
-          <th style="padding:10px 12px;font-size:.73rem;white-space:nowrap">Atual<br><span style="font-weight:400;font-size:.68rem">${curPeriod.label}</span></th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+      <table style="width:100%;border-collapse:collapse;font-family:inherit">
+        <thead>
+          <tr>
+            <th style="${TH}">Ente</th>
+            <th style="${TH}">Bimestre</th>
+            <th style="${TH}">Certidão</th>
+            <th style="${TH}">Validade</th>
+            <th style="${TH}">Última certidão válida</th>
+            <th style="${TH};border-right:none">Status</th>
+          </tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-muted)">Nenhum resultado</td></tr>'}</tbody>
+      </table>
     </div>`;
 }
 
