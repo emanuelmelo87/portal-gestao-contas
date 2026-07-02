@@ -4027,7 +4027,7 @@ function adminSignOut() {
 }
 
 async function _adminLoadCounts() {
-  for (const col of ['jira_chamados','jira_chamados_issues','tipos_cliente','equipes_atendimento','municipios','status_envio','ratificacoes','_meta','colaboradores']) {
+  for (const col of ['jira_chamados','jira_chamados_issues','tipos_cliente','equipes_atendimento','municipios','status_envio','ratificacoes','cnd_estadual','_meta','colaboradores']) {
     try {
       const snap = await _db.collection(col).get();
       const el = document.getElementById('card-count-' + col);
@@ -5875,6 +5875,12 @@ function renderRatifTable() {
         <div style="color:#fff;font-weight:700;font-size:1rem">Ratificações</div>
         <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">ratificacoes</div>
         <div id="card-count-ratificacoes" style="color:#805AD5;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
+      </div>
+      <div onclick="adminLoadCollection('cnd_estadual')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:10px;padding:20px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#0EA5E9'" onmouseout="this.style.borderColor='#2D3748'">
+        <div style="font-size:1.6rem;margin-bottom:8px">📄</div>
+        <div style="color:#fff;font-weight:700;font-size:1rem">CND Estadual</div>
+        <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:4px">cnd_estadual</div>
+        <div id="card-count-cnd_estadual" style="color:#0EA5E9;font-size:1.4rem;font-weight:700;margin-top:10px">—</div>
       </div>
     </div>
 
