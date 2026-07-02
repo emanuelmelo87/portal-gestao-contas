@@ -5552,7 +5552,7 @@ function renderEnvioView() {
     // Cabeçalho da tabela
     const thStyle = 'padding:10px 12px;text-align:center;font-size:.72rem;font-weight:600;color:#475569;border-bottom:2px solid #E2E8F0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;min-width:68px';
     let tHead = `<tr>
-      <th style="padding:10px 14px;text-align:left;font-size:.72rem;font-weight:600;color:#475569;border-bottom:2px solid #E2E8F0;min-width:140px">Entidade</th>
+      <th style="padding:10px 14px;text-align:left;font-size:.72rem;font-weight:600;color:#475569;border-bottom:2px solid #E2E8F0;min-width:180px">Entidade</th>
       ${REGRAS_EV.map(r => `<th title="${CAMPO_LABELS[r.campo]}" style="${thStyle}">${CAMPO_SHORT[r.campo]}</th>`).join('')}
     </tr>`;
 
@@ -5581,8 +5581,8 @@ function renderEnvioView() {
       }).join('');
 
       tBody += `<tr style="background:${rowBg}">
-        <td style="padding:14px 14px;border-bottom:1px solid #EDF2F7;vertical-align:middle">
-          <span style="display:block;color:${tc};font-size:.8rem;font-weight:700;margin-bottom:3px">${tl}</span>
+        <td style="padding:14px 14px;border-bottom:1px solid #EDF2F7;vertical-align:middle;min-width:180px">
+          <span style="display:block;color:${tc};font-size:.75rem;font-weight:700;margin-bottom:3px;white-space:normal;line-height:1.3">${d.nomeUnidade||tl}</span>
           <span style="font-size:.7rem;font-weight:600;color:${scoreColor}">${scoreMark} ${modOk}/${modAplic}</span>
         </td>${cells}</tr>`;
     });
@@ -5590,7 +5590,7 @@ function renderEnvioView() {
     const entityHtml = docsSorted.length
       ? `<div style="overflow-x:auto;padding:8px 14px 12px 40px">
           <table style="border-collapse:collapse;font-size:.8rem;width:100%;table-layout:auto;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">
-            <colgroup><col style="min-width:140px">${REGRAS_EV.map(() => '<col style="min-width:68px">').join('')}</colgroup>
+            <colgroup><col style="min-width:180px">${REGRAS_EV.map(() => '<col style="min-width:68px">').join('')}</colgroup>
             <thead style="background:#F1F5F9">${tHead}</thead>
             <tbody>${tBody}</tbody>
           </table>
