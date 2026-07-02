@@ -5364,6 +5364,38 @@ async function buscarEnvio() {
     if (btn) { btn.disabled = false; btn.textContent = '🔍 Buscar'; }
   }
 }
+// Regras de validação — escopo global
+const REGRAS_EV = [
+  { campo: 'assinatura_balancete_razao',  exceto:  ['CI'],              ok: v => v === 2 },
+  { campo: 'execucao_orcamentaria',       exceto:  ['CI'],              ok: v => v > 0   },
+  { campo: 'gestao_fiscal',               somente: ['CM','CI'], sazonal: true, ok: v => v > 0 },
+  { campo: 'planejamento',                somente: ['CI'],              ok: v => v > 0   },
+  { campo: 'registros_contabeis',         exceto:  ['CI'],              ok: v => v > 0   },
+  { campo: 'relacao_folha_liquidacao',    exceto:  ['CI'],              ok: v => v > 0   },
+  { campo: 'relacao_tributario_impostos', somente: ['Prefeitura'],      ok: v => v > 0   },
+  { campo: 'relacao_tributario_taxas',    somente: ['Prefeitura'],      ok: v => v > 0   },
+  { campo: 'situacoes_obras_engenharia',  todas:   true,                ok: v => v === 0 },
+  { campo: 'tributario',                  somente: ['Prefeitura'],      ok: v => v > 0   }
+];
+function regraAplic(r, tipo, mes) {
+  if (r.sazonal && mes % 2 !== 0) return false; // meses ímpares → N/A
+  if (r.todas)   return true;
+  if (r.somente) return r.somente.includes(tipo);
+  if (r.exceto)  return !r.exceto.includes(tipo);
+  return true;
+}
+function calcDocScore(d, mes) {
+  const tipo = d.entidade || 'Outros';
+  let modAplic = 0, modOk = 0;
+  REGRAS_EV.forEach(r => {
+    if (!regraAplic(r, tipo, mes)) return;
+    modAplic++;
+    const v = d[r.campo];
+    if (v !== null && v !== undefined && r.ok(v)) modOk++;
+  });
+  return { modAplic, modOk, isOk: modAplic > 0 && modOk === modAplic };
+}
+
 function renderEnvioView() {
   if (!_ENVIO.currentKey) return;
   let allDocs = _ENVIO.cache[_ENVIO.currentKey] || [];
@@ -5392,38 +5424,6 @@ function renderEnvioView() {
     if (!munDocs[key]) munDocs[key] = [];
     munDocs[key].push(d);
   });
-
-  // Regras de validação (espelho do progress.js)
-  const REGRAS_EV = [
-    { campo: 'assinatura_balancete_razao',  exceto:  ['CI'],              ok: v => v === 2 },
-    { campo: 'execucao_orcamentaria',       exceto:  ['CI'],              ok: v => v > 0   },
-    { campo: 'gestao_fiscal',               somente: ['CM','CI'], sazonal: true, ok: v => v > 0 },
-    { campo: 'planejamento',                somente: ['CI'],              ok: v => v > 0   },
-    { campo: 'registros_contabeis',         exceto:  ['CI'],              ok: v => v > 0   },
-    { campo: 'relacao_folha_liquidacao',    exceto:  ['CI'],              ok: v => v > 0   },
-    { campo: 'relacao_tributario_impostos', somente: ['Prefeitura'],      ok: v => v > 0   },
-    { campo: 'relacao_tributario_taxas',    somente: ['Prefeitura'],      ok: v => v > 0   },
-    { campo: 'situacoes_obras_engenharia',  todas:   true,                ok: v => v === 0 },
-    { campo: 'tributario',                  somente: ['Prefeitura'],      ok: v => v > 0   }
-  ];
-  function regraAplic(r, tipo, mes) {
-    if (r.sazonal && mes % 2 !== 0) return false; // meses ímpares → N/A
-    if (r.todas)   return true;
-    if (r.somente) return r.somente.includes(tipo);
-    if (r.exceto)  return !r.exceto.includes(tipo);
-    return true;
-  }
-  function calcDocScore(d, mes) {
-    const tipo = d.entidade || 'Outros';
-    let modAplic = 0, modOk = 0;
-    REGRAS_EV.forEach(r => {
-      if (!regraAplic(r, tipo, mes)) return;
-      modAplic++;
-      const v = d[r.campo];
-      if (v !== null && v !== undefined && r.ok(v)) modOk++;
-    });
-    return { modAplic, modOk, isOk: modAplic > 0 && modOk === modAplic };
-  }
 
   // Status consolidado por município (calculado no frontend com REGRAS_EV)
   function calcStatus(munKey) {
