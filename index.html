@@ -1387,31 +1387,25 @@ function onDateChange(val) {
 
 // CND Estadual (e-Sfinge SC): 3 certidões quadrimestrais por entidade
 function fetchCNDEstadual() {
-  return fetchSheet('CND_Estadual').then(rows => {
-    const normVal = v => {
-      const s = (v || '').toString().toLowerCase();
-      // Formato legado: "Com CND" / "Sem CND"
-      if (s.includes('com')) return 'Com CND';
-      if (s.includes('sem')) return 'Sem CND';
-      // Novo formato TCE-SC: "LRF:negativa|SEF:negativa|OCI:negativa"
-      // Qualquer componente positiva → irregular
-      if (s.includes('positiva')) return 'Sem CND';
-      if (s.includes('negativa')) return 'Com CND';
-      if (s.includes('ausente'))  return 'Ausente';
-      return '';
-    };
-    return rows.filter(r => r.municipio).map(r => ({
-      municipio:    titleCaseMun(r.municipio),
-      entidade:     titleCaseMun(r.entidade || ''),
-      meses_atraso: r.meses_atraso || '',
-      tipo_atraso:  r.tipo_atraso || '',
-      status_fonte: r.status_fonte || '',
-      periodo1:     normVal(r.periodo1),
-      periodo2:     normVal(r.periodo2),
-      periodo3:     normVal(r.periodo3),
-      p1_label:     r.p1_label || 'Período 1',
-      p2_label:     r.p2_label || 'Período 2',
-      p3_label:     r.p3_label || 'Período 3',
+  // Lê da coleção Firestore cnd_estadual (alimentada pela extensão Chrome esfinge-updater)
+  return fetchFirestore('cnd_estadual').then(docs => {
+    if (!docs.length) return [];
+    return docs.map(d => ({
+      municipio:    titleCaseMun(d.nomeEnte || d.municipio || ''),
+      entidade:     '',
+      meses_atraso: '',
+      tipo_atraso:  '',
+      status_fonte: d.atualizado_em || '',
+      periodo1:     d.status === 'regular' ? 'Com CND' : 'Sem CND',
+      periodo2:     '',
+      periodo3:     '',
+      p1_label:     d.bimestre || 'Atual',
+      p2_label:     '',
+      p3_label:     '',
+      numero:       d.numero || '',
+      validade:     d.validade || '',
+      bimestre_num: d.bimestre_num || 0,
+      ano:          d.ano || 0,
     }));
   });
 }
