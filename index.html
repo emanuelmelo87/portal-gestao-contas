@@ -5393,13 +5393,13 @@ function renderEnvioView() {
     munDocs[key].push(d);
   });
 
-  // Status consolidado por município
+  // Status consolidado por município (calculado no frontend com REGRAS_EV)
   function calcStatus(munKey) {
     const docs   = munDocs[munKey] || [];
-    const active = docs.filter(d => (d.modulos_aplicaveis || 0) > 0);
+    const active = docs.filter(d => calcDocScore(d, mes).modAplic > 0);
     if (!active.length) return 'nenhum';
-    if (active.every(d => d.status_ok)) return 'completo';
-    if (active.some(d => d.status_ok || (d.modulos_ok || 0) > 0)) return 'parcial';
+    if (active.every(d => calcDocScore(d, mes).isOk)) return 'completo';
+    if (active.some(d => calcDocScore(d, mes).modOk > 0)) return 'parcial';
     return 'nenhum';
   }
 
@@ -5468,6 +5468,17 @@ function renderEnvioView() {
     if (r.exceto)  return !r.exceto.includes(tipo);
     return true;
   }
+  function calcDocScore(d, mes) {
+    const tipo = d.entidade || 'Outros';
+    let modAplic = 0, modOk = 0;
+    REGRAS_EV.forEach(r => {
+      if (!regraAplic(r, tipo, mes)) return;
+      modAplic++;
+      const v = d[r.campo];
+      if (v !== null && v !== undefined && r.ok(v)) modOk++;
+    });
+    return { modAplic, modOk, isOk: modAplic > 0 && modOk === modAplic };
+  }
 
   const TIPO_COL  = { Prefeitura:'#1e40af', CM:'#7c3aed', CI:'#b45309', Consorcio:'#0f766e' };
   const TIPO_ORD  = { Prefeitura:0, CM:1, CI:2, Consorcio:3 };
@@ -5527,9 +5538,7 @@ function renderEnvioView() {
       const tipo = d.entidade || 'Outros';
       const tc   = TIPO_COL[tipo] || '#475569';
       const tl   = TIPO_SIGLA[tipo] || tipo;
-      const isOk = !!d.status_ok;
-      const modOk    = d.modulos_ok    || 0;
-      const modAplic = d.modulos_aplicaveis || 0;
+      const { modAplic, modOk, isOk } = calcDocScore(d, mes);
       const rowBg    = isOk ? '#FAFFFD' : '#FFFAFA';
       const scoreColor = isOk ? '#276749' : '#C53030';
       const scoreMark  = isOk ? '✓' : '✗';
