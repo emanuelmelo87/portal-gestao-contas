@@ -5371,7 +5371,7 @@ const REGRAS_EV = [
   { campo: 'gestao_fiscal',               somente: ['CM','CI'], sazonal: true, ok: v => v > 0 },
   { campo: 'planejamento',                somente: ['CI'],              ok: v => v > 0   },
   { campo: 'registros_contabeis',         exceto:  ['CI'],              ok: v => v > 0   },
-  { campo: 'relacao_folha_liquidacao',    exceto:  ['CI'],              ok: v => v > 0   },
+  { campo: 'relacao_folha_liquidacao',    exceto:  ['CI','Outros'],              ok: v => v > 0   },
   { campo: 'relacao_tributario_impostos', somente: ['Prefeitura'],      ok: v => v > 0   },
   { campo: 'relacao_tributario_taxas',    somente: ['Prefeitura'],      ok: v => v > 0   },
   { campo: 'situacoes_obras_engenharia',  todas:   true,                ok: v => v === 0 },
