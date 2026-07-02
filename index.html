@@ -924,7 +924,11 @@
                 <option value="nenhum">❌ Não enviou</option>
               </select>
             </div>
-            <span id="envio-info" style="font-size:.75rem;color:var(--text-muted);align-self:flex-end;padding-bottom:2px;margin-left:auto"></span>
+            <div style="display:flex;gap:6px;margin-left:auto;align-self:flex-end">
+              <button onclick="envioExpandAll()" style="padding:5px 12px;border:1px solid #CBD5E0;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;background:#F8FAFC;color:#475569;transition:background .15s" onmouseover="this.style.background='#E2E8F0'" onmouseout="this.style.background='#F8FAFC'">⊞ Expandir Todos</button>
+              <button onclick="envioCollapseAll()" style="padding:5px 12px;border:1px solid #CBD5E0;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;background:#F8FAFC;color:#475569;transition:background .15s" onmouseover="this.style.background='#E2E8F0'" onmouseout="this.style.background='#F8FAFC'">⊟ Recolher Todos</button>
+            </div>
+            <span id="envio-info" style="font-size:.75rem;color:var(--text-muted);align-self:flex-end;padding-bottom:2px"></span>
           </div>
 
           <!-- Cards de resumo -->
@@ -5365,37 +5369,35 @@ function renderEnvioView() {
   let allDocs = _ENVIO.cache[_ENVIO.currentKey] || [];
   const [ano, mes] = _ENVIO.currentKey.split('-').map(Number);
 
-  // Filtro hierárquico global (tipo_conta → equipe → portfolio → associacao → municipio)
+  // Filtro hierárquico global
   const _validMunNames = _getFilteredMunNames();
-  const _hasHierFilter = _validMunNames.size > 0;
-  if (_hasHierFilter) allDocs = allDocs.filter(d => _validMunNames.has((d.municipio||'').toLowerCase().trim()));
+  if (_validMunNames.size > 0) {
+    allDocs = allDocs.filter(d => _validMunNames.has((d.municipio||'').toLowerCase().trim()));
+  }
 
   document.getElementById('envio-loading').style.display = 'none';
 
-  const statusFil    = document.getElementById('envio-status-filter')?.value || '';
+  const statusFil = document.getElementById('envio-status-filter')?.value || '';
 
-  // Construir mapa municipio → regiao a partir do _MUN_CACHE
-  const munMeta = {};
-  _MUN_CACHE.docs.forEach(d => { if (d.municipio) munMeta[d.municipio.toLowerCase().trim()] = d; });
-
-  // Portfólio = municípios que constam no Firestore municipios
-  const portfolioSet = _MUN_CACHE.loaded && _MUN_CACHE.docs.length > 0
-    ? new Set(_MUN_CACHE.docs.map(d => (d.municipio||'').toLowerCase().trim()))
-    : new Set(ESF_PORTFOLIO.map(m => m.toLowerCase().trim()));
-
-  // Nova estrutura: um documento por entidade — agrupar por município
-  const munDocs = {}; // municipio → [docs de entidade]
-  allDocs.forEach(d => {
-    const mun = d.municipio || '';
-    if (!munDocs[mun]) munDocs[mun] = [];
-    munDocs[mun].push(d);
+  // CND por município (lookup lowercase)
+  const cndByMun = {};
+  (state.cndEstadual || []).forEach(r => {
+    cndByMun[(r.municipio||'').toLowerCase().trim()] = r.periodo1 || '';
   });
 
-  // Status por município baseado em entidades
-  function calcStatus(mun) {
-    const docs   = munDocs[mun] || [];
+  // Agrupar docs por município
+  const munDocs = {};
+  allDocs.forEach(d => {
+    const key = (d.municipio || '').toLowerCase().trim();
+    if (!munDocs[key]) munDocs[key] = [];
+    munDocs[key].push(d);
+  });
+
+  // Status consolidado por município
+  function calcStatus(munKey) {
+    const docs   = munDocs[munKey] || [];
     const active = docs.filter(d => (d.modulos_aplicaveis || 0) > 0);
-    if (active.length === 0) return 'nenhum';
+    if (!active.length) return 'nenhum';
     if (active.every(d => d.status_ok)) return 'completo';
     if (active.some(d => d.status_ok || (d.modulos_ok || 0) > 0)) return 'parcial';
     return 'nenhum';
@@ -5403,32 +5405,24 @@ function renderEnvioView() {
 
   let municipios = Object.keys(munDocs).sort((a,b) => a.localeCompare(b,'pt-BR'));
 
-  // Contagens para cards
+  // KPI cards
   const total    = municipios.length;
   const nOk      = municipios.filter(m => calcStatus(m) === 'completo').length;
   const nParcial = municipios.filter(m => calcStatus(m) === 'parcial').length;
   const nNenhum  = municipios.filter(m => calcStatus(m) === 'nenhum').length;
-
   document.getElementById('envio-card-total').textContent   = total;
   document.getElementById('envio-card-ok').textContent      = nOk;
-  document.getElementById('envio-card-parcial').textContent  = nParcial;
+  document.getElementById('envio-card-parcial').textContent = nParcial;
   document.getElementById('envio-card-err').textContent     = nNenhum;
   document.getElementById('envio-cards').style.display = 'grid';
 
-  // Filtro de status
-  if (statusFil) {
-    municipios = municipios.filter(m => {
-      const s = calcStatus(m);
-      if (statusFil === 'nenhum') return s === 'nenhum';
-      return s === statusFil;
-    });
-  }
+  if (statusFil) municipios = municipios.filter(m => calcStatus(m) === statusFil);
 
-  const mesLabel = MESES_LABEL[mes-1];
+  const mesLabel = MESES_LABEL[mes - 1] || mes;
   document.getElementById('envio-info').textContent =
     municipios.length + '/' + total + ' municípios · ' + mesLabel + '/' + ano;
 
-  if (municipios.length === 0) {
+  if (!municipios.length) {
     document.getElementById('envio-list').style.display  = 'none';
     document.getElementById('envio-empty').style.display = 'block';
     document.getElementById('envio-empty').innerHTML =
@@ -5440,77 +5434,139 @@ function renderEnvioView() {
   document.getElementById('envio-empty').style.display = 'none';
   document.getElementById('envio-list').style.display  = 'block';
 
-  const TIPO_COLORS_EV = { Prefeitura:'#1e40af', CM:'#7c3aed', CI:'#b45309', Consorcio:'#0f766e', Outros:'#475569' };
-  const TIPO_ORD_EV    = { Prefeitura:0, CM:1, CI:2, Consorcio:3, Outros:4 };
+  // ── Mapa de labels de campo ──────────────────────────────────────────
+  const CAMPO_LABELS = {
+    assinatura_balancete_razao:    'Ass.Balancete',
+    execucao_orcamentaria:         'Ex.Orçamentária',
+    gestao_fiscal:                 'Gestão Fiscal',
+    planejamento:                  'Planejamento',
+    registros_contabeis:           'Reg.Contábeis',
+    relacao_folha_liquidacao:      'Folha/Liq.',
+    relacao_tributario_impostos:   'Trib/Impostos',
+    relacao_tributario_taxas:      'Trib/Taxas',
+    situacoes_obras_engenharia:    'Obras/Eng.',
+    tributario:                    'Tributário'
+  };
 
-  // ── Tabela cruzada estilo TCE: linhas = entidades, colunas = módulos ──
-  const TH_S = 'padding:7px 6px;background:#F1F5F9;color:#475569;font-size:.72rem;font-weight:600;text-align:center;white-space:nowrap;border-bottom:2px solid #CBD5E0;border-right:1px solid #E2E8F0';
+  // Regras de validação (espelho do progress.js)
+  const REGRAS_EV = [
+    { campo: 'assinatura_balancete_razao',  exceto:  ['CI'],              ok: v => v === 2 },
+    { campo: 'execucao_orcamentaria',       exceto:  ['CI'],              ok: v => v > 0   },
+    { campo: 'gestao_fiscal',               somente: ['CM','CI'],         ok: v => v > 0   },
+    { campo: 'planejamento',                somente: ['CI'],              ok: v => v > 0   },
+    { campo: 'registros_contabeis',         exceto:  ['CI'],              ok: v => v > 0   },
+    { campo: 'relacao_folha_liquidacao',    exceto:  ['CI'],              ok: v => v > 0   },
+    { campo: 'relacao_tributario_impostos', somente: ['Prefeitura'],      ok: v => v > 0   },
+    { campo: 'relacao_tributario_taxas',    somente: ['Prefeitura'],      ok: v => v > 0   },
+    { campo: 'situacoes_obras_engenharia',  todas:   true,                ok: v => v > 0   },
+    { campo: 'tributario',                  somente: ['Prefeitura'],      ok: v => v > 0   }
+  ];
+  function regraAplic(r, tipo) {
+    if (r.todas)   return true;
+    if (r.somente) return r.somente.includes(tipo);
+    if (r.exceto)  return !r.exceto.includes(tipo);
+    return true;
+  }
 
-  const theadHtml = `<tr>
-    <th style="${TH_S};text-align:left;min-width:240px;padding-left:12px;position:sticky;left:0;z-index:2;background:#F1F5F9">Entidade</th>
-    ${ESF_MODS.map(m => `<th style="${TH_S}" title="${m.key}">${m.label}</th>`).join('')}
-  </tr>`;
+  const TIPO_COL  = { Prefeitura:'#1e40af', CM:'#7c3aed', CI:'#b45309', Consorcio:'#0f766e' };
+  const TIPO_ORD  = { Prefeitura:0, CM:1, CI:2, Consorcio:3 };
+  const TIPO_SIGLA = { Prefeitura:'Pref.', CM:'Câmara', CI:'Ctrl.Int.', Consorcio:'Consórcio' };
 
-  let tbodyHtml = '';
-  municipios.forEach(mun => {
-    const docs   = munDocs[mun] || [];
-    const active = docs.filter(d => (d.modulos_aplicaveis || 0) > 0);
-    const status = calcStatus(mun);
+  let html = '';
 
-    const totalOk    = active.reduce((s, d) => s + (d.modulos_ok || 0), 0);
-    const totalAplic = active.reduce((s, d) => s + (d.modulos_aplicaveis || 0), 0);
-    const pct = totalAplic ? Math.round(totalOk / totalAplic * 100) : 0;
+  municipios.forEach(munKey => {
+    const docs   = munDocs[munKey];
+    const status = calcStatus(munKey);
+    const cndSt  = cndByMun[munKey] || '';
 
-    const stColor = status === 'completo' ? '#276749' : status === 'parcial' ? '#7B6F00' : '#9B2335';
-    const stBg    = status === 'completo' ? '#F0FFF4' : status === 'parcial' ? '#FFFFF0' : '#FFF5F5';
-    const stBdr   = status === 'completo' ? '#9AE6B4' : status === 'parcial' ? '#F6E05E' : '#FEB2B2';
-    const stIcon  = status === 'completo' ? '✅' : status === 'parcial' ? '⚠️' : '❌';
-    const stLabel = status === 'completo' ? 'Completo' : status === 'parcial' ? 'Parcial' : 'Não enviou';
-    const barFill = `<div style="display:inline-block;width:60px;height:5px;background:#E2E8F0;border-radius:3px;overflow:hidden;vertical-align:middle;margin:0 6px"><div style="width:${pct}%;height:100%;background:${stColor};border-radius:3px"></div></div>`;
+    // Nome de exibição do município (Title Case do MUN_CACHE ou do próprio doc)
+    const meta = (_MUN_CACHE.docs || []).find(d =>
+      (d.municipio||'').toLowerCase().trim() === munKey);
+    const munDisplay = meta?.municipio || docs[0]?.municipio || munKey;
 
-    // Linha de cabeçalho do município
-    tbodyHtml += `<tr style="background:#EBF0F8;border-top:2px solid #CBD5E0">
-      <td colspan="${ESF_MODS.length + 1}" style="padding:6px 12px;font-weight:700;font-size:.82rem;color:#1C1A23;position:sticky;left:0;background:#EBF0F8">
-        ${mun}
-        <span style="margin-left:10px;padding:1px 8px;border-radius:12px;font-size:.7rem;font-weight:600;background:${stBg};color:${stColor};border:1px solid ${stBdr}">${stIcon} ${stLabel}</span>
-        ${barFill}<span style="font-size:.7rem;color:#718096">${totalOk}/${totalAplic}</span>
-      </td>
-    </tr>`;
+    // Cores do status de envio
+    const stC = status === 'completo' ? {c:'#276749',bg:'#F0FFF4',bd:'#9AE6B4',ico:'✅',lbl:'Completo'}
+              : status === 'parcial'  ? {c:'#7B6F00',bg:'#FFFBEB',bd:'#F6E05E',ico:'⚠️',lbl:'Parcial'}
+              :                         {c:'#9B2335',bg:'#FFF5F5',bd:'#FEB2B2',ico:'❌',lbl:'Não Enviado'};
+    // Cores do CND
+    const cC = cndSt === 'Com CND' ? {c:'#276749',bg:'#F0FFF4',bd:'#9AE6B4',ico:'✅'}
+             : cndSt === 'Sem CND' ? {c:'#9B2335',bg:'#FFF5F5',bd:'#FEB2B2',ico:'❌'}
+             :                        {c:'#64748B',bg:'#F8FAFC',bd:'#CBD5E0',ico:'—'};
+    const cndLabel = cndSt || '—';
 
-    // Linhas de entidade ordenadas por tipo
-    const docsSorted = [...docs].sort((a, b) => {
-      const ta = TIPO_ORD_EV[a.entidade] ?? 5, tb = TIPO_ORD_EV[b.entidade] ?? 5;
-      return ta !== tb ? ta - tb : (a.nomeUnidade||'').localeCompare(b.nomeUnidade||'', 'pt-BR');
+    // Entidades ordenadas
+    const docsSorted = [...docs].sort((a,b) => {
+      const oa = TIPO_ORD[a.entidade]??5, ob = TIPO_ORD[b.entidade]??5;
+      return oa !== ob ? oa - ob : (a.nomeUnidade||'').localeCompare(b.nomeUnidade||'','pt-BR');
     });
 
-    docsSorted.forEach((d, i) => {
-      const rowBg = i % 2 === 0 ? '#fff' : '#FAFAFA';
-      const tc = TIPO_COLORS_EV[d.entidade] || '#475569';
-      const tipoBadge = `<span style="display:inline-block;background:${tc}18;color:${tc};border:1px solid ${tc}44;border-radius:4px;padding:1px 5px;font-size:.65rem;font-weight:700;margin-right:6px;vertical-align:middle">${d.entidade||'?'}</span>`;
+    let entityHtml = '';
+    docsSorted.forEach(d => {
+      const tipo = d.entidade || 'Outros';
+      const tc   = TIPO_COL[tipo] || '#475569';
+      const tl   = TIPO_SIGLA[tipo] || tipo;
+      const isOk = !!d.status_ok;
+      const modOk    = d.modulos_ok    || 0;
+      const modAplic = d.modulos_aplicaveis || 0;
 
-      const modCells = ESF_MODS.map(m => {
-        const v = d[m.key];
-        if (v === null || v === undefined)
-          return `<td style="text-align:center;padding:5px 6px;color:#CBD5E0;font-size:.82rem;border-right:1px solid #EDF2F7">—</td>`;
-        if (v === 0)
-          return `<td style="text-align:center;padding:5px 6px;font-size:.82rem;font-weight:600;color:#C53030;background:#FFF5F5;border-right:1px solid #EDF2F7">0</td>`;
-        return `<td style="text-align:center;padding:5px 6px;font-size:.82rem;color:#276749;border-right:1px solid #EDF2F7">${v}</td>`;
-      }).join('');
+      // Pílulas de campo
+      let pills = '';
+      REGRAS_EV.forEach(r => {
+        if (!regraAplic(r, tipo)) return;
+        const v = d[r.campo];
+        const isNull   = v === null || v === undefined;
+        const fieldOk  = !isNull && r.ok(v);
+        const pc = isNull ? '#94A3B8' : fieldOk ? '#276749' : '#C53030';
+        const pb = isNull ? '#F8FAFC' : fieldOk ? '#F0FFF4' : '#FFF5F5';
+        const pd = isNull ? '#E2E8F0' : fieldOk ? '#9AE6B4' : '#FEB2B2';
+        const mark = isNull ? '' : (fieldOk ? '✓ ' : '✗ ');
+        pills += `<span style="display:inline-flex;align-items:center;gap:2px;background:${pb};border:1px solid ${pd};border-radius:4px;padding:1px 5px;font-size:.63rem;color:${pc};white-space:nowrap"><b>${mark}</b>${CAMPO_LABELS[r.campo]}: <b>${isNull ? '—' : v}</b></span>`;
+      });
 
-      tbodyHtml += `<tr style="background:${rowBg};border-bottom:1px solid #EDF2F7">
-        <td style="padding:6px 12px;font-size:.8rem;white-space:nowrap;position:sticky;left:0;background:${rowBg};border-right:1px solid #E2E8F0">${tipoBadge}${d.nomeUnidade||''}</td>
-        ${modCells}
-      </tr>`;
+      entityHtml += `
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px;padding:8px 14px 8px 40px;border-bottom:1px solid #EDF2F7;background:${isOk ? '#FAFFFE' : '#FFFAFA'}">
+          <span style="flex-shrink:0;background:${tc}18;color:${tc};border:1px solid ${tc}44;border-radius:4px;padding:1px 6px;font-size:.66rem;font-weight:700">${tl}</span>
+          <span style="flex:1;min-width:140px;max-width:260px;font-size:.77rem;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${(d.nomeUnidade||'').replace(/"/g,'&quot;')}">${d.nomeUnidade||''}</span>
+          <span style="flex-shrink:0;padding:1px 9px;border-radius:12px;font-size:.69rem;font-weight:700;white-space:nowrap;background:${isOk ? '#F0FFF4' : '#FFF5F5'};color:${isOk ? '#276749' : '#C53030'};border:1px solid ${isOk ? '#9AE6B4' : '#FEB2B2'}">${isOk ? '✅ OK' : '❌ Não Ok'} (${modOk}/${modAplic})</span>
+          <div style="width:100%;display:flex;flex-wrap:wrap;gap:4px;padding-left:2px">${pills}</div>
+        </div>`;
     });
+
+    html += `
+    <div class="mun-envio-row" style="border-bottom:1px solid #E2E8F0">
+      <div onclick="toggleEnvioMun(this)" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;user-select:none;background:#fff;transition:background .12s" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='#fff'">
+        <span class="envio-toggle" style="font-size:.75rem;color:#94A3B8;flex-shrink:0;transition:transform .18s;display:inline-block">▶</span>
+        <span style="flex:1;font-size:.84rem;font-weight:700;color:#1E293B">${munDisplay}</span>
+        <span style="flex-shrink:0;padding:2px 10px;border-radius:12px;font-size:.71rem;font-weight:700;background:${stC.bg};color:${stC.c};border:1px solid ${stC.bd}">${stC.ico} ${stC.lbl}</span>
+        <span style="flex-shrink:0;padding:2px 10px;border-radius:12px;font-size:.71rem;font-weight:600;background:${cC.bg};color:${cC.c};border:1px solid ${cC.bd}">CND ${cC.ico} ${cndLabel}</span>
+      </div>
+      <div class="envio-detail" style="display:none;border-top:1px solid #EDF2F7">
+        ${entityHtml || '<div style="padding:12px 40px;font-size:.78rem;color:#94A3B8">Sem entidades registradas.</div>'}
+      </div>
+    </div>`;
   });
 
-  const listEl = document.getElementById('envio-list');
-  listEl.style.overflowX = 'auto';
-  listEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.82rem">
-    <thead>${theadHtml}</thead>
-    <tbody>${tbodyHtml}</tbody>
-  </table>`;
+  document.getElementById('envio-list').innerHTML = html;
 }
+
+function toggleEnvioMun(headerEl) {
+  const detail = headerEl.nextElementSibling;
+  const toggle = headerEl.querySelector('.envio-toggle');
+  const open   = detail.style.display !== 'none';
+  detail.style.display   = open ? 'none'  : 'block';
+  toggle.style.transform = open ? ''      : 'rotate(90deg)';
+}
+
+function envioExpandAll() {
+  document.querySelectorAll('#envio-list .envio-detail').forEach(d => { d.style.display = 'block'; });
+  document.querySelectorAll('#envio-list .envio-toggle').forEach(t => { t.style.transform = 'rotate(90deg)'; });
+}
+
+function envioCollapseAll() {
+  document.querySelectorAll('#envio-list .envio-detail').forEach(d => { d.style.display = 'none'; });
+  document.querySelectorAll('#envio-list .envio-toggle').forEach(t => { t.style.transform = ''; });
+}
+
 
 // ── eSfinge Status Envio — matriz entidades × módulos ────────────────
 
