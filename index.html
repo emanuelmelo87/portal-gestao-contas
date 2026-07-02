@@ -5500,7 +5500,28 @@ function renderEnvioView() {
       return oa !== ob ? oa - ob : (a.nomeUnidade||'').localeCompare(b.nomeUnidade||'','pt-BR');
     });
 
-    let entityHtml = '';
+    // Abreviações para cabeçalho da tabela (title = nome completo via tooltip)
+    const CAMPO_SHORT = {
+      assinatura_balancete_razao:    'Bal.Raz.',
+      execucao_orcamentaria:         'Ex.Orç.',
+      gestao_fiscal:                 'G.Fisc.',
+      planejamento:                  'Plan.',
+      registros_contabeis:           'Reg.Ct.',
+      relacao_folha_liquidacao:      'Folha',
+      relacao_tributario_impostos:   'Tr.Imp.',
+      relacao_tributario_taxas:      'Tr.Tax.',
+      situacoes_obras_engenharia:    'Obras',
+      tributario:                    'Tribut.'
+    };
+
+    // Cabeçalho da tabela
+    const thStyle = 'padding:4px 3px;text-align:center;font-size:.67rem;font-weight:600;color:#64748B;border-bottom:1px solid #E2E8F0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;max-width:52px';
+    let tHead = `<tr>
+      <th style="padding:4px 6px;text-align:left;font-size:.67rem;font-weight:600;color:#64748B;border-bottom:1px solid #E2E8F0;min-width:80px">Entidade</th>
+      ${REGRAS_EV.map(r => `<th title="${CAMPO_LABELS[r.campo]}" style="${thStyle}">${CAMPO_SHORT[r.campo]}</th>`).join('')}
+    </tr>`;
+
+    let tBody = '';
     docsSorted.forEach(d => {
       const tipo = d.entidade || 'Outros';
       const tc   = TIPO_COL[tipo] || '#475569';
@@ -5508,29 +5529,39 @@ function renderEnvioView() {
       const isOk = !!d.status_ok;
       const modOk    = d.modulos_ok    || 0;
       const modAplic = d.modulos_aplicaveis || 0;
+      const rowBg    = isOk ? '#FAFFFE' : '#FFFAFA';
 
-      // Pílulas de campo
-      let pills = '';
-      REGRAS_EV.forEach(r => {
-        if (!regraAplic(r, tipo)) return;
-        const v = d[r.campo];
-        const isNull   = v === null || v === undefined;
-        const fieldOk  = !isNull && r.ok(v);
-        const pc = isNull ? '#94A3B8' : fieldOk ? '#276749' : '#C53030';
-        const pb = isNull ? '#F8FAFC' : fieldOk ? '#F0FFF4' : '#FFF5F5';
-        const pd = isNull ? '#E2E8F0' : fieldOk ? '#9AE6B4' : '#FEB2B2';
-        const mark = isNull ? '' : (fieldOk ? '✓ ' : '✗ ');
-        pills += `<span style="display:inline-flex;align-items:center;gap:2px;background:${pb};border:1px solid ${pd};border-radius:4px;padding:1px 5px;font-size:.63rem;color:${pc};white-space:nowrap"><b>${mark}</b>${CAMPO_LABELS[r.campo]}: <b>${isNull ? '—' : v}</b></span>`;
-      });
+      const tdStyle = 'padding:5px 3px;text-align:center;border-bottom:1px solid #F1F5F9;font-size:.82rem';
+      let cells = REGRAS_EV.map(r => {
+        if (!regraAplic(r, tipo)) {
+          return `<td style="${tdStyle};color:#CBD5E0">—</td>`;
+        }
+        const v      = d[r.campo];
+        const isNull = v === null || v === undefined;
+        const fOk    = !isNull && r.ok(v);
+        if (isNull) return `<td style="${tdStyle};color:#94A3B8">—</td>`;
+        return fOk
+          ? `<td style="${tdStyle};color:#276749;font-weight:700">✓</td>`
+          : `<td style="${tdStyle};color:#C53030;font-weight:700">✗</td>`;
+      }).join('');
 
-      entityHtml += `
-        <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px;padding:8px 14px 8px 40px;border-bottom:1px solid #EDF2F7;background:${isOk ? '#FAFFFE' : '#FFFAFA'}">
-          <span style="flex-shrink:0;background:${tc}18;color:${tc};border:1px solid ${tc}44;border-radius:4px;padding:1px 6px;font-size:.66rem;font-weight:700">${tl}</span>
-          <span style="flex:1;min-width:140px;max-width:260px;font-size:.77rem;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${(d.nomeUnidade||'').replace(/"/g,'&quot;')}">${d.nomeUnidade||''}</span>
-          <span style="flex-shrink:0;padding:1px 9px;border-radius:12px;font-size:.69rem;font-weight:700;white-space:nowrap;background:${isOk ? '#F0FFF4' : '#FFF5F5'};color:${isOk ? '#276749' : '#C53030'};border:1px solid ${isOk ? '#9AE6B4' : '#FEB2B2'}">${isOk ? '✅ OK' : '❌ Não Ok'} (${modOk}/${modAplic})</span>
-          <div style="width:100%;display:flex;flex-wrap:wrap;gap:4px;padding-left:2px">${pills}</div>
-        </div>`;
+      tBody += `<tr style="background:${rowBg}">
+        <td style="padding:5px 6px;border-bottom:1px solid #F1F5F9;white-space:nowrap">
+          <span style="color:${tc};font-size:.7rem;font-weight:700">${tl}</span>
+          <span style="display:block;font-size:.65rem;color:#64748B">${isOk ? '✅' : '❌'} ${modOk}/${modAplic}</span>
+        </td>${cells}</tr>`;
     });
+
+    const entityHtml = docsSorted.length
+      ? `<div style="overflow-x:auto;padding:6px 14px 10px 40px">
+          <table style="border-collapse:collapse;font-size:.78rem;width:100%;table-layout:auto">
+            <colgroup><col style="min-width:80px">${REGRAS_EV.map(() => '<col style="width:52px">').join('')}</colgroup>
+            <thead style="background:#F8FAFC">${tHead}</thead>
+            <tbody>${tBody}</tbody>
+          </table>
+          <div style="font-size:.65rem;color:#94A3B8;margin-top:6px">✓ ok &nbsp;·&nbsp; ✗ falha &nbsp;·&nbsp; — N/A &nbsp;(passe o mouse nos cabeçalhos para ver o nome completo)</div>
+        </div>`
+      : '';
 
     html += `
     <div class="mun-envio-row" style="border-bottom:1px solid #E2E8F0">
