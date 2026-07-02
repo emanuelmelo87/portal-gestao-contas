@@ -3990,6 +3990,29 @@ async function adminLoadCollection(col) {
     _adminData.docIds = docs.map((d, i) => d.key || String(i));
   }
   _adminData.filtered = _adminData.docs.slice();
+  // Popular select de colunas
+  (function() {
+    const COL_MAP = {
+      jira_chamados:         ['key','municipio','assunto','status','tipo','equipe_atendimento','prioridade','criado_em','atualizado_em'],
+      jira_chamados_issues:  ['key','municipio','assunto','status','tipo','equipe_atendimento','prioridade'],
+      colaboradores:         ['nome','cargo','area_atuacao','area_atendimento','equipe_atendimento','email','gestor'],
+      municipios:            ['municipio','associacao','uf','tipo_conta','portfolio','equipe_atendimento','consultor_comercial','coordenador','analista_cs'],
+      tipos_cliente:         ['tipo'],
+      equipes_atendimento:   ['equipe','tipo_cliente'],
+      status_envio:          ['municipio','entidade','nomeUnidade','ano','mes','status_ok'],
+      ratificacoes:          ['municipio','status','anomes'],
+      cnd_estadual:          ['municipio','nomeEnte','bimestre','numero','validade','status','ano'],
+    };
+    const cols = COL_MAP[col] || ((_adminData.docs[0] && Object.keys(_adminData.docs[0])) || []);
+    const sel = document.getElementById('admin-col-filter');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Todas as colunas</option>';
+    cols.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
+  })();
   // Mostra/oculta botões de gestão de colaboradores
   const colabActions = document.getElementById('admin-colab-actions');
   if (colabActions) colabActions.style.display = (col === 'colaboradores') ? 'flex' : 'none';
@@ -4005,9 +4028,13 @@ async function adminLoadCollection(col) {
 }
 
 function adminTableFilter() {
-  const q = (document.getElementById('admin-table-search').value || '').toLowerCase();
+  const q   = (document.getElementById('admin-table-search').value || '').toLowerCase();
+  const col = (document.getElementById('admin-col-filter')?.value || '');
   _adminData.filtered = q
-    ? _adminData.docs.filter(d => JSON.stringify(d).toLowerCase().includes(q))
+    ? _adminData.docs.filter(d => {
+        const val = col ? String(d[col] ?? '').toLowerCase() : JSON.stringify(d).toLowerCase();
+        return val.includes(q);
+      })
     : _adminData.docs.slice();
   _adminRenderTable();
 }
@@ -5840,6 +5867,9 @@ function renderRatifTable() {
       <!-- Toolbar -->
       <div style="padding:16px 20px;border-bottom:1px solid #2D3748;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <span id="admin-table-title" style="color:#fff;font-weight:700;font-size:1rem"></span>
+        <select id="admin-col-filter" onchange="adminTableFilter()" style="padding:6px 10px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:rgba(255,255,255,.7);font-size:.8rem;min-width:140px">
+          <option value="">Todas as colunas</option>
+        </select>
         <input id="admin-table-search" type="text" placeholder="Filtrar…" oninput="adminTableFilter()" style="padding:6px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.83rem;width:200px">
         <button onclick="adminExportCollectionCSV()" style="padding:6px 14px;background:#0761FF;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">⬇ CSV</button>
         <button onclick="adminLoadCollection(_adminData.collection)" style="padding:6px 14px;background:#2D3748;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer" title="Recarregar">🔄</button>
