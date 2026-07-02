@@ -5503,81 +5503,73 @@ function renderEnvioView() {
   const TIPO_COLORS_EV = { Prefeitura:'#1e40af', CM:'#7c3aed', CI:'#b45309', Consorcio:'#0f766e', Outros:'#475569' };
   const TIPO_ORD_EV    = { Prefeitura:0, CM:1, CI:2, Consorcio:3, Outros:4 };
 
-  const listEl = document.getElementById('envio-list');
-  listEl.innerHTML = municipios.map((mun, rowIdx) => {
-    const docs    = munDocs[mun] || [];
-    const active  = docs.filter(d => (d.modulos_aplicaveis || 0) > 0);
-    const status  = calcStatus(mun);
+  // ── Tabela cruzada estilo TCE: linhas = entidades, colunas = módulos ──
+  const TH_S = 'padding:7px 6px;background:#F1F5F9;color:#475569;font-size:.72rem;font-weight:600;text-align:center;white-space:nowrap;border-bottom:2px solid #CBD5E0;border-right:1px solid #E2E8F0';
 
-    // Totais agregados
+  const theadHtml = `<tr>
+    <th style="${TH_S};text-align:left;min-width:240px;padding-left:12px;position:sticky;left:0;z-index:2;background:#F1F5F9">Entidade</th>
+    ${ESF_MODS.map(m => `<th style="${TH_S}" title="${m.key}">${m.label}</th>`).join('')}
+  </tr>`;
+
+  let tbodyHtml = '';
+  municipios.forEach(mun => {
+    const docs   = munDocs[mun] || [];
+    const active = docs.filter(d => (d.modulos_aplicaveis || 0) > 0);
+    const status = calcStatus(mun);
+
     const totalOk    = active.reduce((s, d) => s + (d.modulos_ok || 0), 0);
     const totalAplic = active.reduce((s, d) => s + (d.modulos_aplicaveis || 0), 0);
     const pct = totalAplic ? Math.round(totalOk / totalAplic * 100) : 0;
 
-    const barColor   = status === 'completo' ? '#38A169' : status === 'parcial' ? '#D69E2E' : '#E53E3E';
-    const badgeStyle = status === 'completo'
-      ? 'background:#F0FFF4;color:#276749;border:1px solid #9AE6B4'
-      : status === 'parcial'
-      ? 'background:#FFFFF0;color:#7B6F00;border:1px solid #F6E05E'
-      : 'background:#FFF5F5;color:#9B2335;border:1px solid #FEB2B2';
-    const badgeTxt = status === 'completo' ? '✅ Completo' : status === 'parcial' ? '⚠️ Parcial' : '❌ Não enviou';
+    const stColor = status === 'completo' ? '#276749' : status === 'parcial' ? '#7B6F00' : '#9B2335';
+    const stBg    = status === 'completo' ? '#F0FFF4' : status === 'parcial' ? '#FFFFF0' : '#FFF5F5';
+    const stBdr   = status === 'completo' ? '#9AE6B4' : status === 'parcial' ? '#F6E05E' : '#FEB2B2';
+    const stIcon  = status === 'completo' ? '✅' : status === 'parcial' ? '⚠️' : '❌';
+    const stLabel = status === 'completo' ? 'Completo' : status === 'parcial' ? 'Parcial' : 'Não enviou';
+    const barFill = `<div style="display:inline-block;width:60px;height:5px;background:#E2E8F0;border-radius:3px;overflow:hidden;vertical-align:middle;margin:0 6px"><div style="width:${pct}%;height:100%;background:${stColor};border-radius:3px"></div></div>`;
 
-    // Hint de faltando — agrega modulos_faltantes de todas as entidades
-    const faltando = [...new Set(active.flatMap(d => d.modulos_faltantes || []))];
-    const faltandoHint = faltando.length > 0 && faltando.length <= 3
-      ? 'Falta: ' + faltando.join(', ')
-      : faltando.length > 3
-      ? 'Falta: ' + faltando.slice(0,2).join(', ') + ' +' + (faltando.length-2)
-      : '';
+    // Linha de cabeçalho do município
+    tbodyHtml += `<tr style="background:#EBF0F8;border-top:2px solid #CBD5E0">
+      <td colspan="${ESF_MODS.length + 1}" style="padding:6px 12px;font-weight:700;font-size:.82rem;color:#1C1A23;position:sticky;left:0;background:#EBF0F8">
+        ${mun}
+        <span style="margin-left:10px;padding:1px 8px;border-radius:12px;font-size:.7rem;font-weight:600;background:${stBg};color:${stColor};border:1px solid ${stBdr}">${stIcon} ${stLabel}</span>
+        ${barFill}<span style="font-size:.7rem;color:#718096">${totalOk}/${totalAplic}</span>
+      </td>
+    </tr>`;
 
-    const meta   = munMeta[mun.toLowerCase().trim()];
-    const regiao = meta?.regiao ? `<span style="font-size:.7rem;color:#718096;margin-left:6px">${meta.regiao}</span>` : '';
-    const rowBg  = rowIdx % 2 === 0 ? '#fff' : '#FAFAFA';
-
-    // Linhas de entidade (expandível) — ordenadas por tipo
+    // Linhas de entidade ordenadas por tipo
     const docsSorted = [...docs].sort((a, b) => {
       const ta = TIPO_ORD_EV[a.entidade] ?? 5, tb = TIPO_ORD_EV[b.entidade] ?? 5;
       return ta !== tb ? ta - tb : (a.nomeUnidade||'').localeCompare(b.nomeUnidade||'', 'pt-BR');
     });
 
-    const detailRows = docsSorted.map(d => {
+    docsSorted.forEach((d, i) => {
+      const rowBg = i % 2 === 0 ? '#fff' : '#FAFAFA';
       const tc = TIPO_COLORS_EV[d.entidade] || '#475569';
-      const tipoBadge = `<span style="background:${tc}18;color:${tc};border:1px solid ${tc}44;border-radius:4px;padding:1px 5px;font-size:.68rem;font-weight:700;margin-right:6px">${d.entidade||'?'}</span>`;
-      const entOk    = d.modulos_ok || 0;
-      const entAplic = d.modulos_aplicaveis || 0;
-      const entIcon  = entAplic === 0 ? '<span style="color:#A0AEC0">—</span>'
-                     : d.status_ok ? '✅' : '<span style="color:#E53E3E">❌</span>';
-      return `<tr style="border-top:1px solid #EDF2F7">
-        <td style="padding:6px 12px 6px 48px;font-size:.8rem;color:#4A5568">${tipoBadge}${d.nomeUnidade||''}</td>
-        <td style="padding:6px 14px;font-size:.8rem;text-align:right;color:#718096">${entOk}/${entAplic}</td>
-        <td style="padding:6px 14px;font-size:.85rem;text-align:center">${entIcon}</td>
-      </tr>`;
-    }).join('');
+      const tipoBadge = `<span style="display:inline-block;background:${tc}18;color:${tc};border:1px solid ${tc}44;border-radius:4px;padding:1px 5px;font-size:.65rem;font-weight:700;margin-right:6px;vertical-align:middle">${d.entidade||'?'}</span>`;
 
-    return `<div style="border-bottom:1px solid #EDF2F7;background:${rowBg}">
-      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'table':'none';this.querySelector('.envio-chev').textContent=this.nextElementSibling.style.display!=='none'?'▼':'▶'"
-           style="display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;user-select:none" onmouseover="this.style.background='#F7FAFC'" onmouseout="this.style.background=''">
-        <span class="envio-chev" style="font-size:.7rem;color:#A0AEC0;width:12px">▶</span>
-        <span style="font-weight:600;font-size:.85rem;min-width:120px">${mun}</span>${regiao}
-        <span style="padding:2px 8px;border-radius:20px;font-size:.72rem;font-weight:600;${badgeStyle}">${badgeTxt}</span>
-        <div style="flex:1;display:flex;align-items:center;gap:8px;max-width:180px">
-          <div style="flex:1;height:5px;background:#EDF2F7;border-radius:3px;overflow:hidden">
-            <div style="width:${pct}%;height:100%;background:${barColor};border-radius:3px"></div>
-          </div>
-          <span style="font-size:.72rem;color:#718096;white-space:nowrap">${totalOk}/${totalAplic}</span>
-        </div>
-        <span style="font-size:.72rem;color:#A0AEC0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${faltandoHint}</span>
-      </div>
-      <table style="display:none;width:100%;border-collapse:collapse;background:#FAFCFF">
-        <tr style="background:#F1F5F9">
-          <th style="padding:5px 12px 5px 48px;font-size:.7rem;font-weight:600;color:#718096;text-align:left">Entidade</th>
-          <th style="padding:5px 14px;font-size:.7rem;font-weight:600;color:#718096;text-align:right">Módulos OK</th>
-          <th style="padding:5px 14px;font-size:.7rem;font-weight:600;color:#718096;text-align:center">Status</th>
-        </tr>
-        ${detailRows}
-      </table>
-    </div>`;
-  }).join('');
+      const modCells = ESF_MODS.map(m => {
+        const v = d[m.key];
+        if (v === null || v === undefined)
+          return `<td style="text-align:center;padding:5px 6px;color:#CBD5E0;font-size:.82rem;border-right:1px solid #EDF2F7">—</td>`;
+        if (v === 0)
+          return `<td style="text-align:center;padding:5px 6px;font-size:.82rem;font-weight:600;color:#C53030;background:#FFF5F5;border-right:1px solid #EDF2F7">0</td>`;
+        return `<td style="text-align:center;padding:5px 6px;font-size:.82rem;color:#276749;border-right:1px solid #EDF2F7">${v}</td>`;
+      }).join('');
+
+      tbodyHtml += `<tr style="background:${rowBg};border-bottom:1px solid #EDF2F7">
+        <td style="padding:6px 12px;font-size:.8rem;white-space:nowrap;position:sticky;left:0;background:${rowBg};border-right:1px solid #E2E8F0">${tipoBadge}${d.nomeUnidade||''}</td>
+        ${modCells}
+      </tr>`;
+    });
+  });
+
+  const listEl = document.getElementById('envio-list');
+  listEl.style.overflowX = 'auto';
+  listEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.82rem">
+    <thead>${theadHtml}</thead>
+    <tbody>${tbodyHtml}</tbody>
+  </table>`;
 }
 
 // ── eSfinge Status Envio — matriz entidades × módulos ────────────────
