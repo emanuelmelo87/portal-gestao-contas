@@ -2672,7 +2672,7 @@ function renderCNDEstadual() {
   renderCNDStatusFonte('cnd-estadual-status', statusFonte, 'eSfinge TCE/SC');
 
   // ── Filtros ──────────────────────────────────────────────────────
-  const regiaoFil    = state.selectedRegiao || document.getElementById('cnd-regiao-filter')?.value || '';
+  const regiaoFil    = state.selectedRegiao || '';
   const statusCNDFil = document.getElementById('cnd-status-filter')?.value || '';
   const munRegiaoMap = {};
   (_MUN_CACHE.docs || []).forEach(d => { if (d.municipio) munRegiaoMap[d.municipio.toLowerCase().trim()] = d.regiao || ''; });
@@ -5128,39 +5128,8 @@ function _renderEnvioChart(filteredMuns, munMetaMap, filteredMunNames, groupBy) 
   ], true);
 }
 
-let _REGIAO_CACHE = [];
-function populateCNDFilters() {
-  // Região no filtro da CND
-  const cndReg = document.getElementById('cnd-regiao-filter');
-  if (cndReg && _REGIAO_CACHE.length) {
-    const cur = state.selectedRegiao || cndReg.value;
-    cndReg.innerHTML = '<option value="">Todas</option>';
-    _REGIAO_CACHE.forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r; opt.textContent = r;
-      if (r === cur) opt.selected = true;
-      cndReg.appendChild(opt);
-    });
-  }
-  // Ano na CND — extrair dos labels dos períodos
-  const cndAno = document.getElementById('cnd-ano-filter');
-  if (cndAno && state.cndEstadual.length) {
-    const labels = [
-      state.cndEstadual[0].p1_label || '',
-      state.cndEstadual[0].p2_label || '',
-      state.cndEstadual[0].p3_label || '',
-    ];
-    const anos = [...new Set(labels.map(l => { const m = l.match(/\d{4}/); return m ? m[0] : null; }).filter(Boolean))].sort().reverse();
-    const cur = cndAno.value;
-    cndAno.innerHTML = '<option value="">Todos</option>';
-    anos.forEach(a => {
-      const opt = document.createElement('option');
-      opt.value = a; opt.textContent = a;
-      if (a === cur) opt.selected = true;
-      cndAno.appendChild(opt);
-    });
-  }
-}
+const _REGIAO_CACHE = [];
+function populateCNDFilters() { /* filtros Ano/Região removidos — apenas Status CND mantido */ }
 async function populateMunicipioFilter() {
   const sel = document.getElementById('mun-filter');
   if (!sel) return;
