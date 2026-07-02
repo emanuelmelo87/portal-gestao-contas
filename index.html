@@ -4550,7 +4550,8 @@ function switchTCETab(tab) {
 }
 
 // ── Status de Envio — cache de municípios do Firestore ───────────────────────
-const _MUN_CACHE = { docs: [], loaded: false };
+const _MUN_CACHE  = { docs: [], loaded: false };
+const _EQ_CACHE   = { list: [], loaded: false };  // equipes_atendimento collection
 const _ENVIO = { cache: {}, currentKey: null };
 const MESES_LABEL = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
@@ -4566,6 +4567,21 @@ async function _loadMunicipios() {
     _MUN_CACHE.loaded = true;
   }
   return _MUN_CACHE.docs;
+}
+
+// Carrega equipes da coleção equipes_atendimento (cache)
+async function _loadEquipes() {
+  if (_EQ_CACHE.loaded) return _EQ_CACHE.list;
+  try {
+    const snap = await _db.collection('equipes_atendimento').get();
+    _EQ_CACHE.list   = snap.docs.map(d => d.data().equipe || d.id).filter(Boolean).sort((a,b) => a.localeCompare(b,'pt'));
+    _EQ_CACHE.loaded = true;
+  } catch(e) {
+    console.warn('equipes_atendimento:', e.message);
+    _EQ_CACHE.list   = [];
+    _EQ_CACHE.loaded = true;
+  }
+  return _EQ_CACHE.list;
 }
 
 // Cards de esfera removidos — função mantida para não quebrar chamadas
@@ -4738,7 +4754,7 @@ function _getFilteredMunNames() {
 }
 
 async function populateMainFilters() {
-  await _loadMunicipios();
+  await Promise.all([_loadMunicipios(), _loadEquipes()]);
   _populateTipoContaFilter();
 }
 
@@ -4760,9 +4776,16 @@ function _populateTipoContaFilter() {
 }
 
 function _populateEquipeFilter() {
-  let muns = _MUN_CACHE.docs || [];
-  if (state.selectedTipoConta) muns = muns.filter(d => d.tipo_conta === state.selectedTipoConta);
-  const equipes = [...new Set(muns.map(d => d.equipe_atendimento).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt'));
+  // Usa a coleção equipes_atendimento como fonte canônica; fallback nos municipios
+  const fromCollection = _EQ_CACHE.loaded && _EQ_CACHE.list.length > 0;
+  let equipes;
+  if (fromCollection) {
+    equipes = _EQ_CACHE.list;
+  } else {
+    let muns = _MUN_CACHE.docs || [];
+    if (state.selectedTipoConta) muns = muns.filter(d => d.tipo_conta === state.selectedTipoConta);
+    equipes = [...new Set(muns.map(d => d.equipe_atendimento).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt'));
+  }
   const sel = document.getElementById('equipe-filter');
   if (sel) {
     const cur = state.selectedEquipe;
