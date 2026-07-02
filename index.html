@@ -916,12 +916,29 @@
           <!-- Barra de filtros de Envio -->
           <div id="envio-filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
             <div>
-              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Status</label>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Status de Envio</label>
               <select id="envio-status-filter" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
                 <option value="">Todos</option>
-                <option value="completo">✅ Completo</option>
-                <option value="parcial">⚠️ Parcial</option>
-                <option value="nenhum">❌ Não enviou</option>
+                <option value="completo">Completo</option>
+                <option value="parcial">Parcial</option>
+                <option value="nenhum">Não enviou</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Ratificado</label>
+              <select id="envio-ratif-filter" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                <option value="">Todos</option>
+                <option value="sim">Sim</option>
+                <option value="nao">Não</option>
+                <option value="nd">Sem dados</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">CND</label>
+              <select id="envio-cnd-filter" onchange="renderEnvioView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                <option value="">Todos</option>
+                <option value="com">CND Sim</option>
+                <option value="sem">CND Não</option>
               </select>
             </div>
             <div style="display:flex;gap:6px;margin-left:auto;align-self:flex-end">
@@ -5417,6 +5434,8 @@ function renderEnvioView() {
   document.getElementById('envio-loading').style.display = 'none';
 
   const statusFil = document.getElementById('envio-status-filter')?.value || '';
+  const ratifFil  = document.getElementById('envio-ratif-filter')?.value  || '';
+  const cndFil    = document.getElementById('envio-cnd-filter')?.value    || '';
 
   // CND por município (lookup lowercase)
   const cndByMun = {};
@@ -5468,6 +5487,17 @@ function renderEnvioView() {
   document.getElementById('envio-cards').style.display = 'grid';
 
   if (statusFil) municipios = municipios.filter(m => calcStatus(m) === statusFil);
+  if (ratifFil)  municipios = municipios.filter(m => {
+    const r = ratifByMun[m] || '';
+    if (ratifFil === 'nd')  return !r;
+    return r === ratifFil;
+  });
+  if (cndFil) municipios = municipios.filter(m => {
+    const c = cndByMun[m] || '';
+    if (cndFil === 'com') return c === 'Com CND';
+    if (cndFil === 'sem') return c === 'Sem CND';
+    return true;
+  });
 
   const mesLabel = MESES_LABEL[mes - 1] || mes;
   document.getElementById('envio-info').textContent =
