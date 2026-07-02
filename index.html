@@ -5452,7 +5452,7 @@ function renderEnvioView() {
   const REGRAS_EV = [
     { campo: 'assinatura_balancete_razao',  exceto:  ['CI'],              ok: v => v === 2 },
     { campo: 'execucao_orcamentaria',       exceto:  ['CI'],              ok: v => v > 0   },
-    { campo: 'gestao_fiscal',               somente: ['CM','CI'],         ok: v => v > 0   },
+    { campo: 'gestao_fiscal',               somente: ['CM','CI'], sazonal: true, ok: v => v > 0 },
     { campo: 'planejamento',                somente: ['CI'],              ok: v => v > 0   },
     { campo: 'registros_contabeis',         exceto:  ['CI'],              ok: v => v > 0   },
     { campo: 'relacao_folha_liquidacao',    exceto:  ['CI'],              ok: v => v > 0   },
@@ -5461,7 +5461,8 @@ function renderEnvioView() {
     { campo: 'situacoes_obras_engenharia',  todas:   true,                ok: v => v === 0 },
     { campo: 'tributario',                  somente: ['Prefeitura'],      ok: v => v > 0   }
   ];
-  function regraAplic(r, tipo) {
+  function regraAplic(r, tipo, mes) {
+    if (r.sazonal && mes % 2 !== 0) return false; // meses ímpares → N/A
     if (r.todas)   return true;
     if (r.somente) return r.somente.includes(tipo);
     if (r.exceto)  return !r.exceto.includes(tipo);
@@ -5535,7 +5536,7 @@ function renderEnvioView() {
 
       const tdStyle = 'padding:14px 12px;text-align:center;border-bottom:1px solid #EDF2F7;font-size:.9rem;vertical-align:middle';
       let cells = REGRAS_EV.map(r => {
-        if (!regraAplic(r, tipo)) {
+        if (!regraAplic(r, tipo, mes)) {
           return `<td style="${tdStyle};color:#CBD5E0;font-size:.8rem">—</td>`;
         }
         const v      = d[r.campo];
