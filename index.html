@@ -5449,7 +5449,7 @@ function renderEnvioView() {
   if (_RATIF.loaded) {
     const ratifDocs = _RATIF.docs.filter(d => d.ano == ano && d.mes == mes);
     ratifDocs.forEach(d => {
-      const k = (d.municipio||'').toLowerCase().trim();
+      const k = (d.municipio || d.nomeEnte || '').toLowerCase().trim();
       if (!k) return;
       if (ratifByMun[k] === 'nao') return;
       ratifByMun[k] = d.ratificacao_ok ? 'sim' : 'nao';
