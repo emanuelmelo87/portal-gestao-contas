@@ -5354,7 +5354,7 @@ async function buscarEnvio() {
     _ENVIO.currentKey = key;
     await _loadMunicipios();
     if (!_RATIF.loaded) {
-      try { _RATIF.docs = await fetchFirestore('ratificacoes'); _RATIF.loaded = true; } catch(e) {}
+      try { _RATIF.docs = await fetchFirestore('ratificacoes'); _RATIF.loaded = true; } catch(e) { console.error('[RATIF] Falha cache-hit:', e?.message||e); _RATIF.error = e?.message||'erro'; }
     }
     renderEnvioView();
     renderSummaryChart();
@@ -5369,7 +5369,7 @@ async function buscarEnvio() {
   try {
     const ratifPromise = _RATIF.loaded
       ? Promise.resolve(null)
-      : fetchFirestore('ratificacoes').then(docs => { _RATIF.docs = docs; _RATIF.loaded = true; }).catch(()=>{});
+      : fetchFirestore('ratificacoes').then(docs => { _RATIF.docs = docs; _RATIF.loaded = true; }).catch(e => { console.error('[RATIF] Falha ao carregar ratificacoes:', e?.message||e); _RATIF.error = e?.message||'erro'; });
     const [snap] = await Promise.all([
       _db.collection('status_envio').where('ano', '==', ano).where('mes', '==', mes).get(),
       _loadMunicipios(),
