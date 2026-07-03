@@ -904,6 +904,10 @@
             style="padding:7px 20px;border:none;border-radius:7px;font-size:.84rem;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12);transition:all .15s">
             📊 Status de Envio
           </button>
+          <button id="est-sub-ratif" onclick="switchEstadualSub('ratif')"
+            style="padding:7px 20px;border:none;border-radius:7px;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
+            📋 Ratificação
+          </button>
           <button id="est-sub-cnd" onclick="switchEstadualSub('cnd')"
             style="padding:7px 20px;border:none;border-radius:7px;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
             📄 Certidão CND
@@ -1004,6 +1008,66 @@
           <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start;flex-wrap:wrap"></div>
           <div id="cnd-estadual-table" style="margin-top:16px"></div>
         </div><!-- /estadual-cnd-section -->
+
+        <!-- Sub-página: Ratificação -->
+        <div id="estadual-ratif-section" style="display:none">
+
+          <!-- Seletor de competência + filtros -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
+            <div>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Ano</label>
+              <select id="ratif-ano" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)"></select>
+            </div>
+            <div>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Mês</label>
+              <select id="ratif-mes" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+                <option value="3">Março</option><option value="4">Abril</option>
+                <option value="5">Maio</option><option value="6">Junho</option>
+                <option value="7">Julho</option><option value="8">Agosto</option>
+                <option value="9">Setembro</option><option value="10">Outubro</option>
+                <option value="11">Novembro</option><option value="12">Dezembro</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Status</label>
+              <select id="ratif-status-filter" onchange="renderRatifView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                <option value="">Todos</option>
+                <option value="sim">✅ Ratificado</option>
+                <option value="nao">❌ Pendente</option>
+              </select>
+            </div>
+            <button id="ratif-buscar-btn" onclick="buscarRatif()"
+              style="padding:7px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:.83rem;font-weight:700;cursor:pointer;align-self:flex-end">
+              🔍 Buscar
+            </button>
+            <span id="ratif-info" style="font-size:.75rem;color:var(--text-muted);align-self:flex-end;margin-left:auto"></span>
+          </div>
+
+          <!-- Cards resumo -->
+          <div id="ratif-cards" style="display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+            <div style="background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 18px;text-align:center">
+              <div id="ratif-card-sim" style="font-size:1.6rem;font-weight:800;color:#276749">—</div>
+              <div style="font-size:.75rem;color:#276749;font-weight:600;margin-top:2px">✅ Ratificado</div>
+            </div>
+            <div style="background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 18px;text-align:center">
+              <div id="ratif-card-nao" style="font-size:1.6rem;font-weight:800;color:#9B2335">—</div>
+              <div style="font-size:.75rem;color:#9B2335;font-weight:600;margin-top:2px">❌ Pendente</div>
+            </div>
+            <div style="background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 18px;text-align:center">
+              <div id="ratif-card-total" style="font-size:1.6rem;font-weight:800;color:#2B6CB0">—</div>
+              <div style="font-size:.75rem;color:#2B6CB0;font-weight:600;margin-top:2px">📊 Total</div>
+            </div>
+          </div>
+
+          <!-- Hint / loading / lista -->
+          <div id="ratif-hint" style="text-align:center;padding:36px;color:var(--text-muted)">
+            Selecione a competência e clique em <strong>Buscar</strong>.
+          </div>
+          <div id="ratif-loading" style="display:none;text-align:center;padding:36px;color:var(--text-muted)">⏳ Carregando…</div>
+          <div id="ratif-table" style="display:none"></div>
+
+        </div><!-- /estadual-ratif-section -->
 
       </div><!-- /tce-pane-estadual -->
 
@@ -5273,26 +5337,178 @@ function renderFederal() {
 function switchEstadualSub(sub) {
   const envioSec = document.getElementById('estadual-envio-section');
   const cndSec   = document.getElementById('estadual-cnd-section');
+  const ratifSec = document.getElementById('estadual-ratif-section');
   const btnEnvio = document.getElementById('est-sub-envio');
   const btnCND   = document.getElementById('est-sub-cnd');
+  const btnRatif = document.getElementById('est-sub-ratif');
   if (!envioSec) return;
 
   state.estadualSub = sub;
 
+  // Reset todas as seções e botões
+  [envioSec, cndSec, ratifSec].forEach(s => { if (s) s.style.display = 'none'; });
+  [btnEnvio, btnCND, btnRatif].forEach(b => {
+    if (b) { b.style.background = 'transparent'; b.style.color = '#64748B'; b.style.boxShadow = 'none'; }
+  });
+
+  // Ativar a seção escolhida
+  const activeBtn = sub === 'envio' ? btnEnvio : sub === 'ratif' ? btnRatif : btnCND;
+  if (activeBtn) { activeBtn.style.background = 'var(--accent)'; activeBtn.style.color = '#fff'; activeBtn.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
+
   if (sub === 'envio') {
     envioSec.style.display = 'block';
-    cndSec.style.display   = 'none';
-    if (btnEnvio) { btnEnvio.style.background = 'var(--accent)'; btnEnvio.style.color = '#fff'; btnEnvio.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
-    if (btnCND)   { btnCND.style.background = 'transparent'; btnCND.style.color = '#64748B'; btnCND.style.boxShadow = 'none'; }
     initEnvioPanel();
+  } else if (sub === 'ratif') {
+    if (ratifSec) ratifSec.style.display = 'block';
+    initRatifPanel();
   } else {
-    envioSec.style.display = 'none';
-    cndSec.style.display   = 'block';
-    if (btnCND)   { btnCND.style.background = 'var(--accent)'; btnCND.style.color = '#fff'; btnCND.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
-    if (btnEnvio) { btnEnvio.style.background = 'transparent'; btnEnvio.style.color = '#64748B'; btnEnvio.style.boxShadow = 'none'; }
+    cndSec.style.display = 'block';
     populateCNDFilters();
     renderCNDEstadual();
   }
+}
+
+// ─── Ratificação ────────────────────────────────────────────────────────────────
+
+const MESES_LABEL_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                          'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function _titleCase(s) {
+  if (!s) return '';
+  const lower = { de:1,da:1,do:1,dos:1,das:1,e:1,a:1,o:1 };
+  return s.toLowerCase().split(' ').map((w,i) => (i > 0 && lower[w]) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function initRatifPanel() {
+  // Popular seletores ano/mês se ainda vazios
+  const anoSel = document.getElementById('ratif-ano');
+  if (anoSel && !anoSel.options.length) {
+    const anoAtual = new Date().getFullYear();
+    for (let y = anoAtual; y >= anoAtual - 3; y--) anoSel.add(new Option(y, y));
+    anoSel.value = anoAtual;
+  }
+  const mesSel = document.getElementById('ratif-mes');
+  if (mesSel) mesSel.value = new Date().getMonth() + 1 || 12;
+  // Se já há dados carregados, renderiza direto
+  if (_RATIF.loaded && _RATIF._ratifKey) renderRatifView();
+}
+
+async function buscarRatif() {
+  const ano = parseInt(document.getElementById('ratif-ano')?.value) || new Date().getFullYear();
+  const mes = parseInt(document.getElementById('ratif-mes')?.value) || (new Date().getMonth() + 1);
+
+  const btn = document.getElementById('ratif-buscar-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Buscando…'; }
+  document.getElementById('ratif-hint').style.display    = 'none';
+  document.getElementById('ratif-loading').style.display = 'block';
+  document.getElementById('ratif-table').style.display   = 'none';
+  document.getElementById('ratif-cards').style.display   = 'none';
+
+  try {
+    if (!_RATIF.loaded) {
+      _RATIF.docs = await fetchFirestore('ratificacoes');
+      _RATIF.loaded = true;
+    }
+    _RATIF._ratifKey = ano + '-' + mes;
+    renderRatifView();
+  } catch(e) {
+    document.getElementById('ratif-loading').style.display = 'none';
+    document.getElementById('ratif-hint').style.display = 'block';
+    document.getElementById('ratif-hint').textContent = '⚠️ Erro ao carregar: ' + e.message;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔍 Buscar'; }
+  }
+}
+
+function renderRatifView() {
+  const key = _RATIF._ratifKey;
+  if (!key || !_RATIF.loaded) return;
+
+  const [ano, mes] = key.split('-').map(Number);
+  const statusFil = document.getElementById('ratif-status-filter')?.value || '';
+
+  // Filtrar docs do mês (excluir nomeEnte vazio ou "-")
+  let docs = (_RATIF.docs || []).filter(d =>
+    d.ano == ano && d.mes == mes &&
+    (d.nomeEnte || '').trim() && (d.nomeEnte || '').trim() !== '-'
+  );
+
+  // Aplicar filtro de status
+  if (statusFil === 'sim') docs = docs.filter(d => d.ratificacao_ok === true);
+  if (statusFil === 'nao') docs = docs.filter(d => d.ratificacao_ok === false);
+
+  // Aplicar filtro global de município (filtros em cascata do portal)
+  const _validMuns = _getFilteredMunNames();
+  if (_validMuns.size > 0) {
+    docs = docs.filter(d => _validMuns.has((d.nomeEnte || '').toLowerCase().trim()));
+  }
+
+  docs = docs.sort((a, b) => (a.nomeEnte || '').localeCompare(b.nomeEnte || '', 'pt-BR'));
+
+  // Totais (sem filtro de status para os cards)
+  const allDocs = (_RATIF.docs || []).filter(d =>
+    d.ano == ano && d.mes == mes &&
+    (d.nomeEnte || '').trim() && (d.nomeEnte || '').trim() !== '-'
+  );
+  const totalSim = allDocs.filter(d => d.ratificacao_ok === true).length;
+  const totalNao = allDocs.filter(d => d.ratificacao_ok === false).length;
+  const total    = allDocs.length;
+
+  // Cards
+  document.getElementById('ratif-loading').style.display = 'none';
+  document.getElementById('ratif-cards').style.display   = 'grid';
+  document.getElementById('ratif-card-sim').textContent   = totalSim;
+  document.getElementById('ratif-card-nao').textContent   = totalNao;
+  document.getElementById('ratif-card-total').textContent = total;
+
+  const mesLabel = MESES_LABEL_FULL[mes - 1] || mes;
+  document.getElementById('ratif-info').textContent =
+    docs.length + '/' + total + ' municípios · ' + mesLabel + '/' + ano;
+
+  // Tabela
+  const TH = 'padding:10px 14px;font-size:.73rem;font-weight:700;text-align:left;white-space:nowrap;background:#1a3a5c;color:#fff;border-right:1px solid rgba(255,255,255,.1)';
+
+  const rows = docs.map((d, i) => {
+    const bg = i % 2 === 0 ? '#fff' : '#F7FAFC';
+    const statusBadge = d.ratificacao_ok === true
+      ? '<span style="background:#C6F6D5;color:#276749;padding:3px 12px;border-radius:10px;font-size:.76rem;font-weight:700">✅ Ratificado</span>'
+      : '<span style="background:#FED7D7;color:#C53030;padding:3px 12px;border-radius:10px;font-size:.76rem;font-weight:700">❌ Pendente</span>';
+    const transmissao = d.ultimaTransmissao && d.ultimaTransmissao !== '-' ? d.ultimaTransmissao : '—';
+    const quitado   = d.totalQuitado   ?? '—';
+    const atrasado  = d.totalAtrasado  ?? '—';
+    const faltantes = d.totalFaltantes ?? '—';
+    const ausente   = d.totalAusente   ?? '—';
+    const atrasadoStyle = (typeof atrasado === 'number' && atrasado > 0)
+      ? 'color:#C53030;font-weight:700' : 'color:#4A5568';
+    return `<tr style="background:${bg};border-bottom:1px solid #EDF2F7">
+      <td style="padding:9px 14px;font-size:.84rem;font-weight:600">${_titleCase(d.nomeEnte)}</td>
+      <td style="padding:9px 14px">${statusBadge}</td>
+      <td style="padding:9px 14px;font-size:.8rem;color:#4A5568">${transmissao}</td>
+      <td style="padding:9px 14px;font-size:.83rem;text-align:center;color:#276749;font-weight:600">${quitado}</td>
+      <td style="padding:9px 14px;font-size:.83rem;text-align:center;${atrasadoStyle}">${atrasado}</td>
+      <td style="padding:9px 14px;font-size:.83rem;text-align:center;color:#4A5568">${faltantes}</td>
+      <td style="padding:9px 14px;font-size:.83rem;text-align:center;color:#A0AEC0">${ausente}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('ratif-table').style.display = 'block';
+  document.getElementById('ratif-table').innerHTML = `
+    <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+      <table style="width:100%;border-collapse:collapse;font-family:inherit">
+        <thead>
+          <tr>
+            <th style="${TH}">Município / Ente</th>
+            <th style="${TH}">Status</th>
+            <th style="${TH}">Última Transmissão</th>
+            <th style="${TH};text-align:center">Quitados</th>
+            <th style="${TH};text-align:center">Atrasados</th>
+            <th style="${TH};text-align:center">Faltantes</th>
+            <th style="${TH};text-align:center;border-right:none">Ausentes</th>
+          </tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-muted)">Nenhum resultado para o filtro selecionado.</td></tr>'}</tbody>
+      </table>
+    </div>`;
 }
 
 // Função toggleCND mantida para compatibilidade (não usada mais)
