@@ -1012,23 +1012,8 @@
         <!-- Sub-página: Ratificação -->
         <div id="estadual-ratif-section" style="display:none">
 
-          <!-- Seletor de competência + filtros -->
+          <!-- Filtro único: status de ratificação -->
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
-            <div>
-              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Ano</label>
-              <select id="ratif-ano" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)"></select>
-            </div>
-            <div>
-              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Mês</label>
-              <select id="ratif-mes" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-                <option value="1">Janeiro</option><option value="2">Fevereiro</option>
-                <option value="3">Março</option><option value="4">Abril</option>
-                <option value="5">Maio</option><option value="6">Junho</option>
-                <option value="7">Julho</option><option value="8">Agosto</option>
-                <option value="9">Setembro</option><option value="10">Outubro</option>
-                <option value="11">Novembro</option><option value="12">Dezembro</option>
-              </select>
-            </div>
             <div>
               <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Status</label>
               <select id="ratif-status-filter" onchange="renderRatifView()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
@@ -1037,10 +1022,6 @@
                 <option value="nao">❌ Pendente</option>
               </select>
             </div>
-            <button id="ratif-buscar-btn" onclick="buscarRatif()"
-              style="padding:7px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:.83rem;font-weight:700;cursor:pointer;align-self:flex-end">
-              🔍 Buscar
-            </button>
             <span id="ratif-info" style="font-size:.75rem;color:var(--text-muted);align-self:flex-end;margin-left:auto"></span>
           </div>
 
@@ -1061,9 +1042,7 @@
           </div>
 
           <!-- Hint / loading / lista -->
-          <div id="ratif-hint" style="text-align:center;padding:36px;color:var(--text-muted)">
-            Selecione a competência e clique em <strong>Buscar</strong>.
-          </div>
+          <div id="ratif-hint" style="display:none"></div>
           <div id="ratif-loading" style="display:none;text-align:center;padding:36px;color:var(--text-muted)">⏳ Carregando…</div>
           <div id="ratif-table" style="display:none"></div>
 
@@ -4781,7 +4760,7 @@ function onFilterChange(type, value) {
     _populateMunicipioFilter2();
   } else if (type === 'municipio') {
     state.selectedMunicipio = value;
-    renderCNDEstadual(); renderEnvioView(); renderFederal(); renderSummaryChart();
+    renderCNDEstadual(); renderEnvioView(); renderFederal(); renderSummaryChart(); renderRatifView();
   } else if (type === 'regiao') {
     // Legado — ignorar
   } else if (type === 'mes' || type === 'ano') {
@@ -4791,6 +4770,8 @@ function onFilterChange(type, value) {
       const key = fbAno.value + '-' + fbMes.value;
       if (_ENVIO.cache[key]) { _ENVIO.currentKey = key; renderEnvioView(); renderSummaryChart(); }
       else buscarEnvio();
+      // Sincronizar competência da aba Ratificação
+      if (_RATIF.loaded) { _RATIF._ratifKey = key; renderRatifView(); }
     }
   }
   _saveFilters();
@@ -4804,6 +4785,7 @@ async function onBuscarGlobal() {
     await buscarEnvio();
     renderCNDEstadual();
     renderFederal();
+    if (_RATIF.loaded) { _RATIF._ratifKey = _ENVIO.currentKey; renderRatifView(); }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '🔍 Buscar'; }
   }
@@ -4844,6 +4826,7 @@ function onMunicipioChange(val) {
   // Re-renderiza CND e Envio
   renderCNDEstadual();
   renderEnvioView();
+  renderRatifView();
   // Atualiza federal se visível
   renderFederal();
 }
@@ -5379,27 +5362,9 @@ function _titleCase(s) {
   return s.toLowerCase().split(' ').map((w,i) => (i > 0 && lower[w]) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
-function initRatifPanel() {
-  // Popular seletores ano/mês se ainda vazios
-  const anoSel = document.getElementById('ratif-ano');
-  if (anoSel && !anoSel.options.length) {
-    const anoAtual = new Date().getFullYear();
-    for (let y = anoAtual; y >= anoAtual - 3; y--) anoSel.add(new Option(y, y));
-    anoSel.value = anoAtual;
-  }
-  const mesSel = document.getElementById('ratif-mes');
-  if (mesSel) mesSel.value = new Date().getMonth() + 1 || 12;
-  // Se já há dados carregados, renderiza direto
-  if (_RATIF.loaded && _RATIF._ratifKey) renderRatifView();
-}
-
-async function buscarRatif() {
-  const ano = parseInt(document.getElementById('ratif-ano')?.value) || new Date().getFullYear();
-  const mes = parseInt(document.getElementById('ratif-mes')?.value) || (new Date().getMonth() + 1);
-
-  const btn = document.getElementById('ratif-buscar-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Buscando…'; }
-  document.getElementById('ratif-hint').style.display    = 'none';
+// initRatifPanel: carrega automaticamente usando a competência global (_ENVIO.currentKey)
+// e respeita os filtros globais (Competência, Região, Município) via _getFilteredMunNames()
+async function initRatifPanel() {
   document.getElementById('ratif-loading').style.display = 'block';
   document.getElementById('ratif-table').style.display   = 'none';
   document.getElementById('ratif-cards').style.display   = 'none';
@@ -5409,14 +5374,20 @@ async function buscarRatif() {
       _RATIF.docs = await fetchFirestore('ratificacoes');
       _RATIF.loaded = true;
     }
-    _RATIF._ratifKey = ano + '-' + mes;
+    // Usar competência do Status de Envio; se não houver, pegar o mês mais recente dos dados
+    if (_ENVIO.currentKey) {
+      _RATIF._ratifKey = _ENVIO.currentKey; // formato "ano-mes"
+    } else if (_RATIF.docs.length) {
+      const latest = _RATIF.docs.reduce((best, d) => {
+        const score = (d.ano || 0) * 100 + (d.mes || 0);
+        return score > best.score ? { score, key: d.ano + '-' + d.mes } : best;
+      }, { score: 0, key: null });
+      _RATIF._ratifKey = latest.key;
+    }
     renderRatifView();
   } catch(e) {
     document.getElementById('ratif-loading').style.display = 'none';
-    document.getElementById('ratif-hint').style.display = 'block';
-    document.getElementById('ratif-hint').textContent = '⚠️ Erro ao carregar: ' + e.message;
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔍 Buscar'; }
+    console.error('[RATIF] initRatifPanel erro:', e.message);
   }
 }
 
