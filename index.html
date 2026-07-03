@@ -5441,24 +5441,19 @@ function renderRatifView() {
 
   const rows = docs.map((d, i) => {
     const bg = i % 2 === 0 ? '#fff' : '#F7FAFC';
+    const ciData = d.ci_data_ratificacao || '';
+    const ciDateCell = d.ratificacao_ok && ciData
+      ? `<span style="color:#276749;font-weight:700;font-size:.88rem">${ciData}</span>`
+      : ciData
+      ? `<span style="color:#D69E2E;font-weight:700;font-size:.88rem">${ciData}</span>`
+      : `<span style="color:#C53030;font-size:.82rem">Pendente</span>`;
     const statusBadge = d.ratificacao_ok === true
       ? '<span style="background:#C6F6D5;color:#276749;padding:3px 12px;border-radius:10px;font-size:.76rem;font-weight:700">✅ Ratificado</span>'
       : '<span style="background:#FED7D7;color:#C53030;padding:3px 12px;border-radius:10px;font-size:.76rem;font-weight:700">❌ Pendente</span>';
-    const transmissao = d.ultimaTransmissao && d.ultimaTransmissao !== '-' ? d.ultimaTransmissao : '—';
-    const quitado   = d.totalQuitado   ?? '—';
-    const atrasado  = d.totalAtrasado  ?? '—';
-    const faltantes = d.totalFaltantes ?? '—';
-    const ausente   = d.totalAusente   ?? '—';
-    const atrasadoStyle = (typeof atrasado === 'number' && atrasado > 0)
-      ? 'color:#C53030;font-weight:700' : 'color:#4A5568';
     return `<tr style="background:${bg};border-bottom:1px solid #EDF2F7">
       <td style="padding:9px 14px;font-size:.84rem;font-weight:600">${_titleCase(d.nomeEnte)}</td>
+      <td style="padding:9px 14px;text-align:center">${ciDateCell}</td>
       <td style="padding:9px 14px">${statusBadge}</td>
-      <td style="padding:9px 14px;font-size:.8rem;color:#4A5568">${transmissao}</td>
-      <td style="padding:9px 14px;font-size:.83rem;text-align:center;color:#276749;font-weight:600">${quitado}</td>
-      <td style="padding:9px 14px;font-size:.83rem;text-align:center;${atrasadoStyle}">${atrasado}</td>
-      <td style="padding:9px 14px;font-size:.83rem;text-align:center;color:#4A5568">${faltantes}</td>
-      <td style="padding:9px 14px;font-size:.83rem;text-align:center;color:#A0AEC0">${ausente}</td>
     </tr>`;
   }).join('');
 
@@ -5469,15 +5464,11 @@ function renderRatifView() {
         <thead>
           <tr>
             <th style="${TH}">Município / Ente</th>
-            <th style="${TH}">Status</th>
-            <th style="${TH}">Última Transmissão</th>
-            <th style="${TH};text-align:center">Quitados</th>
-            <th style="${TH};text-align:center">Atrasados</th>
-            <th style="${TH};text-align:center">Faltantes</th>
-            <th style="${TH};text-align:center;border-right:none">Ausentes</th>
+            <th style="${TH};text-align:center">Data Ratif. Controle Interno</th>
+            <th style="${TH};border-right:none">Status</th>
           </tr>
         </thead>
-        <tbody>${rows || '<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-muted)">Nenhum resultado para o filtro selecionado.</td></tr>'}</tbody>
+        <tbody>${rows || '<tr><td colspan="3" style="padding:24px;text-align:center;color:var(--text-muted)">Nenhum resultado para o filtro selecionado.</td></tr>'}</tbody>
       </table>
     </div>`;
 }
