@@ -912,6 +912,10 @@
             style="padding:7px 20px;border:none;border-radius:7px;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
             📄 Certidão CND
           </button>
+          <button id="est-sub-diario" onclick="switchEstadualSub('diario')"
+            style="padding:7px 20px;border:none;border-radius:7px;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
+            📅 Diário
+          </button>
         </div>
 
         <!-- Sub-página: Status de Envio -->
@@ -1047,6 +1051,34 @@
           <div id="ratif-table" style="display:none"></div>
 
         </div><!-- /estadual-ratif-section -->
+
+        <!-- Sub-página: Diário de Atividade -->
+        <div id="estadual-diario-section" style="display:none">
+
+          <!-- Toolbar: date picker -->
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
+            <span style="font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px">Atividade do dia</span>
+            <button onclick="diarioNavDate(-1)" style="background:#fff;border:1px solid #CBD5E0;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#374151">‹</button>
+            <input type="date" id="diario-date-input" onchange="renderDiarioView()" style="background:#fff;border:1px solid #7C3AED;border-radius:6px;padding:5px 10px;font-size:.84rem;font-weight:700;color:#7C3AED;cursor:pointer">
+            <button onclick="diarioNavDate(1)" style="background:#fff;border:1px solid #CBD5E0;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#374151">›</button>
+            <span id="diario-today-badge" style="display:none;background:#EDE9FE;color:#7C3AED;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:10px">Hoje</span>
+            <span style="margin-left:auto;font-size:.72rem;color:var(--text-muted)">Quem enviou, ratificou ou obteve CND nesta data</span>
+          </div>
+
+          <!-- Chips de resumo -->
+          <div id="diario-chips" style="display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
+
+          <!-- 3 colunas -->
+          <div id="diario-cols" style="display:none;display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
+
+          <!-- Estado vazio -->
+          <div id="diario-empty" style="display:none;text-align:center;padding:36px;color:var(--text-muted)">
+            <div style="font-size:2rem;margin-bottom:8px">📭</div>
+            <div>Nenhuma atividade registrada nesta data.</div>
+            <div style="font-size:.75rem;margin-top:8px;color:#94A3B8">Execute a extensão eSfinge Updater para importar dados.</div>
+          </div>
+
+        </div><!-- /estadual-diario-section -->
 
       </div><!-- /tce-pane-estadual -->
 
@@ -5318,25 +5350,28 @@ function renderFederal() {
 
 // ─── SUB-TABS ESTADUAL (Envio | CND) ─────────────────────────────────────────
 function switchEstadualSub(sub) {
-  const envioSec = document.getElementById('estadual-envio-section');
-  const cndSec   = document.getElementById('estadual-cnd-section');
-  const ratifSec = document.getElementById('estadual-ratif-section');
-  const btnEnvio = document.getElementById('est-sub-envio');
-  const btnCND   = document.getElementById('est-sub-cnd');
-  const btnRatif = document.getElementById('est-sub-ratif');
+  const envioSec   = document.getElementById('estadual-envio-section');
+  const cndSec     = document.getElementById('estadual-cnd-section');
+  const ratifSec   = document.getElementById('estadual-ratif-section');
+  const diarioSec  = document.getElementById('estadual-diario-section');
+  const btnEnvio   = document.getElementById('est-sub-envio');
+  const btnCND     = document.getElementById('est-sub-cnd');
+  const btnRatif   = document.getElementById('est-sub-ratif');
+  const btnDiario  = document.getElementById('est-sub-diario');
   if (!envioSec) return;
 
   state.estadualSub = sub;
 
   // Reset todas as seções e botões
-  [envioSec, cndSec, ratifSec].forEach(s => { if (s) s.style.display = 'none'; });
-  [btnEnvio, btnCND, btnRatif].forEach(b => {
+  [envioSec, cndSec, ratifSec, diarioSec].forEach(s => { if (s) s.style.display = 'none'; });
+  [btnEnvio, btnCND, btnRatif, btnDiario].forEach(b => {
     if (b) { b.style.background = 'transparent'; b.style.color = '#64748B'; b.style.boxShadow = 'none'; }
   });
 
   // Ativar a seção escolhida
-  const activeBtn = sub === 'envio' ? btnEnvio : sub === 'ratif' ? btnRatif : btnCND;
-  if (activeBtn) { activeBtn.style.background = 'var(--accent)'; activeBtn.style.color = '#fff'; activeBtn.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
+  const activeBtn = sub === 'envio' ? btnEnvio : sub === 'ratif' ? btnRatif : sub === 'diario' ? btnDiario : btnCND;
+  const activeBg  = sub === 'diario' ? '#7C3AED' : 'var(--accent)';
+  if (activeBtn) { activeBtn.style.background = activeBg; activeBtn.style.color = '#fff'; activeBtn.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
 
   if (sub === 'envio') {
     envioSec.style.display = 'block';
@@ -5344,6 +5379,9 @@ function switchEstadualSub(sub) {
   } else if (sub === 'ratif') {
     if (ratifSec) ratifSec.style.display = 'block';
     initRatifPanel();
+  } else if (sub === 'diario') {
+    if (diarioSec) diarioSec.style.display = 'block';
+    initDiarioPanel();
   } else {
     cndSec.style.display = 'block';
     populateCNDFilters();
@@ -5471,6 +5509,214 @@ function renderRatifView() {
         <tbody>${rows || '<tr><td colspan="3" style="padding:24px;text-align:center;color:var(--text-muted)">Nenhum resultado para o filtro selecionado.</td></tr>'}</tbody>
       </table>
     </div>`;
+}
+
+
+// ─── Diário de Atividade ──────────────────────────────────────────────────────
+
+function _isoToDisplay(iso) {
+  // "2026-07-07" → "07/07/2026"
+  if (!iso || iso.length < 10) return iso;
+  return iso.slice(8,10) + '/' + iso.slice(5,7) + '/' + iso.slice(0,4);
+}
+function _displayToIso(dmy) {
+  // "07/07/2026" → "2026-07-07"
+  if (!dmy || dmy.length < 10) return '';
+  const p = dmy.split('/');
+  return p[2] + '-' + p[1] + '-' + p[0];
+}
+
+async function initDiarioPanel() {
+  const inp = document.getElementById('diario-date-input');
+  if (!inp) return;
+  // Inicializar com hoje se ainda não tiver valor
+  if (!inp.value) {
+    inp.value = new Date().toISOString().slice(0,10);
+  }
+  // Garantir que dados de ratificação e CND estejam carregados
+  if (!_RATIF.loaded) {
+    try {
+      _RATIF.docs   = await fetchFirestore('ratificacoes');
+      _RATIF.loaded = true;
+    } catch(e) { console.warn('[Diário] ratificacoes:', e.message); }
+  }
+  if (!state.cndEstadual.length) {
+    try { state.cndEstadual = await fetchFirestore('cnd_estadual').then(docs => docs.map(d => ({
+      _id: d._id, municipio: d.municipio, nomeEnte: d.nomeEnte || d.municipio,
+      status: d.status, validade: d.validade, data_emissao: d.data_emissao || '',
+      atualizado_em: d.atualizado_em || ''
+    }))); } catch(e) { console.warn('[Diário] cnd_estadual:', e.message); }
+  }
+  renderDiarioView();
+}
+
+function diarioNavDate(delta) {
+  const inp = document.getElementById('diario-date-input');
+  if (!inp || !inp.value) return;
+  const d = new Date(inp.value + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  inp.value = d.toISOString().slice(0,10);
+  renderDiarioView();
+}
+
+function renderDiarioView() {
+  const inp     = document.getElementById('diario-date-input');
+  const colsEl  = document.getElementById('diario-cols');
+  const chipsEl = document.getElementById('diario-chips');
+  const emptyEl = document.getElementById('diario-empty');
+  const badge   = document.getElementById('diario-today-badge');
+  if (!inp || !colsEl) return;
+
+  const selectedISO = inp.value; // "YYYY-MM-DD"
+  if (!selectedISO) return;
+
+  const today = new Date().toISOString().slice(0,10);
+  if (badge) badge.style.display = selectedISO === today ? 'inline-block' : 'none';
+
+  const selectedDMY = _isoToDisplay(selectedISO); // "DD/MM/YYYY"
+
+  // ── Ratificação: ci_data_ratificacao == DD/MM/YYYY ──────────────────
+  let ratifDocs = [];
+  if (_RATIF.loaded && _RATIF.docs.length) {
+    ratifDocs = _RATIF.docs.filter(d => d.ci_data_ratificacao === selectedDMY);
+    // Deduplicar por município (mantém 1 por mun)
+    const seen = new Set();
+    ratifDocs = ratifDocs.filter(d => {
+      const k = (d.municipio || d.nomeEnte || '').toLowerCase();
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    });
+  }
+
+  // ── Envio: data_envio == DD/MM/YYYY (disponível após próxima execução) ─
+  let envioDocs = [];
+  const allEnvioKeys = Object.keys(_ENVIO.cache || {});
+  for (const key of allEnvioKeys) {
+    const docs = (_ENVIO.cache[key] || []).filter(d => d.data_envio === selectedDMY);
+    envioDocs = envioDocs.concat(docs);
+  }
+  // Deduplicar por municipio+entidade
+  const envioSeen = new Set();
+  envioDocs = envioDocs.filter(d => {
+    const k = (d.municipio + '|' + d.entidade).toLowerCase();
+    if (envioSeen.has(k)) return false;
+    envioSeen.add(k); return true;
+  });
+
+  // ── CND: data_emissao == DD/MM/YYYY OU atualizado_em.slice(0,10) == selectedISO ─
+  let cndDocs = [];
+  if (state.cndEstadual && state.cndEstadual.length) {
+    cndDocs = state.cndEstadual.filter(d => {
+      // Preferir data_emissao se disponível; fallback para atualizado_em
+      if (d.data_emissao && d.data_emissao.trim()) return d.data_emissao.trim() === selectedDMY;
+      return (d.atualizado_em || '').slice(0,10) === selectedISO;
+    });
+  }
+
+  const total = ratifDocs.length + envioDocs.length + cndDocs.length;
+
+  if (total === 0 && (_RATIF.loaded || allEnvioKeys.length || (state.cndEstadual || []).length)) {
+    colsEl.style.display  = 'none';
+    chipsEl.style.display = 'none';
+    emptyEl.style.display = 'block';
+    return;
+  }
+
+  emptyEl.style.display  = 'none';
+
+  // ── Chips ──────────────────────────────────────────────────────────
+  chipsEl.style.display = 'grid';
+  chipsEl.innerHTML = `
+    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:1.5rem;font-weight:800;color:#2563EB">${envioDocs.length}</div>
+      <div style="font-size:.75rem;color:#64748B;line-height:1.3">Municípios<br>enviaram</div>
+    </div>
+    <div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:1.5rem;font-weight:800;color:#7C3AED">${ratifDocs.length}</div>
+      <div style="font-size:.75rem;color:#64748B;line-height:1.3">Ratificações<br>concluídas</div>
+    </div>
+    <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:1.5rem;font-weight:800;color:#16A34A">${cndDocs.length}</div>
+      <div style="font-size:.75rem;color:#64748B;line-height:1.3">CNDs<br>emitidas</div>
+    </div>`;
+
+  // ── Builders de coluna ──────────────────────────────────────────────
+  function buildCol(title, color, borderColor, bgColor, items, renderRow, noteText) {
+    const rows = items.length
+      ? items.map(renderRow).join('')
+      : `<div style="padding:24px;text-align:center;color:#94A3B8;font-size:.8rem">Nenhuma atividade</div>`;
+    const note = noteText
+      ? `<div style="padding:7px 14px;font-size:.72rem;color:#94A3B8;background:#FAFAFA;border-top:1px dashed #E5E7EB;text-align:center">${noteText}</div>`
+      : '';
+    return `
+      <div style="border:1px solid #E5E7EB;border-radius:8px;overflow:hidden">
+        <div style="padding:9px 14px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between;background:#FAFAFA">
+          <span style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:${color}">${title}</span>
+          <span style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:10px;background:${bgColor};color:${color}">${items.length} mun.</span>
+        </div>
+        ${rows}
+        ${note}
+      </div>`;
+  }
+
+  function dot(ok) {
+    const c = ok ? '#22C55E' : '#F59E0B';
+    return `<span style="width:7px;height:7px;border-radius:50%;background:${c};display:inline-block;flex-shrink:0"></span>`;
+  }
+  function tag(label, bg, color) {
+    return `<span style="font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:4px;background:${bg};color:${color}">${label}</span>`;
+  }
+  const ROW = 'display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid #F1F5F9';
+
+  // Coluna Envio
+  const envioNoData = envioDocs.length === 0 && allEnvioKeys.length === 0;
+  const envioNote   = envioNoData ? '⚡ Disponível após próxima execução da extensão' : '';
+  const colEnvio = buildCol(
+    '📤 Enviaram', '#2563EB', '#BFDBFE', '#DBEAFE', envioDocs,
+    d => {
+      const ok = d.status_ok;
+      return `<div style="${ROW}">${dot(ok)}
+        <span style="flex:1;font-size:.83rem;color:#374151;font-weight:500">${d.municipio}</span>
+        <span style="font-size:.72rem;color:#9CA3AF">${d.entidade || ''}</span>
+        ${ok ? tag('OK','#DCFCE7','#16A34A') : tag('Parcial','#FEF9C3','#B45309')}
+      </div>`;
+    },
+    envioNote
+  );
+
+  // Coluna Ratificação
+  const colRatif = buildCol(
+    '✅ Ratificaram', '#7C3AED', '#DDD6FE', '#EDE9FE', ratifDocs,
+    d => {
+      const mun = d.municipio || d.nomeEnte || '—';
+      return `<div style="${ROW}">
+        <span style="width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block;flex-shrink:0"></span>
+        <span style="flex:1;font-size:.83rem;color:#374151;font-weight:500">${mun}</span>
+        <span style="font-size:.72rem;color:#9CA3AF">CI Municipal</span>
+        ${tag(d.ci_data_ratificacao || selectedDMY, '#EDE9FE', '#7C3AED')}
+      </div>`;
+    },
+    ''
+  );
+
+  // Coluna CND
+  const cndNote = (state.cndEstadual || []).some(d => d.data_emissao)
+    ? '' : '⚡ Mostra coleta do dia; data precisa após próxima execução';
+  const colCND = buildCol(
+    '📋 CND emitida', '#16A34A', '#BBF7D0', '#DCFCE7', cndDocs,
+    d => {
+      const ok = d.status === 'regular';
+      return `<div style="${ROW}">${dot(ok)}
+        <span style="flex:1;font-size:.83rem;color:#374151;font-weight:500">${d.nomeEnte || d.municipio}</span>
+        <span style="font-size:.72rem;color:#9CA3AF">${d.data_emissao || d.validade || ''}</span>
+        ${ok ? tag('Regular','#DCFCE7','#16A34A') : tag('Irregular','#FEE2E2','#DC2626')}
+      </div>`;
+    },
+    cndNote
+  );
+
+  colsEl.style.display = 'grid';
+  colsEl.innerHTML = colEnvio + colRatif + colCND;
 }
 
 // Função toggleCND mantida para compatibilidade (não usada mais)
