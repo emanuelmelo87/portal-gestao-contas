@@ -712,8 +712,46 @@
 </div><!-- /inner -->
 </div>
 <!-- ═══════════════ /SUB-HEADER ═══════════════ -->
+<!-- ═══════════════ GUIAS DIÁRIO / GERAL ═══════════════ -->
+<div id="pc-tabs-bar" style="background:#fff;border-bottom:1px solid #E2E8F0;padding:0 20px;display:flex;align-items:center;gap:4px;position:sticky;top:52px;z-index:85;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+  <button id="pc-tab-diario" onclick="switchPCTab('diario')"
+    style="padding:10px 18px;border:none;border-radius:0;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#7C3AED;border-bottom:2px solid #7C3AED;transition:all .15s;display:flex;align-items:center;gap:6px">
+    📅 Diário
+  </button>
+  <button id="pc-tab-geral" onclick="switchPCTab('geral')"
+    style="padding:10px 18px;border:none;border-radius:0;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:6px">
+    📊 Geral
+  </button>
+</div>
 
-<main>
+<!-- ═══════════════ DIÁRIO FULLSCREEN ═══════════════ -->
+<div id="pc-diario-outer" style="display:none;padding:16px 20px;min-height:calc(100vh - 110px)">
+  <!-- Toolbar: date picker -->
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
+    <span style="font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px">Atividade do dia</span>
+    <button onclick="diarioNavDate(-1)" style="background:#fff;border:1px solid #CBD5E0;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#374151">‹</button>
+    <input type="date" id="diario-date-input" onchange="renderDiarioView()" style="background:#fff;border:1px solid #7C3AED;border-radius:6px;padding:5px 10px;font-size:.84rem;font-weight:700;color:#7C3AED;cursor:pointer">
+    <button onclick="diarioNavDate(1)" style="background:#fff;border:1px solid #CBD5E0;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#374151">›</button>
+    <span id="diario-today-badge" style="display:none;background:#EDE9FE;color:#7C3AED;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:10px">Hoje</span>
+    <span style="margin-left:auto;font-size:.72rem;color:var(--text-muted)">Quem enviou, ratificou ou obteve CND nesta data</span>
+  </div>
+
+  <!-- Chips de resumo -->
+  <div id="diario-chips" style="display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
+
+  <!-- 3 colunas -->
+  <div id="diario-cols" style="display:none;display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
+
+  <!-- Estado vazio -->
+  <div id="diario-empty" style="display:none;text-align:center;padding:36px;color:var(--text-muted)">
+    <div style="font-size:2rem;margin-bottom:8px">📭</div>
+    <div>Nenhuma atividade registrada nesta data.</div>
+    <div style="font-size:.75rem;margin-top:8px;color:#94A3B8">Execute a extensão eSfinge Updater para importar dados.</div>
+  </div>
+</div>
+<!-- ═══════════════ /DIÁRIO FULLSCREEN ═══════════════ -->
+
+<main id="pc-main">
   <!-- KPI Cards -->
   <div class="kpi-grid" style="display:none">
     <!-- KPIs de Chamados pausados -->
@@ -1053,32 +1091,7 @@
         </div><!-- /estadual-ratif-section -->
 
         <!-- Sub-página: Diário de Atividade -->
-        <div id="estadual-diario-section" style="display:none">
-
-          <!-- Toolbar: date picker -->
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
-            <span style="font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px">Atividade do dia</span>
-            <button onclick="diarioNavDate(-1)" style="background:#fff;border:1px solid #CBD5E0;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#374151">‹</button>
-            <input type="date" id="diario-date-input" onchange="renderDiarioView()" style="background:#fff;border:1px solid #7C3AED;border-radius:6px;padding:5px 10px;font-size:.84rem;font-weight:700;color:#7C3AED;cursor:pointer">
-            <button onclick="diarioNavDate(1)" style="background:#fff;border:1px solid #CBD5E0;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#374151">›</button>
-            <span id="diario-today-badge" style="display:none;background:#EDE9FE;color:#7C3AED;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:10px">Hoje</span>
-            <span style="margin-left:auto;font-size:.72rem;color:var(--text-muted)">Quem enviou, ratificou ou obteve CND nesta data</span>
-          </div>
-
-          <!-- Chips de resumo -->
-          <div id="diario-chips" style="display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
-
-          <!-- 3 colunas -->
-          <div id="diario-cols" style="display:none;display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
-
-          <!-- Estado vazio -->
-          <div id="diario-empty" style="display:none;text-align:center;padding:36px;color:var(--text-muted)">
-            <div style="font-size:2rem;margin-bottom:8px">📭</div>
-            <div>Nenhuma atividade registrada nesta data.</div>
-            <div style="font-size:.75rem;margin-top:8px;color:#94A3B8">Execute a extensão eSfinge Updater para importar dados.</div>
-          </div>
-
-        </div><!-- /estadual-diario-section -->
+        <div id="estadual-diario-section" style="display:none"><!-- content moved to #pc-diario-outer --></div><!-- /estadual-diario-section -->
 
       </div><!-- /tce-pane-estadual -->
 
@@ -1241,6 +1254,12 @@ const FIREBASE_CONFIG = {
   appId:             '1:403708882905:web:ad8e706f9357d232cc73c8'
 };
 firebase.initializeApp(FIREBASE_CONFIG);
+
+// Ativar guia Diário como padrão ao carregar a página
+window.addEventListener('DOMContentLoaded', function() {
+  // Pequeno timeout para garantir que o DOM está pronto
+  setTimeout(function() { switchPCTab('diario'); }, 0);
+});
 const _db = firebase.firestore();
 
 
@@ -4818,6 +4837,7 @@ async function onBuscarGlobal() {
     renderCNDEstadual();
     renderFederal();
     if (_RATIF.loaded) { _RATIF._ratifKey = _ENVIO.currentKey; renderRatifView(); }
+    if (state.pcTab === 'diario') renderDiarioView();
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '🔍 Buscar'; }
   }
@@ -5349,6 +5369,34 @@ function renderFederal() {
 
 
 // ─── SUB-TABS ESTADUAL (Envio | CND) ─────────────────────────────────────────
+// ─── Guias Diário / Geral ──────────────────────────────────────────────────
+function switchPCTab(tab) {
+  const mainEl     = document.getElementById('pc-main');
+  const diarioEl   = document.getElementById('pc-diario-outer');
+  const tabDiario  = document.getElementById('pc-tab-diario');
+  const tabGeral   = document.getElementById('pc-tab-geral');
+  if (!mainEl || !diarioEl) return;
+
+  state.pcTab = tab;
+
+  if (tab === 'diario') {
+    mainEl.style.display   = 'none';
+    diarioEl.style.display = 'block';
+    tabDiario.style.color        = '#7C3AED';
+    tabDiario.style.borderBottom = '2px solid #7C3AED';
+    tabGeral.style.color         = '#64748B';
+    tabGeral.style.borderBottom  = '2px solid transparent';
+    initDiarioPanel();
+  } else {
+    mainEl.style.display   = 'block';
+    diarioEl.style.display = 'none';
+    tabGeral.style.color         = 'var(--accent)';
+    tabGeral.style.borderBottom  = '2px solid var(--accent)';
+    tabDiario.style.color        = '#64748B';
+    tabDiario.style.borderBottom = '2px solid transparent';
+  }
+}
+
 function switchEstadualSub(sub) {
   const envioSec   = document.getElementById('estadual-envio-section');
   const cndSec     = document.getElementById('estadual-cnd-section');
@@ -5380,8 +5428,9 @@ function switchEstadualSub(sub) {
     if (ratifSec) ratifSec.style.display = 'block';
     initRatifPanel();
   } else if (sub === 'diario') {
-    if (diarioSec) diarioSec.style.display = 'block';
-    initDiarioPanel();
+    // Diário foi promovido à guia de nível superior — redirecionar
+    switchPCTab('diario');
+    return;
   } else {
     cndSec.style.display = 'block';
     populateCNDFilters();
