@@ -5678,7 +5678,7 @@ function renderDiarioView() {
 
   const total = ratifDocs.length + envioDocs.length + cndDocs.length;
 
-  if (total === 0 && (_RATIF.loaded || allEnvioKeys.length || (state.cndEstadual || []).length)) {
+  if (total === 0 && (_RATIF.loaded || envioKeys.length || (state.cndEstadual || []).length)) {
     colsEl.style.display  = 'none';
     chipsEl.style.display = 'none';
     emptyEl.style.display = 'block';
@@ -5732,7 +5732,7 @@ function renderDiarioView() {
   const ROW = 'display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid #F1F5F9';
 
   // Coluna Envio
-  const envioNoData = envioDocs.length === 0 && allEnvioKeys.length === 0;
+  const envioNoData = envioDocs.length === 0 && !_ENVIO.currentKey && !Object.keys(_ENVIO.cache||{}).length;
   const envioNote   = envioNoData ? '⚡ Disponível após próxima execução da extensão' : '';
   const colEnvio = buildCol(
     '📤 Enviaram', '#2563EB', '#BFDBFE', '#DBEAFE', envioDocs,
