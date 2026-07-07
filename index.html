@@ -5603,13 +5603,15 @@ function renderDiarioView() {
     envioSeen.add(k); return true;
   });
 
-  // ── CND: data_emissao == DD/MM/YYYY OU atualizado_em.slice(0,10) == selectedISO ─
+  // ── CND: data_emissao == DD/MM/YYYY OU status_fonte (=atualizado_em).slice(0,10) == selectedISO ─
+  // state.cndEstadual mapeia atualizado_em → status_fonte; data_emissao pode existir via raw
   let cndDocs = [];
   if (state.cndEstadual && state.cndEstadual.length) {
     cndDocs = state.cndEstadual.filter(d => {
-      // Preferir data_emissao se disponível; fallback para atualizado_em
+      // data_emissao direta (disponível após próxima execução da extensão)
       if (d.data_emissao && d.data_emissao.trim()) return d.data_emissao.trim() === selectedDMY;
-      return (d.atualizado_em || '').slice(0,10) === selectedISO;
+      // fallback: status_fonte guarda o atualizado_em original (ISO timestamp)
+      return (d.status_fonte || '').slice(0,10) === selectedISO;
     });
   }
 
@@ -5700,16 +5702,17 @@ function renderDiarioView() {
   );
 
   // Coluna CND
-  const cndNote = (state.cndEstadual || []).some(d => d.data_emissao)
-    ? '' : '⚡ Mostra coleta do dia; data precisa após próxima execução';
+  const cndNote = (state.cndEstadual || []).some(d => d.data_emissao && d.data_emissao.trim())
+    ? '' : '⚡ Mostra certidões coletadas no dia; data precisa de emissão disponível após próxima execução';
   const colCND = buildCol(
     '📋 CND emitida', '#16A34A', '#BBF7D0', '#DCFCE7', cndDocs,
     d => {
-      const ok = d.status === 'regular';
+      const ok = d.periodo1 === 'Com CND';
+      const info = d.data_emissao || (d.validade ? 'Válida até ' + d.validade : d.p1_label || '');
       return `<div style="${ROW}">${dot(ok)}
-        <span style="flex:1;font-size:.83rem;color:#374151;font-weight:500">${d.nomeEnte || d.municipio}</span>
-        <span style="font-size:.72rem;color:#9CA3AF">${d.data_emissao || d.validade || ''}</span>
-        ${ok ? tag('Regular','#DCFCE7','#16A34A') : tag('Irregular','#FEE2E2','#DC2626')}
+        <span style="flex:1;font-size:.83rem;color:#374151;font-weight:500">${d.municipio}</span>
+        <span style="font-size:.72rem;color:#9CA3AF">${info}</span>
+        ${ok ? tag('Com CND','#DCFCE7','#16A34A') : tag('Sem CND','#FEE2E2','#DC2626')}
       </div>`;
     },
     cndNote
