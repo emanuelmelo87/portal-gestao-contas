@@ -5641,10 +5641,10 @@ function renderDiarioView() {
     });
   }
 
-  // ── Envio: data_envio == DD/MM/YYYY (disponível após próxima execução) ─
+  // ── Envio: data_envio == DD/MM/YYYY — usa só a competência carregada ─
   let envioDocs = [];
-  const allEnvioKeys = Object.keys(_ENVIO.cache || {});
-  for (const key of allEnvioKeys) {
+  const envioKeys = _ENVIO.currentKey ? [_ENVIO.currentKey] : Object.keys(_ENVIO.cache || {});
+  for (const key of envioKeys) {
     const docs = (_ENVIO.cache[key] || []).filter(d => d.data_envio === selectedDMY);
     envioDocs = envioDocs.concat(docs);
   }
@@ -5666,6 +5666,14 @@ function renderDiarioView() {
       // fallback: status_fonte guarda o atualizado_em original (ISO timestamp)
       return (d.status_fonte || '').slice(0,10) === selectedISO;
     });
+  }
+
+  // ── Aplicar filtros globais do cabeçalho (portfolio, equipe, município, etc.) ─
+  const _diarioValidMuns = _getFilteredMunNames();
+  if (_diarioValidMuns.size > 0) {
+    ratifDocs = ratifDocs.filter(d => _diarioValidMuns.has((d.municipio || d.nomeEnte || '').toLowerCase().trim()));
+    envioDocs = envioDocs.filter(d => _diarioValidMuns.has((d.municipio || '').toLowerCase().trim()));
+    cndDocs   = cndDocs.filter(d   => _diarioValidMuns.has((d.municipio || '').toLowerCase().trim()));
   }
 
   const total = ratifDocs.length + envioDocs.length + cndDocs.length;
