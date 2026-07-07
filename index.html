@@ -725,28 +725,30 @@
 </div>
 
 <!-- ═══════════════ DIÁRIO FULLSCREEN ═══════════════ -->
-<div id="pc-diario-outer" style="display:none;padding:16px 20px;min-height:calc(100vh - 110px)">
-  <!-- Toolbar: date picker -->
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
-    <span style="font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px">Atividade do dia</span>
-    <button onclick="diarioNavDate(-1)" style="background:#fff;border:1px solid #CBD5E0;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#374151">‹</button>
-    <input type="date" id="diario-date-input" onchange="renderDiarioView()" style="background:#fff;border:1px solid #7C3AED;border-radius:6px;padding:5px 10px;font-size:.84rem;font-weight:700;color:#7C3AED;cursor:pointer">
-    <button onclick="diarioNavDate(1)" style="background:#fff;border:1px solid #CBD5E0;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#374151">›</button>
-    <span id="diario-today-badge" style="display:none;background:#EDE9FE;color:#7C3AED;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:10px">Hoje</span>
-    <span style="margin-left:auto;font-size:.72rem;color:var(--text-muted)">Quem enviou, ratificou ou obteve CND nesta data</span>
-  </div>
+<div id="pc-diario-outer" style="display:none;max-width:1400px;margin:0 auto;padding:24px 24px 32px;width:100%">
+  <div class="chart-panel">
+    <!-- Toolbar: date picker -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
+      <span style="font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px">Atividade do dia</span>
+      <button onclick="diarioNavDate(-1)" style="background:#fff;border:1px solid #CBD5E0;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#374151">‹</button>
+      <input type="date" id="diario-date-input" onchange="renderDiarioView()" style="background:#fff;border:1px solid #7C3AED;border-radius:6px;padding:5px 10px;font-size:.84rem;font-weight:700;color:#7C3AED;cursor:pointer">
+      <button onclick="diarioNavDate(1)" style="background:#fff;border:1px solid #CBD5E0;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:#374151">›</button>
+      <span id="diario-today-badge" style="display:none;background:#EDE9FE;color:#7C3AED;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:10px">Hoje</span>
+      <span style="margin-left:auto;font-size:.72rem;color:var(--text-muted)">Quem enviou, ratificou ou obteve CND nesta data</span>
+    </div>
 
-  <!-- Chips de resumo -->
-  <div id="diario-chips" style="display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
+    <!-- Chips de resumo -->
+    <div id="diario-chips" style="display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
 
-  <!-- 3 colunas -->
-  <div id="diario-cols" style="display:none;display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
+    <!-- 3 colunas -->
+    <div id="diario-cols" style="display:none;display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
 
-  <!-- Estado vazio -->
-  <div id="diario-empty" style="display:none;text-align:center;padding:36px;color:var(--text-muted)">
-    <div style="font-size:2rem;margin-bottom:8px">📭</div>
-    <div>Nenhuma atividade registrada nesta data.</div>
-    <div style="font-size:.75rem;margin-top:8px;color:#94A3B8">Execute a extensão eSfinge Updater para importar dados.</div>
+    <!-- Estado vazio -->
+    <div id="diario-empty" style="display:none;text-align:center;padding:36px;color:var(--text-muted)">
+      <div style="font-size:2rem;margin-bottom:8px">📭</div>
+      <div>Nenhuma atividade registrada nesta data.</div>
+      <div style="font-size:.75rem;margin-top:8px;color:#94A3B8">Execute a extensão eSfinge Updater para importar dados.</div>
+    </div>
   </div>
 </div>
 <!-- ═══════════════ /DIÁRIO FULLSCREEN ═══════════════ -->
