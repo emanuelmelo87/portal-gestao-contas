@@ -4174,7 +4174,7 @@ function adminSignOut() {
 }
 
 async function _adminLoadCounts() {
-  for (const col of ['jira_chamados','jira_chamados_issues','tipos_cliente','equipes_atendimento','municipios','status_envio','ratificacoes','cnd_estadual','_meta','colaboradores']) {
+  for (const col of ['jira_chamados','jira_chamados_issues','tipos_cliente','equipes_atendimento','municipios','status_envio','ratificacoes','cnd_estadual','_meta','colaboradores','competencias_cnd']) {
     try {
       const snap = await _db.collection(col).get();
       const el = document.getElementById('card-count-' + col);
@@ -4243,6 +4243,8 @@ async function adminLoadCollection(col) {
   if (tipoActions) tipoActions.style.display = (col === 'tipos_cliente') ? 'flex' : 'none';
   const equipeActions = document.getElementById('admin-equipe-actions');
   if (equipeActions) equipeActions.style.display = (col === 'equipes_atendimento') ? 'flex' : 'none';
+  const cndCompActions = document.getElementById('admin-cndcomp-actions');
+  if (cndCompActions) cndCompActions.style.display = (col === 'competencias_cnd') ? 'flex' : 'none';
   _adminRenderTable();
 }
 
@@ -4384,6 +4386,28 @@ async function adminOpenEdit(docId) {
   }
   document.getElementById('admin-edit-fields').innerHTML = fieldsHtml;
   document.getElementById('admin-edit-modal').style.display = 'flex';
+}
+
+function adminCNDCompAdd() {
+  adminOpenEdit(null);
+}
+
+async function adminCNDCompSeedDefaults() {
+  if (!confirm('Inserir os 6 bimestres padrão? Docs já existentes serão sobrescritos.')) return;
+  const statusEl = document.getElementById('admin-edit-status');
+  try {
+    for (const c of DEFAULT_COMPETENCIAS_CND) {
+      const docId = 'bimestre_' + c.bimestre;
+      await _db.collection('competencias_cnd').doc(docId).set({
+        ...c, atualizado_em: new Date().toISOString()
+      });
+    }
+    state.competenciasCND = null; // força reload na próxima abertura da aba CND
+    adminLoadCollection('competencias_cnd');
+    alert('✅ 6 bimestres inseridos com sucesso!');
+  } catch(e) {
+    alert('❌ Erro: ' + e.message);
+  }
 }
 
 function adminCloseEdit() {
@@ -7052,6 +7076,10 @@ function renderRatifTable() {
         </span>
         <span id="admin-equipe-actions" style="display:none;gap:8px;align-items:center">
           <button onclick="adminEquipeAdd()" style="padding:6px 14px;background:#0BC5EA;color:#1C1A23;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">+ Adicionar Equipe</button>
+        </span>
+        <span id="admin-cndcomp-actions" style="display:none;gap:8px;align-items:center">
+          <button onclick="adminCNDCompAdd()" style="padding:6px 14px;background:#D69E2E;color:#1C1A23;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer">+ Adicionar Competência</button>
+          <button onclick="adminCNDCompSeedDefaults()" style="padding:6px 14px;background:#2D3748;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer" title="Preencher com os 6 bimestres padrão">⬆ Inserir padrão</button>
         </span>
         <span id="admin-table-count" style="color:rgba(255,255,255,.4);font-size:.78rem;margin-left:auto"></span>
       </div>
