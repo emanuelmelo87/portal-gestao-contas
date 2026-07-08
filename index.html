@@ -723,6 +723,10 @@
       style="padding:10px 18px;border:none;border-radius:0;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:6px">
       📊 Geral
     </button>
+    <button id="pc-tab-paineis" onclick="switchPCTab('paineis')"
+      style="padding:10px 18px;border:none;border-radius:0;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:6px">
+      📈 Painéis
+    </button>
   </div>
 </div>
 
@@ -754,6 +758,50 @@
   </div>
 </div>
 <!-- ═══════════════ /DIÁRIO FULLSCREEN ═══════════════ -->
+
+<!-- ═══════════════ PAINÉIS FULLSCREEN ═══════════════ -->
+<div id="pc-paineis-outer" style="display:none;max-width:1400px;margin:0 auto;padding:24px 24px 32px;width:100%">
+
+  <!-- Loading -->
+  <div id="paineis-loading" style="display:flex;align-items:center;justify-content:center;min-height:280px;gap:12px;color:#64748B;font-size:.9rem">
+    <div style="width:20px;height:20px;border:2px solid #E2E8F0;border-top-color:#7C3AED;border-radius:50%;animation:spin .7s linear infinite"></div>
+    Carregando dados…
+  </div>
+
+  <!-- Content -->
+  <div id="paineis-content" style="display:none;display:flex;flex-direction:column;gap:20px">
+
+    <!-- Chart 1: Evolução Semanal -->
+    <div class="chart-panel" style="padding:20px">
+      <div style="font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:16px">Evolução Semanal</div>
+      <div style="height:340px;position:relative">
+        <canvas id="paineis-chart-evolucao"></canvas>
+      </div>
+    </div>
+
+    <!-- Charts 2 + 3 lado a lado -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+      <!-- Chart 2: Municípios ratificados -->
+      <div class="chart-panel" style="padding:20px">
+        <div style="font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:16px">Municípios ratificados e Qnt a ratificar</div>
+        <div style="height:300px;position:relative">
+          <canvas id="paineis-chart-ratif"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 3: Status de Envio -->
+      <div class="chart-panel" style="padding:20px">
+        <div style="font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:16px">Status de Envio de Clientes</div>
+        <div style="height:300px;position:relative">
+          <canvas id="paineis-chart-envio"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- ═══════════════ /PAINÉIS FULLSCREEN ═══════════════ -->
 
 <main id="pc-main">
   <!-- KPI Cards -->
@@ -5402,27 +5450,33 @@ function renderFederal() {
 function switchPCTab(tab) {
   const mainEl     = document.getElementById('pc-main');
   const diarioEl   = document.getElementById('pc-diario-outer');
+  const paineisEl  = document.getElementById('pc-paineis-outer');
   const tabDiario  = document.getElementById('pc-tab-diario');
   const tabGeral   = document.getElementById('pc-tab-geral');
+  const tabPaineis = document.getElementById('pc-tab-paineis');
   if (!mainEl || !diarioEl) return;
 
   state.pcTab = tab;
 
+  // Resetar todos os tabs
+  [tabDiario, tabGeral, tabPaineis].forEach(t => {
+    if (t) { t.style.color = '#64748B'; t.style.borderBottom = '2px solid transparent'; }
+  });
+  mainEl.style.display   = 'none';
+  diarioEl.style.display = 'none';
+  if (paineisEl) paineisEl.style.display = 'none';
+
   if (tab === 'diario') {
-    mainEl.style.display   = 'none';
     diarioEl.style.display = 'block';
-    tabDiario.style.color        = '#7C3AED';
-    tabDiario.style.borderBottom = '2px solid #7C3AED';
-    tabGeral.style.color         = '#64748B';
-    tabGeral.style.borderBottom  = '2px solid transparent';
+    if (tabDiario) { tabDiario.style.color = '#7C3AED'; tabDiario.style.borderBottom = '2px solid #7C3AED'; }
     initDiarioPanel();
+  } else if (tab === 'paineis') {
+    if (paineisEl) paineisEl.style.display = 'block';
+    if (tabPaineis) { tabPaineis.style.color = 'var(--accent)'; tabPaineis.style.borderBottom = '2px solid var(--accent)'; }
+    initPaineisTab();
   } else {
-    mainEl.style.display   = 'block';
-    diarioEl.style.display = 'none';
-    tabGeral.style.color         = 'var(--accent)';
-    tabGeral.style.borderBottom  = '2px solid var(--accent)';
-    tabDiario.style.color        = '#64748B';
-    tabDiario.style.borderBottom = '2px solid transparent';
+    mainEl.style.display = 'block';
+    if (tabGeral) { tabGeral.style.color = 'var(--accent)'; tabGeral.style.borderBottom = '2px solid var(--accent)'; }
   }
 }
 
@@ -6325,6 +6379,330 @@ function renderEsfingeMatrix() {
 
     return `<tr style="background:${bg};border-bottom:1px solid #2D3748">${munCell}${tipoCell}${nomeCell}${modCells}${statusCell}</tr>`;
   }).join('');
+}
+
+
+// ─── PAINÉIS ─────────────────────────────────────────────────────────────────
+const _PAINEIS = { loaded: false, loading: false, charts: {}, envio: [], ratif: [] };
+
+async function initPaineisTab() {
+  if (_PAINEIS.loaded) { _renderPaineisCharts(); return; }
+  if (_PAINEIS.loading) return;
+  _PAINEIS.loading = true;
+
+  const loadEl    = document.getElementById('paineis-loading');
+  const contentEl = document.getElementById('paineis-content');
+  if (loadEl)    loadEl.style.display    = 'flex';
+  if (contentEl) contentEl.style.display = 'none';
+
+  try {
+    // Reutiliza _RATIF se já carregado, senão busca
+    const ratifPromise = _RATIF.loaded
+      ? Promise.resolve(_RATIF.docs)
+      : fetchFirestore('ratificacoes').then(docs => { _RATIF.docs = docs; _RATIF.loaded = true; return docs; });
+
+    const [envioAll, ratifAll] = await Promise.all([
+      fetchFirestore('status_envio'),
+      ratifPromise
+    ]);
+
+    _PAINEIS.envio  = envioAll;
+    _PAINEIS.ratif  = ratifAll;
+    _PAINEIS.loaded = true;
+    _PAINEIS.loading = false;
+
+    if (loadEl)    loadEl.style.display    = 'none';
+    if (contentEl) contentEl.style.display = 'flex';
+
+    _renderPaineisCharts();
+  } catch(e) {
+    _PAINEIS.loading = false;
+    if (loadEl) loadEl.innerHTML = '<div style="color:#EF4444">⚠️ Erro ao carregar: ' + e.message + '</div>';
+  }
+}
+
+function _renderPaineisCharts() {
+  _renderEvolucaoSemanal();
+  _renderRatifBarChart();
+  _renderEnvioBarChart();
+}
+
+// ── Chart 1: Evolução Semanal ─────────────────────────────────────────────────
+function _renderEvolucaoSemanal() {
+  const parseDMY = s => {
+    if (!s || typeof s !== 'string') return null;
+    const parts = s.split('/');
+    if (parts.length !== 3) return null;
+    const [d, m, y] = parts;
+    return y + '-' + m.padStart(2,'0') + '-' + d.padStart(2,'0');
+  };
+
+  const MESES_BR  = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ago','Set','Out','Nov','Dez'];
+  const MESES_ABR = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const CORES = ['#2563EB','#DC2626','#D97706','#16A34A','#7C3AED','#0891B2'];
+
+  // Agrupa por competência → municipio → menor data_envio com status_ok
+  const compMap = {};
+  (_PAINEIS.envio || []).forEach(d => {
+    if (!d.ano || !d.mes || !d.status_ok) return;
+    const iso = parseDMY(d.data_envio);
+    if (!iso) return;
+    const key = d.ano + '-' + String(d.mes).padStart(2,'0');
+    const mun = (d.municipio || '').toLowerCase().trim();
+    if (!compMap[key]) compMap[key] = {};
+    if (!compMap[key][mun] || iso < compMap[key][mun]) compMap[key][mun] = iso;
+  });
+
+  // Total de municípios únicos por competência (incluindo os que não enviaram)
+  const totalMap = {};
+  (_PAINEIS.envio || []).forEach(d => {
+    if (!d.ano || !d.mes) return;
+    const key = d.ano + '-' + String(d.mes).padStart(2,'0');
+    const mun = (d.municipio || '').toLowerCase().trim();
+    if (!totalMap[key]) totalMap[key] = new Set();
+    totalMap[key].add(mun);
+  });
+
+  const compKeys = Object.keys(compMap).sort();
+  if (compKeys.length === 0) return;
+
+  // Coleta todas as datas únicas
+  const allDatesSet = new Set();
+  compKeys.forEach(k => Object.values(compMap[k]).forEach(iso => allDatesSet.add(iso)));
+  const allDates = [...allDatesSet].sort();
+
+  const datasets = compKeys.slice(0, 6).map((key, idx) => {
+    const [ano, mes] = key.split('-');
+    const munMap  = compMap[key];
+    const total   = totalMap[key] ? totalMap[key].size : 1;
+    const munDates = Object.values(munMap).sort();
+
+    const data = allDates.map(date => {
+      const sent = munDates.filter(d => d <= date).length;
+      return parseFloat(((sent / total) * 100).toFixed(2));
+    });
+
+    return {
+      label: MESES_BR[parseInt(mes)] || mes,
+      data,
+      borderColor: CORES[idx % CORES.length],
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      pointRadius: allDates.length > 30 ? 1 : 3,
+      tension: 0.35
+    };
+  });
+
+  const labels = allDates.map(iso => {
+    const [y, m, d] = iso.split('-');
+    return d + '/' + m + '/' + y;
+  });
+
+  const ctx = document.getElementById('paineis-chart-evolucao');
+  if (!ctx) return;
+  if (_PAINEIS.charts.evolucao) _PAINEIS.charts.evolucao.destroy();
+  _PAINEIS.charts.evolucao = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2) + '%'
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: 0, max: 100,
+          ticks: { callback: v => v + '%', font: { size: 11 } },
+          grid: { color: '#F1F5F9' }
+        },
+        x: {
+          ticks: { maxTicksLimit: 14, maxRotation: 0, font: { size: 10 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// ── Chart 2: Municípios ratificados e Qnt a ratificar ─────────────────────────
+function _renderRatifBarChart() {
+  const MESES_BR = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ago','Set','Out','Nov','Dez'];
+
+  // Agrupa por competência — conta municípios únicos (nomeEnte) com ratificacao_ok vs sem
+  const compMap = {};
+  (_PAINEIS.ratif || []).forEach(d => {
+    if (!d.ano || !d.mes) return;
+    const key = d.ano + '-' + String(d.mes).padStart(2,'0');
+    if (!compMap[key]) compMap[key] = { ratif: 0, pendente: 0 };
+    if (d.ratificacao_ok) compMap[key].ratif++;
+    else compMap[key].pendente++;
+  });
+
+  const keys   = Object.keys(compMap).sort();
+  const labels = keys.map(k => MESES_BR[parseInt(k.split('-')[1])] || k.split('-')[1]);
+
+  const ratifData   = keys.map(k => compMap[k].ratif);
+  const pendenteData = keys.map(k => compMap[k].pendente);
+
+  const ctx = document.getElementById('paineis-chart-ratif');
+  if (!ctx) return;
+  if (_PAINEIS.charts.ratif) _PAINEIS.charts.ratif.destroy();
+  _PAINEIS.charts.ratif = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Municípios ratificados', data: ratifData,   backgroundColor: '#2563EB', stack: 'st' },
+        { label: 'Qnt a ratificar',        data: pendenteData, backgroundColor: '#FCA5A5', stack: 'st' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index' },
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+        tooltip: { mode: 'index' },
+        datalabels: false
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { stacked: true, grid: { color: '#F1F5F9' }, ticks: { font: { size: 11 } } }
+      }
+    },
+    plugins: [{
+      id: 'stackedLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx: c, data } = chart;
+        chart.data.datasets.forEach((ds, di) => {
+          const meta = chart.getDatasetMeta(di);
+          meta.data.forEach((bar, i) => {
+            const val = ds.data[i];
+            if (!val) return;
+            const color = di === 0 ? '#1e3a8a' : '#9B2335';
+            c.save();
+            c.font = 'bold 11px DM Sans, sans-serif';
+            c.fillStyle = di === 0 ? '#fff' : '#7f1d1d';
+            c.textAlign = 'center';
+            c.textBaseline = 'middle';
+            c.fillText(val, bar.x, bar.y + bar.height / 2);
+            c.restore();
+          });
+          // Número "a ratificar" acima da barra para di===1
+          if (di === 1) {
+            meta.data.forEach((bar, i) => {
+              const val = ds.data[i];
+              if (!val) return;
+              c.save();
+              c.font = 'bold 11px DM Sans, sans-serif';
+              c.fillStyle = '#DC2626';
+              c.textAlign = 'center';
+              c.textBaseline = 'bottom';
+              c.fillText(val, bar.x, bar.y - 2);
+              c.restore();
+            });
+          }
+        });
+      }
+    }]
+  });
+}
+
+// ── Chart 3: Status de Envio de Clientes ──────────────────────────────────────
+function _renderEnvioBarChart() {
+  const MESES_BR = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ago','Set','Out','Nov','Dez'];
+
+  // Agrupa por competência → municipio; conta como "enviado" se TODOS os docs do município têm status_ok
+  const compMunMap = {};
+  (_PAINEIS.envio || []).forEach(d => {
+    if (!d.ano || !d.mes) return;
+    const key = d.ano + '-' + String(d.mes).padStart(2,'0');
+    const mun = (d.municipio || '').toLowerCase().trim();
+    if (!compMunMap[key]) compMunMap[key] = {};
+    if (!compMunMap[key][mun]) compMunMap[key][mun] = { ok: true };
+    if (!d.status_ok) compMunMap[key][mun].ok = false;
+  });
+
+  const compMap = {};
+  Object.keys(compMunMap).forEach(key => {
+    const muns = compMunMap[key];
+    let enviado = 0, pendente = 0;
+    Object.values(muns).forEach(m => { if (m.ok) enviado++; else pendente++; });
+    compMap[key] = { enviado, pendente };
+  });
+
+  const keys   = Object.keys(compMap).sort();
+  const labels = keys.map(k => MESES_BR[parseInt(k.split('-')[1])] || k.split('-')[1]);
+
+  const enviadoData  = keys.map(k => compMap[k].enviado);
+  const pendenteData = keys.map(k => compMap[k].pendente);
+
+  const ctx = document.getElementById('paineis-chart-envio');
+  if (!ctx) return;
+  if (_PAINEIS.charts.envio) _PAINEIS.charts.envio.destroy();
+  _PAINEIS.charts.envio = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Enviados',  data: enviadoData,  backgroundColor: '#2563EB', stack: 'st' },
+        { label: 'Pendentes', data: pendenteData, backgroundColor: '#FCA5A5', stack: 'st' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index' },
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+        tooltip: { mode: 'index' }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { stacked: true, grid: { color: '#F1F5F9' }, ticks: { font: { size: 11 } } }
+      }
+    },
+    plugins: [{
+      id: 'stackedLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx: c } = chart;
+        chart.data.datasets.forEach((ds, di) => {
+          const meta = chart.getDatasetMeta(di);
+          meta.data.forEach((bar, i) => {
+            const val = ds.data[i];
+            if (!val) return;
+            c.save();
+            c.font = 'bold 11px DM Sans, sans-serif';
+            c.fillStyle = di === 0 ? '#fff' : '#7f1d1d';
+            c.textAlign = 'center';
+            c.textBaseline = 'middle';
+            c.fillText(val, bar.x, bar.y + bar.height / 2);
+            c.restore();
+          });
+          if (di === 1) {
+            meta.data.forEach((bar, i) => {
+              const val = ds.data[i];
+              if (!val) return;
+              c.save();
+              c.font = 'bold 11px DM Sans, sans-serif';
+              c.fillStyle = '#DC2626';
+              c.textAlign = 'center';
+              c.textBaseline = 'bottom';
+              c.fillText(val, bar.x, bar.y - 2);
+              c.restore();
+            });
+          }
+        });
+      }
+    }]
+  });
 }
 
 // ── Ratificações ─────────────────────────────────────────────────────
