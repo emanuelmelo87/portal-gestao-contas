@@ -1569,7 +1569,7 @@ function fetchCNDEstadual() {
       tipo_atraso:  '',
       status_fonte: d.atualizado_em || '',
       tipo:         d.data_emissao || '',
-      periodo1:     (d.status === 'regular' && (d.data_emissao||'').toLowerCase().includes('bimestral')) ? 'Com CND' : 'Sem CND',
+      periodo1:     (d.status === 'regular' && (d.data_emissao||'').trim() === 'Certidão Bimestral') ? 'Com CND' : 'Sem CND',
       periodo2:     '',
       periodo3:     '',
       p1_label:     d.bimestre || 'Atual',
