@@ -6041,6 +6041,10 @@ function renderEnvioView() {
     return 'nenhum';
   }
 
+  // Incluir municípios conhecidos sem doc (aparecem como "Não enviou" nos cards)
+  if (_validMunNames.size > 0) {
+    _validMunNames.forEach(k => { if (!munDocs[k]) munDocs[k] = []; });
+  }
   let municipios = Object.keys(munDocs).sort((a,b) => a.localeCompare(b,'pt-BR'));
 
   // KPI cards
