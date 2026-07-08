@@ -1568,7 +1568,8 @@ function fetchCNDEstadual() {
       meses_atraso: '',
       tipo_atraso:  '',
       status_fonte: d.atualizado_em || '',
-      periodo1:     d.status === 'regular' ? 'Com CND' : 'Sem CND',
+      tipo:         d.data_emissao || '',
+      periodo1:     (d.status === 'regular' && (d.data_emissao||'').toLowerCase().includes('bimestral')) ? 'Com CND' : 'Sem CND',
       periodo2:     '',
       periodo3:     '',
       p1_label:     d.bimestre || 'Atual',
@@ -2916,7 +2917,7 @@ function renderCNDEstadual() {
     return `<tr style="background:${bg};border-bottom:1px solid #EDF2F7">
       <td style="padding:9px 14px;font-size:.83rem;font-weight:600">${r.municipio||'—'}</td>
       <td style="padding:9px 14px;font-size:.8rem;color:#4A5568">${r.p1_label||'—'}</td>
-      <td style="padding:9px 14px;font-size:.8rem;color:#4A5568">Certidão Bimestral</td>
+      <td style="padding:9px 14px;font-size:.8rem;font-weight:600;color:${r.tipo&&!r.tipo.toLowerCase().includes('bimestral')?'#C53030':'#4A5568'}">${r.tipo||'—'}</td>
       <td style="padding:9px 14px;font-size:.8rem;color:#4A5568">${validade}</td>
       <td style="padding:9px 14px">${numBadge}</td>
       <td style="padding:9px 14px">${statusBadge}</td>
