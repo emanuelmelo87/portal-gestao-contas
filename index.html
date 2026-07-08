@@ -6086,14 +6086,10 @@ function renderEnvioView() {
     cndDataByMun[_k] = { bimestre_num: r.bimestre_num || 0, ano: r.ano || 0 };
   });
 
-  // Bimestre ao qual o mês selecionado pertence
-  const _compsRef = state.competenciasCND || DEFAULT_COMPETENCIAS_CND;
-  const _bimAtual = (_compsRef.find(c => c.meses && c.meses.includes(mes)) || {}).bimestre || 0;
-  // Alerta: município tem CND para o bimestre atual mas envio não está completo
+  // Alerta: município tem CND bimestral válida mas envio do mês visualizado não está completo.
+  // Ter CND de qualquer bimestre implica que todos os meses anteriores deveriam estar enviados.
   function hasCNDAlerta(munKey) {
-    const d = cndDataByMun[munKey];
-    if (!d || cndByMun[munKey] !== 'Com CND') return false;
-    if (!_bimAtual || d.bimestre_num !== _bimAtual || d.ano !== ano) return false;
+    if (cndByMun[munKey] !== 'Com CND') return false;
     return calcStatus(munKey) !== 'completo';
   }
 
