@@ -1623,11 +1623,13 @@ async function loadAllData() {
 // KPI CARDS
 // ============================================================
 function updateKPIs() {
+  const _vm = _getFilteredMunNames();
+  const _fMun = arr => _vm.size > 0 ? arr.filter(r => _vm.has((r.municipio||'').toLowerCase().trim())) : arr;
   // Total chamados (Serviço + Suporte + Residente)
   // state.jira  = Jira_Chamados (antes do split: todas as equipes; depois: só Serviço)
   // state.suporte = Jira_Chamados_Suporte (Suporte+Residente — vazio para datas históricas anteriores ao split)
   // A soma garante continuidade histórica: datas antigas retornam só jira (total completo); novas retornam jira+suporte
-  const _allChamados = [...state.jira, ...state.suporte];
+  const _allChamados = [..._fMun(state.jira), ..._fMun(state.suporte)];
   const totalChamados = _allChamados.reduce((s, r) => s + (parseInt(r.total_chamados) || 0), 0);
   const municipiosJira = [...new Set(_allChamados.map(r => r.municipio).filter(Boolean))];
   document.getElementById('kpi-chamados').textContent = totalChamados || '—';
@@ -1635,11 +1637,11 @@ function updateKPIs() {
     _allChamados.length ? `Em ${municipiosJira.length} municípios` : 'Dados indisponíveis';
 
   // Dependendo de ação do time (Suporte + Serviço) — contagem por chamado
-  const _depSup   = state.suporteIssues.filter(dependeDoTime);
-  const _depSrv   = state.chamadosIssues.filter(dependeDoTime);
+  const _depSup   = _fMun(state.suporteIssues).filter(dependeDoTime);
+  const _depSrv   = _fMun(state.chamadosIssues).filter(dependeDoTime);
   const _depTotal = _depSup.length + _depSrv.length;
   const _depSlo   = [..._depSup, ..._depSrv].filter(r => (r.slo_horas || '').startsWith('-')).length;
-  const _temIssues = state.suporteIssues.length || state.chamadosIssues.length;
+  const _temIssues = _fMun(state.suporteIssues).length || _fMun(state.chamadosIssues).length;
   const elDep = document.getElementById('kpi-depende');
   if (elDep) {
     elDep.textContent = _temIssues ? _depTotal : '—';
@@ -1649,12 +1651,13 @@ function updateKPIs() {
   }
 
   // CND Estadual — conta por MUNICÍPIO no período atual
-  if (state.cndEstadual.length) {
+  if (_fMun(state.cndEstadual).length) {
     // Detectar período atual (mesma lógica de renderCNDEstadual)
+    const _cndEst0 = _fMun(state.cndEstadual);
     const estLabels = [
-      { key: 'periodo1', label: state.cndEstadual[0].p1_label || '' },
-      { key: 'periodo2', label: state.cndEstadual[0].p2_label || '' },
-      { key: 'periodo3', label: state.cndEstadual[0].p3_label || '' },
+      { key: 'periodo1', label: _cndEst0[0].p1_label || '' },
+      { key: 'periodo2', label: _cndEst0[0].p2_label || '' },
+      { key: 'periodo3', label: _cndEst0[0].p3_label || '' },
     ];
     const parseSD = (lbl) => { const m = lbl.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/); if (!m) return null; const yy = m[3].length === 2 ? 2000+parseInt(m[3]) : parseInt(m[3]); return new Date(yy, parseInt(m[2])-1, parseInt(m[1])); };
     let estIdx = 0;
@@ -1662,13 +1665,13 @@ function updateKPIs() {
     // Fallback: se o período atual ainda não tem dados (certidões ainda não submetidas),
     // recua até o período mais recente que tenha dados reais.
     while (estIdx > 0) {
-      const hasData = state.cndEstadual.some(r => { const v = r[estLabels[estIdx].key]; return v === 'Com CND' || v === 'Sem CND'; });
+      const hasData = _cndEst0.some(r => { const v = r[estLabels[estIdx].key]; return v === 'Com CND' || v === 'Sem CND'; });
       if (hasData) break;
       estIdx--;
     }
     const estKey = estLabels[estIdx].key;
     const estGrp = {};
-    state.cndEstadual.forEach(r => { if (!estGrp[r.municipio]) estGrp[r.municipio] = []; estGrp[r.municipio].push(r); });
+    _cndEst0.forEach(r => { if (!estGrp[r.municipio]) estGrp[r.municipio] = []; estGrp[r.municipio].push(r); });
     const estMuns = Object.values(estGrp);
     const estCom = estMuns.filter(items => !items.some(r => r[estKey] === 'Sem CND') && items.some(r => r[estKey] === 'Com CND')).length;
     const estTotalMuns = Object.keys(estGrp).length;
@@ -1680,7 +1683,7 @@ function updateKPIs() {
   }
 
   // CND Federal — conta por MUNICÍPIO no mês atual
-  if (state.cndFederal.length) {
+  if (_fMun(state.cndFederal).length) {
     const MESES_K = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
     const fedMesKey = MESES_K[new Date().getMonth()];
     const classifyFed = (v) => {
@@ -1691,8 +1694,9 @@ function updateKPIs() {
       if (isNao && s.includes('enviado') && !s.includes('-') && !s.includes('problema') && !s.includes('atraso')) return 'sem';
       return 'atraso';
     };
+    const _cndFed = _fMun(state.cndFederal);
     const fedGrp = {};
-    state.cndFederal.forEach(r => { if (!fedGrp[r.municipio]) fedGrp[r.municipio] = []; fedGrp[r.municipio].push(r); });
+    _cndFed.forEach(r => { if (!fedGrp[r.municipio]) fedGrp[r.municipio] = []; fedGrp[r.municipio].push(r); });
     const fedMuns = Object.values(fedGrp);
     const fedCom = fedMuns.filter(items => {
       const vals = items.map(r => classifyFed(r[fedMesKey]));
@@ -1707,14 +1711,14 @@ function updateKPIs() {
   }
 
   // Risco
-  const emRisco = state.risco.filter(r => r.risco === 'Alto' || r.risco === 'Médio').length;
-  document.getElementById('kpi-risco').textContent = state.risco.length ? emRisco : '—';
+  const emRisco = _fMun(state.risco).filter(r => r.risco === 'Alto' || r.risco === 'Médio').length;
+  document.getElementById('kpi-risco').textContent = _fMun(state.risco).length ? emRisco : '—';
   document.getElementById('kpi-risco-sub').textContent =
-    state.risco.length ? `Alto ou Médio risco` : 'Dados indisponíveis';
+    _fMun(state.risco).length ? `Alto ou Médio risco` : 'Dados indisponíveis';
 
   // NPS
-  if (state.nps.length) {
-    const { score, total } = calcNPS(state.nps);
+  if (_fMun(state.nps).length) {
+    const { score, total } = calcNPS(_fMun(state.nps));
     const zone = npsZone(score);
     const el = document.getElementById('kpi-nps');
     el.textContent = score;
@@ -1726,10 +1730,10 @@ function updateKPIs() {
   }
 
   // Implantações
-  if (state.implantacoes.length) {
-    const totalImpl    = state.implantacoes.reduce((s, r) => s + (parseInt(r.total)     || 0), 0);
-    const totalAtras   = state.implantacoes.reduce((s, r) => s + (parseInt(r.atrasados) || 0), 0);
-    const munImpl      = new Set(state.implantacoes.map(r => r.municipio).filter(Boolean)).size;
+  if (_fMun(state.implantacoes).length) {
+    const totalImpl    = _fMun(state.implantacoes).reduce((s, r) => s + (parseInt(r.total)     || 0), 0);
+    const totalAtras   = _fMun(state.implantacoes).reduce((s, r) => s + (parseInt(r.atrasados) || 0), 0);
+    const munImpl      = new Set(_fMun(state.implantacoes).map(r => r.municipio).filter(Boolean)).size;
     const elImpl       = document.getElementById('kpi-impl');
     elImpl.textContent = totalImpl;
     elImpl.style.color = totalAtras > 0 ? '#DC2626' : '#7C3AED';
@@ -2425,8 +2429,9 @@ function _renderIssuesPorVertical(container, issues, titulo) {
 function renderChamadosAtendimento() {
   const container = document.getElementById('atendimento-content');
   if (!container) return;
+  const _vm2 = _getFilteredMunNames();
 
-  const issues = state.chamadosIssues
+  const issues = (_vm2.size > 0 ? state.chamadosIssues.filter(r => _vm2.has((r.municipio||'').toLowerCase().trim())) : state.chamadosIssues)
     .filter(r => (r.status || '').toLowerCase().includes('atendimento'))
     .sort((a, b) => _parseSloStr(a.slo_horas) - _parseSloStr(b.slo_horas));
 
@@ -2447,10 +2452,12 @@ const _chFilter = { suporte: { ds: null, verts: new Set() }, servico: { ds: null
 
 // Configuração de cada guia (pools de chamados por conjunto)
 function _chamadosCfg(source) {
-  const all = (source === 'suporte' ? state.suporteIssues : state.chamadosIssues) || [];
+  const _vm = _getFilteredMunNames();
+  const _fMun = arr => _vm.size > 0 ? arr.filter(r => _vm.has((r.municipio||'').toLowerCase().trim())) : arr;
+  const all = _fMun((source === 'suporte' ? state.suporteIssues : state.chamadosIssues) || []);
   return {
     source, all,
-    summary: (source === 'suporte' ? state.suporte : state.jira) || [],
+    summary: _fMun((source === 'suporte' ? state.suporte : state.jira) || []),
     pie1: { key:'depende', label:'Dependendo de Ação do Time',     color:'#4338CA', issues: all.filter(dependeDoTime) },
     pie2: { key:'fila',    label: source === 'suporte' ? 'Aguardando Triagem × SLO' : 'Aguardando Atendimento × SLO',
             color: source === 'suporte' ? '#B45309' : '#0E7490', issues: all.filter(r => isFilaStatus(r, source)) },
@@ -2875,15 +2882,17 @@ function renderCNDFederal() {
   const MESES_LBL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const donutsDiv = document.getElementById('cnd-federal-donuts');
   const tableDiv  = document.getElementById('cnd-federal-table');
+  const _vm = _getFilteredMunNames();
+  const cndFedData = _vm.size > 0 ? state.cndFederal.filter(r => _vm.has((r.municipio||'').toLowerCase().trim())) : state.cndFederal;
 
-  if (!state.cndFederal.length) {
+  if (!cndFedData.length) {
     donutsDiv.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--text-muted)">Dados CND Federal indisponíveis.</div>';
     tableDiv.innerHTML = '';
     renderCNDStatusFonte('cnd-federal-status', '', '');
     return;
   }
 
-  renderCNDStatusFonte('cnd-federal-status', state.cndFederal[0].status_fonte || '', 'SICONFI');
+  renderCNDStatusFonte('cnd-federal-status', cndFedData[0].status_fonte || '', 'SICONFI');
 
   // Classifica status
   const classify = (v) => {
@@ -2902,7 +2911,7 @@ function renderCNDFederal() {
   const anoAtual = new Date().getFullYear();
 
   // Agrupar por município (dados reais)
-  const ordenados = [...state.cndFederal].sort((a, b) => {
+  const ordenados = [...cndFedData].sort((a, b) => {
     const mdiff = a.municipio.localeCompare(b.municipio, 'pt-BR');
     if (mdiff !== 0) return mdiff;
     return (a.tipo || '').localeCompare(b.tipo || '', 'pt-BR');
@@ -3011,7 +3020,9 @@ function renderCNDFederal() {
 // ============================================================
 function renderRisco() {
   const container = document.getElementById('risk-container');
-  if (!state.risco.length) {
+  const _vm = _getFilteredMunNames();
+  const riscoData = _vm.size > 0 ? state.risco.filter(r => _vm.has((r.municipio||'').toLowerCase().trim())) : state.risco;
+  if (!riscoData.length) {
     unavailable(container, 'Dados de risco indisponíveis. Verifique se a planilha está publicada.');
     return;
   }
@@ -3020,10 +3031,10 @@ function renderRisco() {
   const normRisco = v => (v || '').trim()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-  const alto     = state.risco.filter(r => normRisco(r.risco) === 'Alto');
-  const medio    = state.risco.filter(r => normRisco(r.risco) === 'Medio');
-  const baixo    = state.risco.filter(r => normRisco(r.risco) === 'Baixo');
-  const semRisco = state.risco.filter(r => !r.risco || r.risco === 'Sem Risco');
+  const alto     = riscoData.filter(r => normRisco(r.risco) === 'Alto');
+  const medio    = riscoData.filter(r => normRisco(r.risco) === 'Medio');
+  const baixo    = riscoData.filter(r => normRisco(r.risco) === 'Baixo');
+  const semRisco = riscoData.filter(r => !r.risco || r.risco === 'Sem Risco');
   const emRisco  = [...alto, ...medio, ...baixo];
 
   // ── KPI cards ──────────────────────────────────────────────
@@ -3145,13 +3156,15 @@ function renderRisco() {
 function renderNPSGeral() {
   destroyChart('chart-4');
   const canvas = document.getElementById('chart-4');
+  const _vm = _getFilteredMunNames();
+  const npsData = _vm.size > 0 ? state.nps.filter(r => _vm.has((r.municipio||'').toLowerCase().trim())) : state.nps;
 
-  if (!state.nps.length) {
+  if (!npsData.length) {
     unavailable(document.getElementById('nps-panel'), 'Dados NPS indisponíveis.');
     return;
   }
 
-  const { score, promotores, neutros, detratores, total } = calcNPS(state.nps);
+  const { score, promotores, neutros, detratores, total } = calcNPS(npsData);
   const zone = npsZone(score);
 
   // Score box + zona
@@ -3234,14 +3247,16 @@ function renderNPSGeral() {
 function renderNPSPorCliente() {
   destroyChart('chart-5');
   const canvas = document.getElementById('chart-5');
+  const _vm = _getFilteredMunNames();
+  const npsData = _vm.size > 0 ? state.nps.filter(r => _vm.has((r.municipio||'').toLowerCase().trim())) : state.nps;
 
-  if (!state.nps.length) {
+  if (!npsData.length) {
     unavailable(canvas.parentElement, 'Dados NPS indisponíveis.');
     return;
   }
 
   // Dados já pré-agregados por município em NPS_Calculado
-  const entries = state.nps
+  const entries = npsData
     .filter(r => r.municipio)
     .map(r => ({
       municipio:   r.municipio,
@@ -3257,7 +3272,7 @@ function renderNPSPorCliente() {
   const values = entries.map(e => e.nps);
   const colors = values.map(v => npsZone(v).color);
 
-  const { score: scoreGeral } = calcNPS(state.nps);
+  const { score: scoreGeral } = calcNPS(npsData);
 
   canvas.style.height = Math.max(300, entries.length * 22) + 'px';
 
@@ -3584,14 +3599,17 @@ function renderImplantacoes() {
   implCharts.forEach(c => c.destroy());
   implCharts = [];
 
-  if (!state.implantacoes.length) {
+  const _vm = _getFilteredMunNames();
+  const implData = _vm.size > 0 ? state.implantacoes.filter(r => _vm.has((r.municipio||'').toLowerCase().trim())) : state.implantacoes;
+
+  if (!implData.length) {
     unavailable(container, 'Dados de implantações indisponíveis. Verifique se a planilha Jira_Implantacoes está publicada.');
     return;
   }
 
   // --- Agregação ---
   const munMap = {};
-  state.implantacoes.forEach(r => {
+  implData.forEach(r => {
     const mu        = (r.municipio || 'Não informado').trim();
     const v         = (r.vertical  || 'Não informado').trim();
     const total     = parseInt(r.total)     || 0;
@@ -3780,9 +3798,12 @@ function _updateImplPivot() {
 
   // Filtro de produto: reconstrói células a partir das issues
   let filteredMap = null;
+  const _vmI = _getFilteredMunNames();
+  const issuePool = _vmI.size > 0 ? state.implantacoesIssues.filter(r => _vmI.has((r.municipio||'').toLowerCase().trim())) : state.implantacoesIssues;
+
   if (prodTerms.length) {
     filteredMap = {};
-    state.implantacoesIssues.forEach(r => {
+    issuePool.forEach(r => {
       const sumL = (r.summary || '').toLowerCase();
       const matchesAny = prodTerms.some(t => sumL.includes(t));
       const passes = modeProd === 'exclude' ? !matchesAny : matchesAny;
@@ -3879,7 +3900,7 @@ function _updateImplPivot() {
 
   _implTotalIssues = { __all__: [] };
   verticaisVis.forEach(v => { _implTotalIssues[v] = []; });
-  state.implantacoesIssues.forEach(r => {
+  issuePool.forEach(r => {
     const m = (r.municipio || '').trim();
     const v = (r.vertical  || '').trim();
     if (!linhasVis.includes(m)) return;
@@ -5016,6 +5037,8 @@ function _populateMunicipioFilter2() {
   renderCNDEstadual();
   renderEnvioView();
   renderFederal();
+  if (typeof renderActiveView === 'function') renderActiveView();
+  updateKPIs();
 }
 
 // ─── GRÁFICO DE VISÃO GERAL ──────────────────────────────────────────────────
@@ -5351,16 +5374,18 @@ function renderFedTable(containerId, rows) {
 }
 
 function renderFederal() {
-  const mun = state.selectedMunicipio || '';
-  const filtered = mun ? FEDERAL_DATA.filter(r => r.municipio === mun) : FEDERAL_DATA;
+  const _vm = _getFilteredMunNames();
+  const fedFiltered = _vm.size > 0
+    ? FEDERAL_DATA.filter(r => _vm.has((r.municipio||'').toLowerCase().trim()))
+    : FEDERAL_DATA;
 
   const grupos = ['pgfn','fgts','transferegov','siconfi','cauc'];
   grupos.forEach(g => {
-    renderFedTable('fed-table-' + g, filtered.filter(r => r.grupo === g));
+    renderFedTable('fed-table-' + g, fedFiltered.filter(r => r.grupo === g));
   });
 
   // Atualizar cards resumo
-  const all = filtered;
+  const all = fedFiltered;
   const total = new Set(all.map(r => r.municipio)).size;
   const countStatus = (s) => new Set(all.filter(r => r.status === s).map(r => r.municipio)).size;
   const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
