@@ -6077,11 +6077,25 @@ function renderEnvioView() {
   const ratifFil  = document.getElementById('envio-ratif-filter')?.value  || '';
   const cndFil    = document.getElementById('envio-cnd-filter')?.value    || '';
 
-  // CND por município (lookup lowercase)
+  // CND por município (lookup lowercase) — guarda status e dados do bimestre
   const cndByMun = {};
+  const cndDataByMun = {};
   (state.cndEstadual || []).forEach(r => {
-    cndByMun[(r.municipio||'').toLowerCase().trim()] = r.periodo1 || '';
+    const _k = (r.municipio||'').toLowerCase().trim();
+    cndByMun[_k] = r.periodo1 || '';
+    cndDataByMun[_k] = { bimestre_num: r.bimestre_num || 0, ano: r.ano || 0 };
   });
+
+  // Bimestre ao qual o mês selecionado pertence
+  const _compsRef = state.competenciasCND || DEFAULT_COMPETENCIAS_CND;
+  const _bimAtual = (_compsRef.find(c => c.meses && c.meses.includes(mes)) || {}).bimestre || 0;
+  // Alerta: município tem CND para o bimestre atual mas envio não está completo
+  function hasCNDAlerta(munKey) {
+    const d = cndDataByMun[munKey];
+    if (!d || cndByMun[munKey] !== 'Com CND') return false;
+    if (!_bimAtual || d.bimestre_num !== _bimAtual || d.ano !== ano) return false;
+    return calcStatus(munKey) !== 'completo';
+  }
 
   // Ratificação por município (agrega: todos ok = sim, qualquer não = nao, sem dados = '')
   const ratifByMun = {};
@@ -6277,11 +6291,19 @@ function renderEnvioView() {
         </div>`
       : '';
 
+    const _alertaCND = hasCNDAlerta(munKey);
+    const _rowBorder  = _alertaCND ? 'border-left:4px solid #D97706;border-bottom:1px solid #E2E8F0' : 'border-bottom:1px solid #E2E8F0';
+    const _hdrBg      = _alertaCND ? '#FFFBEB' : '#fff';
+    const _hdrBgHov   = _alertaCND ? '#FEF3C7' : '#F8FAFC';
+    const _alertaBadge = _alertaCND
+      ? `<span title="Município tem CND bimestral mas o envio não está completo neste período" style="flex-shrink:0;padding:2px 10px;border-radius:12px;font-size:.71rem;font-weight:700;background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;cursor:default">⚠️ CND sem envio</span>`
+      : '';
     html += `
-    <div class="mun-envio-row" style="border-bottom:1px solid #E2E8F0">
-      <div onclick="toggleEnvioMun(this)" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;user-select:none;background:#fff;transition:background .12s" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='#fff'">
+    <div class="mun-envio-row" style="${_rowBorder}">
+      <div onclick="toggleEnvioMun(this)" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;user-select:none;background:${_hdrBg};transition:background .12s" onmouseover="this.style.background='${_hdrBgHov}'" onmouseout="this.style.background='${_hdrBg}'">
         <span class="envio-toggle" style="font-size:.75rem;color:#94A3B8;flex-shrink:0;transition:transform .18s;display:inline-block">▶</span>
         <span style="flex:1;font-size:.84rem;font-weight:700;color:#1E293B">${munDisplay}</span>
+        ${_alertaBadge}
         <span style="flex-shrink:0;padding:2px 10px;border-radius:12px;font-size:.71rem;font-weight:700;background:${stC.bg};color:${stC.c};border:1px solid ${stC.bd}">${stC.lbl}</span>
         <span style="flex-shrink:0;padding:2px 10px;border-radius:12px;font-size:.71rem;font-weight:700;background:${rC.bg};color:${rC.c};border:1px solid ${rC.bd}">${rC.lbl}</span>
         <span style="flex-shrink:0;padding:2px 10px;border-radius:12px;font-size:.71rem;font-weight:700;background:${cC.bg};color:${cC.c};border:1px solid ${cC.bd}">${cC.lbl}</span>
