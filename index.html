@@ -727,6 +727,10 @@
       style="padding:10px 18px;border:none;border-radius:0;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:6px">
       📈 Painéis
     </button>
+    <button id="pc-tab-cnd" onclick="switchPCTab('cnd')"
+      style="padding:10px 18px;border:none;border-radius:0;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:6px">
+      📄 CND
+    </button>
   </div>
 </div>
 
@@ -802,6 +806,126 @@
   </div>
 </div>
 <!-- ═══════════════ /PAINÉIS FULLSCREEN ═══════════════ -->
+
+<!-- ═══════════════ CND FULLSCREEN ═══════════════ -->
+<div id="pc-cnd-outer" style="display:none;max-width:1400px;margin:0 auto;padding:24px 24px 32px;width:100%">
+
+  <div style="font-size:1.1rem;font-weight:800;color:var(--text);margin-bottom:4px">Certidão Negativa de Débitos</div>
+  <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:20px">Status atual das certidões — não filtrado por competência</div>
+
+  <!-- Pills Estadual / Federal -->
+  <div style="display:flex;gap:6px;margin:0 0 18px;background:#F1F5F9;border-radius:10px;padding:4px;width:fit-content">
+    <button id="cnd-tab-pill-estadual" onclick="switchCNDTabPane('estadual')"
+      style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12);transition:all .15s">
+      📊 Estadual
+    </button>
+    <button id="cnd-tab-pill-federal" onclick="switchCNDTabPane('federal')"
+      style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
+      🇧🇷 Federal
+    </button>
+  </div>
+
+  <!-- Pane Estadual CND -->
+  <div id="cnd-tab-pane-estadual">
+        <div id="estadual-cnd-section" style="display:block">
+
+          <!-- Barra de filtros da CND -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
+            <div>
+              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Status CND</label>
+              <select id="cnd-status-filter" onchange="renderCNDEstadual()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
+                <option value="">Todos</option>
+                <option value="Com CND">✅ Com CND</option>
+                <option value="Sem CND">❌ Sem CND</option>
+              </select>
+            </div>
+            <span id="cnd-filter-info" style="font-size:.75rem;color:var(--text-muted);align-self:flex-end;margin-left:auto"></span>
+          </div>
+
+          <div id="cnd-estadual-status" style="margin-bottom:12px"></div>
+          <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start;flex-wrap:wrap"></div>
+          <div id="cnd-estadual-table" style="margin-top:16px"></div>
+        </div><!-- /estadual-cnd-section -->
+  </div><!-- /cnd-tab-pane-estadual -->
+
+  <!-- Pane Federal -->
+  <div id="cnd-tab-pane-federal" style="display:none">
+      <div id="tce-pane-federal" style="display:none;padding-top:16px">
+
+        <!-- Resumo Federal -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px" id="federal-resumo-cards">
+          <div style="flex:1;min-width:120px;background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 16px">
+            <div style="font-size:1.6rem;font-weight:700;color:#276749" id="fed-card-ok">—</div>
+            <div style="font-size:.75rem;color:#276749;margin-top:2px">✅ Regular</div>
+          </div>
+          <div style="flex:1;min-width:120px;background:#FFFFF0;border:1px solid #F6E05E;border-radius:10px;padding:14px 16px">
+            <div style="font-size:1.6rem;font-weight:700;color:#7B6F00" id="fed-card-atencao">—</div>
+            <div style="font-size:.75rem;color:#7B6F00;margin-top:2px">⚠️ Atenção</div>
+          </div>
+          <div style="flex:1;min-width:120px;background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 16px">
+            <div style="font-size:1.6rem;font-weight:700;color:#9B2335" id="fed-card-irregular">—</div>
+            <div style="font-size:.75rem;color:#9B2335;margin-top:2px">❌ Irregular</div>
+          </div>
+          <div style="flex:1;min-width:120px;background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 16px">
+            <div style="font-size:1.6rem;font-weight:700;color:#1A365D" id="fed-card-total">—</div>
+            <div style="font-size:.75rem;color:#1A365D;margin-top:2px">📊 Total municípios</div>
+          </div>
+        </div>
+
+        <!-- Grupo 1: PGFN / Dívida Ativa da União -->
+        <div style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
+            <span style="background:#FED7D7;color:#9B2335;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">PGFN</span>
+            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Procuradoria-Geral da Fazenda Nacional — Dívida Ativa</span>
+          </div>
+          <div class="fed-table" id="fed-table-pgfn"></div>
+        </div>
+
+        <!-- Grupo 2: FGTS / Caixa -->
+        <div style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
+            <span style="background:#C6F6D5;color:#276749;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">FGTS</span>
+            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Fundo de Garantia do Tempo de Serviço — Caixa Econômica</span>
+          </div>
+          <div class="fed-table" id="fed-table-fgts"></div>
+        </div>
+
+        <!-- Grupo 3: Transferegov / Convênios -->
+        <div style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
+            <span style="background:#BEE3F8;color:#1A365D;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">TRANSFEREGOV</span>
+            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Transferegov — Convênios e Instrumentos de Repasse</span>
+          </div>
+          <div class="fed-table" id="fed-table-transferegov"></div>
+        </div>
+
+        <!-- Grupo 4: SICONFI / Transparência -->
+        <div style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
+            <span style="background:#E9D8FD;color:#44337A;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">SICONFI</span>
+            <span style="font-size:.85rem;font-weight:700;color:var(--text)">SICONFI — Prestação de Contas / LRF</span>
+          </div>
+          <div class="fed-table" id="fed-table-siconfi"></div>
+        </div>
+
+        <!-- Grupo 5: CAUC / Cadastro Único de Convenentes -->
+        <div style="margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
+            <span style="background:#FEEBC8;color:#7B341E;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">CAUC</span>
+            <span style="font-size:.85rem;font-weight:700;color:var(--text)">CAUC — Cadastro de Regularidade Fiscal e Trabalhista</span>
+          </div>
+          <div class="fed-table" id="fed-table-cauc"></div>
+        </div>
+
+        <div style="font-size:.72rem;color:var(--text-muted);margin-top:12px;text-align:right;padding-top:8px;border-top:1px solid var(--border)">
+          ⚠️ Dados ilustrativos — integração com APIs federais em desenvolvimento
+        </div>
+
+      </div><!-- /tce-pane-federal -->
+  </div><!-- /cnd-tab-pane-federal -->
+
+</div>
+<!-- ═══════════════ /CND FULLSCREEN ═══════════════ -->
 
 <main id="pc-main">
   <!-- KPI Cards -->
@@ -937,16 +1061,7 @@
       <div id="pca-chart-section" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:16px">
         <!-- Header: toggle CND/Envio + group-by -->
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-          <div style="display:flex;gap:5px;background:#F1F5F9;border-radius:8px;padding:3px">
-            <button id="chart-btn-cnd" onclick="switchChartMode('cnd')"
-              style="padding:6px 16px;border:none;border-radius:6px;font-size:.82rem;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;transition:all .15s">
-              📄 Certidão CND
-            </button>
-            <button id="chart-btn-envio" onclick="switchChartMode('envio')"
-              style="padding:6px 16px;border:none;border-radius:6px;font-size:.82rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
-              📦 Status de Envio
-            </button>
-          </div>
+          <div style="font-size:.9rem;font-weight:700;color:var(--text)">📦 Status de Envio por Grupo</div>
           <div style="display:flex;align-items:center;gap:8px">
             <label style="font-size:.73rem;color:var(--text-muted);white-space:nowrap">Agrupar por:</label>
             <select id="chart-group-by" onchange="renderSummaryChart()"
@@ -979,10 +1094,7 @@
           style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .15s;background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12)">
           🏛️ Estadual
         </button>
-        <button id="tce-pill-federal" onclick="switchTCETab('federal')"
-          style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .15s;background:transparent;color:#64748B">
-          🇧🇷 Federal
-        </button>
+
       </div>
 
       <!-- Painel: Estadual -->
@@ -998,14 +1110,8 @@
             style="padding:7px 20px;border:none;border-radius:7px;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
             📋 Ratificação
           </button>
-          <button id="est-sub-cnd" onclick="switchEstadualSub('cnd')"
-            style="padding:7px 20px;border:none;border-radius:7px;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
-            📄 Certidão CND
-          </button>
-          <button id="est-sub-diario" onclick="switchEstadualSub('diario')"
-            style="padding:7px 20px;border:none;border-radius:7px;font-size:.84rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
-            📅 Diário
-          </button>
+
+
         </div>
 
         <!-- Sub-página: Status de Envio -->
@@ -1083,25 +1189,7 @@
         </div><!-- /estadual-envio-section -->
 
         <!-- Sub-página: Certidão CND -->
-        <div id="estadual-cnd-section" style="display:none">
 
-          <!-- Barra de filtros da CND -->
-          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px">
-            <div>
-              <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px">Status CND</label>
-              <select id="cnd-status-filter" onchange="renderCNDEstadual()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;background:#fff;color:var(--text)">
-                <option value="">Todos</option>
-                <option value="Com CND">✅ Com CND</option>
-                <option value="Sem CND">❌ Sem CND</option>
-              </select>
-            </div>
-            <span id="cnd-filter-info" style="font-size:.75rem;color:var(--text-muted);align-self:flex-end;margin-left:auto"></span>
-          </div>
-
-          <div id="cnd-estadual-status" style="margin-bottom:12px"></div>
-          <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start;flex-wrap:wrap"></div>
-          <div id="cnd-estadual-table" style="margin-top:16px"></div>
-        </div><!-- /estadual-cnd-section -->
 
         <!-- Sub-página: Ratificação -->
         <div id="estadual-ratif-section" style="display:none">
@@ -1148,78 +1236,7 @@
       </div><!-- /tce-pane-estadual -->
 
       <!-- Painel: Federal (placeholder — integração futura) -->
-      <div id="tce-pane-federal" style="display:none;padding-top:16px">
 
-        <!-- Resumo Federal -->
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px" id="federal-resumo-cards">
-          <div style="flex:1;min-width:120px;background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 16px">
-            <div style="font-size:1.6rem;font-weight:700;color:#276749" id="fed-card-ok">—</div>
-            <div style="font-size:.75rem;color:#276749;margin-top:2px">✅ Regular</div>
-          </div>
-          <div style="flex:1;min-width:120px;background:#FFFFF0;border:1px solid #F6E05E;border-radius:10px;padding:14px 16px">
-            <div style="font-size:1.6rem;font-weight:700;color:#7B6F00" id="fed-card-atencao">—</div>
-            <div style="font-size:.75rem;color:#7B6F00;margin-top:2px">⚠️ Atenção</div>
-          </div>
-          <div style="flex:1;min-width:120px;background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 16px">
-            <div style="font-size:1.6rem;font-weight:700;color:#9B2335" id="fed-card-irregular">—</div>
-            <div style="font-size:.75rem;color:#9B2335;margin-top:2px">❌ Irregular</div>
-          </div>
-          <div style="flex:1;min-width:120px;background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 16px">
-            <div style="font-size:1.6rem;font-weight:700;color:#1A365D" id="fed-card-total">—</div>
-            <div style="font-size:.75rem;color:#1A365D;margin-top:2px">📊 Total municípios</div>
-          </div>
-        </div>
-
-        <!-- Grupo 1: PGFN / Dívida Ativa da União -->
-        <div style="margin-bottom:20px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
-            <span style="background:#FED7D7;color:#9B2335;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">PGFN</span>
-            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Procuradoria-Geral da Fazenda Nacional — Dívida Ativa</span>
-          </div>
-          <div class="fed-table" id="fed-table-pgfn"></div>
-        </div>
-
-        <!-- Grupo 2: FGTS / Caixa -->
-        <div style="margin-bottom:20px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
-            <span style="background:#C6F6D5;color:#276749;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">FGTS</span>
-            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Fundo de Garantia do Tempo de Serviço — Caixa Econômica</span>
-          </div>
-          <div class="fed-table" id="fed-table-fgts"></div>
-        </div>
-
-        <!-- Grupo 3: Transferegov / Convênios -->
-        <div style="margin-bottom:20px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
-            <span style="background:#BEE3F8;color:#1A365D;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">TRANSFEREGOV</span>
-            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Transferegov — Convênios e Instrumentos de Repasse</span>
-          </div>
-          <div class="fed-table" id="fed-table-transferegov"></div>
-        </div>
-
-        <!-- Grupo 4: SICONFI / Transparência -->
-        <div style="margin-bottom:20px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
-            <span style="background:#E9D8FD;color:#44337A;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">SICONFI</span>
-            <span style="font-size:.85rem;font-weight:700;color:var(--text)">SICONFI — Prestação de Contas / LRF</span>
-          </div>
-          <div class="fed-table" id="fed-table-siconfi"></div>
-        </div>
-
-        <!-- Grupo 5: CAUC / Cadastro Único de Convenentes -->
-        <div style="margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
-            <span style="background:#FEEBC8;color:#7B341E;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">CAUC</span>
-            <span style="font-size:.85rem;font-weight:700;color:var(--text)">CAUC — Cadastro de Regularidade Fiscal e Trabalhista</span>
-          </div>
-          <div class="fed-table" id="fed-table-cauc"></div>
-        </div>
-
-        <div style="font-size:.72rem;color:var(--text-muted);margin-top:12px;text-align:right;padding-top:8px;border-top:1px solid var(--border)">
-          ⚠️ Dados ilustrativos — integração com APIs federais em desenvolvimento
-        </div>
-
-      </div><!-- /tce-pane-federal -->
 
 
 
@@ -4742,27 +4759,15 @@ async function adminColabProcessCSV(input) {
 
 // ── TCE SC / eSfinge funções ──────────────────────────────────────────
 function switchTCETab(tab) {
+  // Federal foi movido para a aba CND
+  if (tab === 'federal') { switchPCTab('cnd'); switchCNDTabPane('federal'); return; }
   const estadualPane = document.getElementById('tce-pane-estadual');
-  const federalPane  = document.getElementById('tce-pane-federal');
   const pillEst      = document.getElementById('tce-pill-estadual');
-  const pillFed      = document.getElementById('tce-pill-federal');
   if (!estadualPane) return;
-
-  state.tceActiveTab = tab;
-
-  if (tab === 'estadual') {
-    estadualPane.style.display = 'block';
-    federalPane.style.display  = 'none';
-    if (pillEst) { pillEst.style.background = 'var(--accent)'; pillEst.style.color = '#fff'; pillEst.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
-    if (pillFed) { pillFed.style.background = 'transparent'; pillFed.style.color = '#64748B'; pillFed.style.boxShadow = 'none'; }
-    switchEstadualSub(state.estadualSub || 'envio');
-  } else {
-    estadualPane.style.display = 'none';
-    federalPane.style.display  = 'block';
-    if (pillFed) { pillFed.style.background = '#fff'; pillFed.style.color = '#1E40AF'; pillFed.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
-    if (pillEst) { pillEst.style.background = 'transparent'; pillEst.style.color = '#64748B'; pillEst.style.boxShadow = 'none'; }
-    renderFederal();
-  }
+  state.tceActiveTab = 'estadual';
+  estadualPane.style.display = 'block';
+  if (pillEst) { pillEst.style.background = 'var(--accent)'; pillEst.style.color = '#fff'; pillEst.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
+  switchEstadualSub(state.estadualSub || 'envio');
 }
 
 // ── Status de Envio — cache de municípios do Firestore ───────────────────────
@@ -5092,7 +5097,7 @@ function _populateMunicipioFilter2() {
 // ─── GRÁFICO DE VISÃO GERAL ──────────────────────────────────────────────────
 
 let _summaryChart = null;
-let _chartMode = 'cnd';
+let _chartMode = 'envio';
 
 function switchChartMode(mode) {
   _chartMode = mode;
@@ -5451,20 +5456,22 @@ function switchPCTab(tab) {
   const mainEl     = document.getElementById('pc-main');
   const diarioEl   = document.getElementById('pc-diario-outer');
   const paineisEl  = document.getElementById('pc-paineis-outer');
+  const cndEl      = document.getElementById('pc-cnd-outer');
   const tabDiario  = document.getElementById('pc-tab-diario');
   const tabGeral   = document.getElementById('pc-tab-geral');
   const tabPaineis = document.getElementById('pc-tab-paineis');
+  const tabCND     = document.getElementById('pc-tab-cnd');
   if (!mainEl || !diarioEl) return;
 
   state.pcTab = tab;
 
-  // Resetar todos os tabs
-  [tabDiario, tabGeral, tabPaineis].forEach(t => {
+  [tabDiario, tabGeral, tabPaineis, tabCND].forEach(t => {
     if (t) { t.style.color = '#64748B'; t.style.borderBottom = '2px solid transparent'; }
   });
   mainEl.style.display   = 'none';
   diarioEl.style.display = 'none';
   if (paineisEl) paineisEl.style.display = 'none';
+  if (cndEl)     cndEl.style.display     = 'none';
 
   if (tab === 'diario') {
     diarioEl.style.display = 'block';
@@ -5474,6 +5481,10 @@ function switchPCTab(tab) {
     if (paineisEl) paineisEl.style.display = 'block';
     if (tabPaineis) { tabPaineis.style.color = 'var(--accent)'; tabPaineis.style.borderBottom = '2px solid var(--accent)'; }
     initPaineisTab();
+  } else if (tab === 'cnd') {
+    if (cndEl) cndEl.style.display = 'block';
+    if (tabCND) { tabCND.style.color = 'var(--accent)'; tabCND.style.borderBottom = '2px solid var(--accent)'; }
+    initCNDTab();
   } else {
     mainEl.style.display = 'block';
     if (tabGeral) { tabGeral.style.color = 'var(--accent)'; tabGeral.style.borderBottom = '2px solid var(--accent)'; }
@@ -5481,43 +5492,32 @@ function switchPCTab(tab) {
 }
 
 function switchEstadualSub(sub) {
-  const envioSec   = document.getElementById('estadual-envio-section');
-  const cndSec     = document.getElementById('estadual-cnd-section');
-  const ratifSec   = document.getElementById('estadual-ratif-section');
-  const diarioSec  = document.getElementById('estadual-diario-section');
-  const btnEnvio   = document.getElementById('est-sub-envio');
-  const btnCND     = document.getElementById('est-sub-cnd');
-  const btnRatif   = document.getElementById('est-sub-ratif');
-  const btnDiario  = document.getElementById('est-sub-diario');
+  // 'cnd' e 'diario' foram promovidos a abas próprias — redirecionar
+  if (sub === 'cnd')    { switchPCTab('cnd');    return; }
+  if (sub === 'diario') { switchPCTab('diario'); return; }
+
+  const envioSec  = document.getElementById('estadual-envio-section');
+  const ratifSec  = document.getElementById('estadual-ratif-section');
+  const btnEnvio  = document.getElementById('est-sub-envio');
+  const btnRatif  = document.getElementById('est-sub-ratif');
   if (!envioSec) return;
 
   state.estadualSub = sub;
 
-  // Reset todas as seções e botões
-  [envioSec, cndSec, ratifSec, diarioSec].forEach(s => { if (s) s.style.display = 'none'; });
-  [btnEnvio, btnCND, btnRatif, btnDiario].forEach(b => {
+  [envioSec, ratifSec].forEach(s => { if (s) s.style.display = 'none'; });
+  [btnEnvio, btnRatif].forEach(b => {
     if (b) { b.style.background = 'transparent'; b.style.color = '#64748B'; b.style.boxShadow = 'none'; }
   });
 
-  // Ativar a seção escolhida
-  const activeBtn = sub === 'envio' ? btnEnvio : sub === 'ratif' ? btnRatif : sub === 'diario' ? btnDiario : btnCND;
-  const activeBg  = sub === 'diario' ? '#7C3AED' : 'var(--accent)';
-  if (activeBtn) { activeBtn.style.background = activeBg; activeBtn.style.color = '#fff'; activeBtn.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
+  const activeBtn = sub === 'ratif' ? btnRatif : btnEnvio;
+  if (activeBtn) { activeBtn.style.background = 'var(--accent)'; activeBtn.style.color = '#fff'; activeBtn.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
 
-  if (sub === 'envio') {
-    envioSec.style.display = 'block';
-    initEnvioPanel();
-  } else if (sub === 'ratif') {
+  if (sub === 'ratif') {
     if (ratifSec) ratifSec.style.display = 'block';
     initRatifPanel();
-  } else if (sub === 'diario') {
-    // Diário foi promovido à guia de nível superior — redirecionar
-    switchPCTab('diario');
-    return;
   } else {
-    cndSec.style.display = 'block';
-    populateCNDFilters();
-    renderCNDEstadual();
+    envioSec.style.display = 'block';
+    initEnvioPanel();
   }
 }
 
@@ -6379,6 +6379,33 @@ function renderEsfingeMatrix() {
 
     return `<tr style="background:${bg};border-bottom:1px solid #2D3748">${munCell}${tipoCell}${nomeCell}${modCells}${statusCell}</tr>`;
   }).join('');
+}
+
+
+// ─── CND TAB ──────────────────────────────────────────────────────────────────
+const _CND_TAB = { loaded: false };
+
+async function initCNDTab() {
+  // Renderiza imediatamente com dados já em state (carregados no boot)
+  renderCNDEstadual();
+  renderFederal();
+  _CND_TAB.loaded = true;
+}
+
+function switchCNDTabPane(pane) {
+  const estPane  = document.getElementById('cnd-tab-pane-estadual');
+  const fedPane  = document.getElementById('cnd-tab-pane-federal');
+  const pillEst  = document.getElementById('cnd-tab-pill-estadual');
+  const pillFed  = document.getElementById('cnd-tab-pill-federal');
+
+  if (estPane) estPane.style.display = pane === 'estadual' ? 'block' : 'none';
+  if (fedPane) fedPane.style.display = pane === 'federal'  ? 'block' : 'none';
+
+  [pillEst, pillFed].forEach(p => {
+    if (p) { p.style.background = 'transparent'; p.style.color = '#64748B'; p.style.boxShadow = 'none'; }
+  });
+  const active = pane === 'estadual' ? pillEst : pillFed;
+  if (active) { active.style.background = 'var(--accent)'; active.style.color = '#fff'; active.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
 }
 
 
