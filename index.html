@@ -846,6 +846,18 @@
           <div id="cnd-estadual-donuts" style="display:flex;justify-content:center;gap:20px;align-items:start;flex-wrap:wrap"></div>
           <div id="cnd-estadual-table" style="margin-top:16px"></div>
         </div><!-- /estadual-cnd-section -->
+    <!-- Competências de CND -->
+    <div style="margin-top:24px">
+      <div style="font-size:.85rem;font-weight:700;color:#1a3a5c;margin-bottom:8px">📅 Tabela de Competências de CND
+        <span style="font-size:.72rem;font-weight:400;color:#64748B;margin-left:8px">— gerencie no Admin</span>
+      </div>
+      <div id="cnd-competencias-table"></div>
+    </div>
+    <!-- Alerta: CND sem envio completo -->
+    <div style="margin-top:20px">
+      <div style="font-size:.85rem;font-weight:700;color:#9B2335;margin-bottom:8px">🔔 Alerta: CND sem Envio Completo</div>
+      <div id="cnd-alerta-envio"><div style="font-size:.8rem;color:#64748B">Carregando…</div></div>
+    </div>
   </div><!-- /cnd-tab-pane-estadual -->
 
   <!-- Pane Federal -->
@@ -4336,6 +4348,15 @@ async function adminOpenEdit(docId) {
         <option value="">— Selecione —</option>${eqOpts}
       </select></div>` +
       MUN_FIELDS.map(k => `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">${MUN_LABELS[k]||k}</label><input data-field="${k}" value="${(data[k]||'').toString().replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`).join('');
+  } else if (_adminData.collection === 'competencias_cnd') {
+    var mesesStr = Array.isArray(data.meses) ? data.meses.join(',') : (data.meses || '');
+    fieldsHtml =
+      '<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Bimestre (1-6)</label><input data-field="bimestre" type="number" min="1" max="6" value="' + (data.bimestre||'') + '" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>' +
+      '<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Label (ex: 1º Bimestre)</label><input data-field="label" value="' + (data.label||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>' +
+      '<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Competências (ex: Janeiro/Fevereiro)</label><input data-field="competencias" value="' + (data.competencias||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>' +
+      '<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Meses cobertos (ex: 1,2)</label><input data-field="meses" value="' + mesesStr + '" placeholder="1,2" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>' +
+      '<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Prazo Envio (ex: 31/03)</label><input data-field="prazo" value="' + (data.prazo||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>' +
+      '<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Validade CND (ex: 30/05)</label><input data-field="validade" value="' + (data.validade||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>';
   } else if (_adminData.collection === 'tipos_cliente') {
     fieldsHtml = `<div style="margin-bottom:14px"><label style="color:rgba(255,255,255,.6);font-size:.78rem;display:block;margin-bottom:4px">Tipo de Cliente</label><input data-field="tipo" value="${(data.tipo||'').replace(/"/g,'&quot;')}" placeholder="Ex: Betha" style="width:100%;padding:8px 12px;background:#0F1117;border:1px solid #2D3748;border-radius:6px;color:#fff;font-size:.85rem"></div>`;
   } else if (_adminData.collection === 'equipes_atendimento') {
@@ -4406,6 +4427,15 @@ async function adminSaveEdit() {
         docId = (updates.municipio||Date.now().toString()).toLowerCase()
           .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
         _MUN_CACHE.docs = []; _MUN_CACHE.loaded = false;
+      } else if (col === 'competencias_cnd') {
+        docId = 'bimestre_' + (updates.bimestre || Date.now());
+        // Converter campo "meses" de string para array
+        if (typeof updates.meses === 'string') {
+          updates.meses = updates.meses.split(',').map(function(s){ return parseInt(s.trim()); }).filter(function(n){ return !isNaN(n); });
+        }
+        updates.bimestre = parseInt(updates.bimestre) || 0;
+        // Invalidar cache para recarregar na próxima abertura da aba CND
+        state.competenciasCND = null;
       } else if (col === 'status_envio') {
         const mun = (updates.municipio||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_');
         const mod = (updates.modulo||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_');
@@ -5957,6 +5987,15 @@ async function buscarEnvio() {
   }
 }
 // Regras de validação — escopo global
+const DEFAULT_COMPETENCIAS_CND = [
+  { bimestre:1, label:'1º Bimestre', competencias:'Janeiro/Fevereiro', meses:[1,2],   prazo:'31/03', validade:'30/05' },
+  { bimestre:2, label:'2º Bimestre', competencias:'Março/Abril',       meses:[3,4],   prazo:'31/05', validade:'30/07' },
+  { bimestre:3, label:'3º Bimestre', competencias:'Maio/Junho',        meses:[5,6],   prazo:'31/07', validade:'30/09' },
+  { bimestre:4, label:'4º Bimestre', competencias:'Julho/Agosto',      meses:[7,8],   prazo:'30/09', validade:'30/11' },
+  { bimestre:5, label:'5º Bimestre', competencias:'Set/Out',           meses:[9,10],  prazo:'30/11', validade:'30/01' },
+  { bimestre:6, label:'6º Bimestre', competencias:'Nov/Dez',           meses:[11,12], prazo:'31/01', validade:'30/03' },
+];
+
 const REGRAS_EV = [
   { campo: 'assinatura_balancete_razao',  exceto:  ['CI'],              ok: v => v === 2 },
   { campo: 'execucao_orcamentaria',       exceto:  ['CI'],              ok: v => v > 0   },
@@ -5966,7 +6005,7 @@ const REGRAS_EV = [
   { campo: 'relacao_folha_liquidacao',    exceto:  ['CI','Outros'],              ok: v => v > 0   },
   { campo: 'relacao_tributario_impostos', somente: ['Prefeitura'],      ok: v => v > 0   },
   { campo: 'relacao_tributario_taxas',    somente: ['Prefeitura'],      ok: v => v > 0   },
-  { campo: 'situacoes_obras_engenharia',  todas:   true,                ok: v => v === 0 },
+  { campo: 'situacoes_obras_engenharia',  todas:   true,                ok: v => true },
   { campo: 'tributario',                  somente: ['Prefeitura'],      ok: v => v > 0   }
 ];
 function regraAplic(r, tipo, mes) {
@@ -5987,6 +6026,14 @@ function calcDocScore(d, mes) {
     if (r.ok(v)) modOk++;
   });
   return { modAplic, modOk, isOk: modAplic > 0 && modOk === modAplic };
+}
+
+function calcMunEnvioStatus(docs, mes) {
+  var active = docs.filter(function(d){ return calcDocScore(d, mes).modAplic > 0; });
+  if (!active.length) return 'nenhum';
+  if (active.every(function(d){ return calcDocScore(d, mes).isOk; })) return 'completo';
+  if (active.some(function(d){ return calcDocScore(d, mes).modOk > 0; })) return 'parcial';
+  return 'nenhum';
 }
 
 function renderEnvioView() {
@@ -6390,10 +6437,122 @@ function renderEsfingeMatrix() {
 // ─── CND TAB ──────────────────────────────────────────────────────────────────
 const _CND_TAB = { loaded: false };
 
+function renderCompetenciasCNDTable() {
+  var div = document.getElementById('cnd-competencias-table');
+  if (!div) return;
+  var comps = state.competenciasCND || DEFAULT_COMPETENCIAS_CND;
+  var TH = 'padding:8px 12px;font-size:.72rem;font-weight:700;background:#1a3a5c;color:#fff;text-align:left;white-space:nowrap';
+  var rows = comps.map(function(c, i) {
+    var bg = i % 2 === 0 ? '#fff' : '#F7FAFC';
+    return '<tr style="background:' + bg + ';border-bottom:1px solid #EDF2F7">' +
+      '<td style="padding:7px 12px;font-size:.8rem;font-weight:700">' + c.label + '</td>' +
+      '<td style="padding:7px 12px;font-size:.8rem;color:#4A5568">' + c.competencias + '</td>' +
+      '<td style="padding:7px 12px;font-size:.8rem;color:#4A5568">' + c.prazo + '</td>' +
+      '<td style="padding:7px 12px;font-size:.8rem;color:#4A5568">' + c.validade + '</td>' +
+      '</tr>';
+  }).join('');
+  div.innerHTML = '<div style="overflow-x:auto;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:20px">' +
+    '<table style="width:100%;border-collapse:collapse;font-family:inherit">' +
+    '<thead><tr>' +
+    '<th style="' + TH + '">Bimestre</th>' +
+    '<th style="' + TH + '">Competências</th>' +
+    '<th style="' + TH + '">Prazo Envio</th>' +
+    '<th style="' + TH + '">Validade CND</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+async function renderCNDAlertaEnvio() {
+  var div = document.getElementById('cnd-alerta-envio');
+  if (!div) return;
+  div.innerHTML = '<div style="font-size:.8rem;color:#64748B;padding:8px 0">🔍 Verificando inconsistências…</div>';
+
+  var src    = (state.cndEstadual || []).filter(function(r){ return r.periodo1 === 'Com CND'; });
+  var comps  = state.competenciasCND || DEFAULT_COMPETENCIAS_CND;
+  var alerts = [];
+
+  for (var i = 0; i < src.length; i++) {
+    var r   = src[i];
+    var bim = r.bimestre_num;
+    var ano = r.ano || new Date().getFullYear();
+    var comp = comps.find(function(c){ return c.bimestre == bim; });
+    if (!comp || !comp.meses || !comp.meses.length) continue;
+
+    var munKey = (r.municipio || '').toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+
+    var statusPorMes = [];
+    for (var j = 0; j < comp.meses.length; j++) {
+      var mes = comp.meses[j];
+      var key = ano + '-' + String(mes).padStart(2, '0');
+      if (!_ENVIO.cache[key]) {
+        try {
+          var snap = await _db.collection('status_envio')
+            .where('ano', '==', ano).where('mes', '==', mes).get();
+          _ENVIO.cache[key] = snap.docs.map(function(d){ return d.data(); });
+        } catch(e) { _ENVIO.cache[key] = []; }
+      }
+      var docs = (_ENVIO.cache[key] || []).filter(function(d){
+        return (d.municipio || '').toLowerCase()
+          .normalize('NFD').replace(/[̀-ͯ]/g, '').trim() === munKey;
+      });
+      var st = calcMunEnvioStatus(docs, mes);
+      statusPorMes.push({ mes: mes, status: st });
+    }
+
+    var incompletos = statusPorMes.filter(function(s){ return s.status !== 'completo'; });
+    if (incompletos.length) {
+      alerts.push({ municipio: r.municipio, bimestre: comp.label,
+        competencias: comp.competencias, statusPorMes: statusPorMes, ano: ano });
+    }
+  }
+
+  if (!alerts.length) {
+    div.innerHTML = '<div style="color:#276749;background:#F0FFF4;border:1px solid #9AE6B4;border-radius:8px;padding:10px 14px;font-size:.82rem;margin-bottom:16px">✅ Nenhuma inconsistência — todos os municípios com CND possuem envio completo nos meses correspondentes.</div>';
+    return;
+  }
+
+  var MESES_SHORT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var TH = 'padding:8px 12px;font-size:.72rem;font-weight:700;background:#7B2D2D;color:#fff;text-align:left;white-space:nowrap';
+  var rows = alerts.map(function(a, i) {
+    var bg = i % 2 === 0 ? '#fff' : '#FFF5F5';
+    var mesStatus = a.statusPorMes.map(function(s){
+      var cor = s.status === 'completo' ? '#276749' : s.status === 'parcial' ? '#7B6F00' : '#9B2335';
+      var ico = s.status === 'completo' ? '✅' : s.status === 'parcial' ? '⚠️' : '❌';
+      return ico + ' ' + MESES_SHORT[s.mes - 1] + '/' + a.ano;
+    }).join(' · ');
+    return '<tr style="background:' + bg + ';border-bottom:1px solid #FED7D7">' +
+      '<td style="padding:7px 12px;font-size:.83rem;font-weight:600;color:#9B2335">⚠️ ' + a.municipio + '</td>' +
+      '<td style="padding:7px 12px;font-size:.8rem;color:#4A5568">' + a.bimestre + '</td>' +
+      '<td style="padding:7px 12px;font-size:.8rem;color:#4A5568">' + a.competencias + '</td>' +
+      '<td style="padding:7px 12px;font-size:.8rem">' + mesStatus + '</td>' +
+      '</tr>';
+  }).join('');
+
+  div.innerHTML = '<div style="font-size:.85rem;font-weight:700;color:#9B2335;margin-bottom:8px">⚠️ ' + alerts.length + ' município(s) com CND mas sem envio completo:</div>' +
+    '<div style="overflow-x:auto;border:1px solid #FEB2B2;border-radius:8px;margin-bottom:16px">' +
+    '<table style="width:100%;border-collapse:collapse;font-family:inherit">' +
+    '<thead><tr>' +
+    '<th style="' + TH + '">Município</th>' +
+    '<th style="' + TH + '">Bimestre</th>' +
+    '<th style="' + TH + '">Competências</th>' +
+    '<th style="' + TH + '">Status Envio por Mês</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
 async function initCNDTab() {
-  // Renderiza imediatamente com dados já em state (carregados no boot)
+  // Carregar competências CND do Firestore (ou usar defaults)
+  if (!state.competenciasCND) {
+    try {
+      const snCND = await fetchFirestore('competencias_cnd');
+      state.competenciasCND = snCND.length
+        ? snCND.sort(function(a,b){ return a.bimestre - b.bimestre; })
+        : DEFAULT_COMPETENCIAS_CND;
+    } catch(e) { state.competenciasCND = DEFAULT_COMPETENCIAS_CND; }
+  }
   renderCNDEstadual();
   renderFederal();
+  renderCompetenciasCNDTable();
+  renderCNDAlertaEnvio();
   _CND_TAB.loaded = true;
 }
 
@@ -6859,6 +7018,7 @@ function renderRatifTable() {
 <div onclick="adminLoadCollection('_meta')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#0761FF'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">⚙️</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Metadados</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">_meta</div></div><div id="card-count-_meta" style="color:#0761FF;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
 <div onclick="adminLoadCollection('colaboradores')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#38A169'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">👥</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Colaboradores</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">colaboradores</div></div><div id="card-count-colaboradores" style="color:#38A169;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
 <div onclick="adminLoadCollection('ratificacoes')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#805AD5'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">✅</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ratificações</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">ratificacoes</div></div><div id="card-count-ratificacoes" style="color:#805AD5;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
+<div onclick="adminLoadCollection('competencias_cnd')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#D69E2E'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">📅</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Competências CND</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">competencias_cnd</div></div><div id="card-count-competencias_cnd" style="color:#D69E2E;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
 <div onclick="adminLoadCollection('cnd_estadual')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#0EA5E9'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">📄</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CND Estadual</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">cnd_estadual</div></div><div id="card-count-cnd_estadual" style="color:#0EA5E9;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
     </div>
 
