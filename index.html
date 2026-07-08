@@ -6082,8 +6082,32 @@ function renderEnvioView() {
     cndDataByMun[_k] = { bimestre_num: r.bimestre_num || 0, ano: r.ano || 0 };
   });
 
-  // Alerta: município tem CND bimestral válida mas envio do mês visualizado não está completo.
-  // Ter CND de qualquer bimestre implica que todos os meses anteriores deveriam estar enviados.
+  // Referência das competências CND (para cascade)
+  const _compsRef = state.competenciasCND || DEFAULT_COMPETENCIAS_CND;
+
+  // Verifica se a CND do município cobre o mês atualmente visualizado
+  function cndCobresMes(munKey) {
+    if (cndByMun[munKey] !== 'Com CND') return false;
+    const d = cndDataByMun[munKey];
+    if (!d || !d.bimestre_num) return false;
+    const comp = _compsRef.find(c => c.bimestre === d.bimestre_num);
+    return !!(comp && comp.meses && comp.meses.includes(mes));
+  }
+
+  // Status com cascade: CND válida → completo; Ratif Sim → completo
+  function calcStatusCascade(munKey) {
+    if (cndCobresMes(munKey)) return 'completo';         // CND garante envio
+    if (ratifByMun[munKey] === 'sim') return 'completo'; // Ratif garante envio
+    return calcStatus(munKey);
+  }
+
+  // Ratif com cascade: CND válida → ratif ok
+  function ratifCascade(munKey) {
+    if (cndCobresMes(munKey)) return 'sim';
+    return ratifByMun[munKey] || '';
+  }
+
+  // Alerta: município tem CND bimestral válida mas envio calculado (sem cascade) não está completo.
   function hasCNDAlerta(munKey) {
     if (cndByMun[munKey] !== 'Com CND') return false;
     return calcStatus(munKey) !== 'completo';
@@ -6187,7 +6211,8 @@ function renderEnvioView() {
 
   municipios.forEach(munKey => {
     const docs   = munDocs[munKey];
-    const status = calcStatus(munKey);
+    const status = calcStatusCascade(munKey);   // com cascade CND/Ratif
+    const statusReal = calcStatus(munKey);       // valor real do Firestore (para alerta)
     const cndSt  = cndByMun[munKey] || '';
 
     // Nome de exibição do município (Title Case do MUN_CACHE ou do próprio doc)
@@ -6199,8 +6224,8 @@ function renderEnvioView() {
     const stC = status === 'completo' ? {c:'#276749',bg:'#F0FFF4',bd:'#9AE6B4',lbl:'Completo'}
               : status === 'parcial'  ? {c:'#7B6F00',bg:'#FFFBEB',bd:'#F6E05E',lbl:'Parcial'}
               :                         {c:'#9B2335',bg:'#FFF5F5',bd:'#FEB2B2',lbl:'Não enviou'};
-    // Ratificação
-    const ratifSt = ratifByMun[munKey] || '';
+    // Ratificação (com cascade: CND válida → ratif ok)
+    const ratifSt = ratifCascade(munKey);
     const rC = ratifSt === 'sim' ? {c:'#276749',bg:'#F0FFF4',bd:'#9AE6B4',lbl:'Ratif. Sim'}
              : ratifSt === 'nao' ? {c:'#9B2335',bg:'#FFF5F5',bd:'#FEB2B2',lbl:'Ratif. Não'}
              :                      {c:'#64748B',bg:'#F8FAFC',bd:'#CBD5E0',lbl:'Ratif. —'};
@@ -6256,8 +6281,8 @@ function renderEnvioView() {
         const fOk    = !isNull && r.ok(v);
         if (isNull) return `<td style="${tdStyle};color:#94A3B8;font-size:.8rem">—</td>`;
         return fOk
-          ? `<td style="${tdStyle};color:#276749;font-weight:700;font-size:1rem">✓</td>`
-          : `<td style="${tdStyle};color:#C53030;font-weight:700;font-size:1rem">✗</td>`;
+          ? `<td style="${tdStyle};color:#276749;font-weight:700;font-size:.85rem">${v}</td>`
+          : `<td style="${tdStyle};color:#C53030;font-weight:700;font-size:.85rem">${v}</td>`;
       }).join('');
 
       tBody += `<tr style="background:${rowBg}">
@@ -6283,7 +6308,7 @@ function renderEnvioView() {
         </div>`
       : '';
 
-    const _alertaCND = hasCNDAlerta(munKey);
+    const _alertaCND = !!(cndByMun[munKey] === 'Com CND' && statusReal !== 'completo');
     const _rowBorder  = _alertaCND ? 'border-left:4px solid #D97706;border-bottom:1px solid #E2E8F0' : 'border-bottom:1px solid #E2E8F0';
     const _hdrBg      = _alertaCND ? '#FFFBEB' : '#fff';
     const _hdrBgHov   = _alertaCND ? '#FEF3C7' : '#F8FAFC';
