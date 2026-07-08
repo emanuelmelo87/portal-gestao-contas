@@ -1367,7 +1367,7 @@ const CONFIG = {
 // ============================================================
 // ESTADO
 // ============================================================
-const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndFederal: [], cndSubTab: 'estadual', selectedMunicipio: '', selectedRegiao: '', estadualSub: 'envio', selectedTipoConta: 'Betha', selectedEquipe: '', selectedPortfolio: '', selectedAssociacao: '', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
+const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndFederal: [], cndSubTab: 'estadual', selectedMunicipio: '', selectedRegiao: '', estadualSub: 'envio', selectedTipoConta: '', selectedEquipe: '', selectedPortfolio: '', selectedAssociacao: '', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
 // Abas que possuem versão histórica no servidor
 const HIST_SHEETS = ['Jira_Chamados', 'Jira_Chamados_Suporte', 'Jira_Implantacoes', 'NPS_Calculado', 'CND_Municipios', 'CND_Federal', 'CND_Estadual', 'Risco de Exclusão', 'Colaboradores'];
 
@@ -4903,7 +4903,7 @@ function initFilterBar() {
   if (datePicker) datePicker.value = saved.date || todayStr;
 
   // Restaurar filtros de hierarquia de municipios
-  state.selectedTipoConta  = saved.tipoConta  !== undefined ? saved.tipoConta  : 'Betha';
+  state.selectedTipoConta  = saved.tipoConta  !== undefined ? saved.tipoConta  : '';
   state.selectedEquipe     = saved.equipe     || '';
   state.selectedPortfolio  = saved.portfolio  || '';
   state.selectedAssociacao = saved.associacao || '';
@@ -4941,6 +4941,7 @@ function onFilterChange(type, value) {
   } else if (type === 'municipio') {
     state.selectedMunicipio = value;
     renderCNDEstadual(); renderEnvioView(); renderFederal(); renderSummaryChart(); renderRatifView();
+    if (state.pcTab === 'diario') renderDiarioView();
   } else if (type === 'regiao') {
     // Legado — ignorar
   } else if (type === 'mes' || type === 'ano') {
@@ -4953,6 +4954,10 @@ function onFilterChange(type, value) {
       // Sincronizar competência da aba Ratificação
       if (_RATIF.loaded) { _RATIF._ratifKey = key; renderRatifView(); }
     }
+  }
+  // Re-renderizar diário quando filtros hierárquicos mudam
+  if (state.pcTab === 'diario' && !['date','mes','ano','municipio'].includes(type)) {
+    renderDiarioView();
   }
   _saveFilters();
 }
@@ -4980,7 +4985,7 @@ function clearFilters() {
   if (datePicker) { datePicker.value = todayStr; onDateChange(todayStr); }
 
   // Resetar filtros de hierarquia (Tipo de Conta volta para Betha)
-  state.selectedTipoConta  = 'Betha';
+  state.selectedTipoConta  = '';
   state.selectedPortfolio  = '';
   state.selectedEquipe     = '';
   state.selectedAssociacao = '';
