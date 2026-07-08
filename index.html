@@ -6308,7 +6308,7 @@ function renderEnvioView() {
         </div>`
       : '';
 
-    const _alertaCND = !!(cndByMun[munKey] === 'Com CND' && statusReal !== 'completo');
+    const _alertaCND = !!(cndByMun[munKey] === 'Com CND' && status !== 'completo');
     const _rowBorder  = _alertaCND ? 'border-left:4px solid #D97706;border-bottom:1px solid #E2E8F0' : 'border-bottom:1px solid #E2E8F0';
     const _hdrBg      = _alertaCND ? '#FFFBEB' : '#fff';
     const _hdrBgHov   = _alertaCND ? '#FEF3C7' : '#F8FAFC';
