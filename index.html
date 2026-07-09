@@ -470,19 +470,7 @@
       .chart-wrap.tall { height: 500px; }
     }
   
-      /* Tabelas Federal */
-      .fed-table { border:1px solid var(--border); border-radius:8px; overflow:hidden; }
-      .fed-row { display:grid; grid-template-columns:1fr 140px 130px 120px; align-items:center; padding:9px 14px; border-bottom:1px solid var(--border); font-size:.82rem; }
-      .fed-row:last-child { border-bottom:none; }
-      .fed-row:nth-child(even) { background:#FAFBFC; }
-      .fed-row-header { background:#F1F5F9 !important; font-weight:700; font-size:.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.03em; }
-      .fed-badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:.72rem; font-weight:700; }
-      .fed-badge.regular { background:#C6F6D5; color:#276749; }
-      .fed-badge.atencao { background:#FEFCBF; color:#7B6F00; }
-      .fed-badge.irregular { background:#FED7D7; color:#9B2335; }
-      .fed-badge.pendente { background:#EDF2F7; color:#4A5568; }
-
-      /* Sub-header filter bar */
+            /* Sub-header filter bar */
       #filter-bar { font-family: inherit; }
       #filter-bar select, #filter-bar input[type="date"] {
         transition: border-color .15s, box-shadow .15s;
@@ -492,14 +480,7 @@
         border-color: var(--accent);
         box-shadow: 0 0 0 3px rgba(59,130,246,.15);
       }
-      /* Cards de esfera */
-      #card-esfera-estadual, #card-esfera-federal {
-        user-select: none;
-        transition: border-color .18s, background .18s, box-shadow .18s;
-      }
-      #card-esfera-estadual:hover, #card-esfera-federal:hover {
-        box-shadow: 0 4px 16px rgba(0,0,0,.10);
-      }
+
       /* ══════════════ RESPONSIVIDADE MOBILE ══════════════ */
       * { box-sizing: border-box; }
 
@@ -532,11 +513,6 @@
       }
 
       /* Toggle pill mobile: full width */
-      @media (max-width: 768px) {
-        #tce-pill-wrapper { width: 100% !important; }
-        #tce-pill-estadual, #tce-pill-federal { flex: 1; text-align: center; padding: 9px 10px; }
-      }
-
       /* Envio filtros mobile */
       @media (max-width: 768px) {
         #envio-filter-bar { flex-direction: column !important; }
@@ -546,21 +522,9 @@
         #envio-cards { grid-template-columns: repeat(2, 1fr) !important; }
       }
 
-      /* Tabela Federal mobile */
-      @media (max-width: 768px) {
-        .fed-row { grid-template-columns: 1fr 1fr !important; }
-        .fed-row > span:nth-child(2) { grid-column: 1 / -1; color: var(--text-muted); font-size: .75rem; }
-        .fed-row > span:nth-child(3) { display: none; }
-      }
-
       /* CND donuts mobile */
       @media (max-width: 768px) {
         #cnd-estadual-donuts { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
-      }
-
-      /* Federal resumo cards mobile */
-      @media (max-width: 768px) {
-        #federal-resumo-cards { grid-template-columns: repeat(2,1fr) !important; display: grid !important; }
       }
 
       /* Geral: simetria */
@@ -813,16 +777,13 @@
   <div style="font-size:1.1rem;font-weight:800;color:var(--text);margin-bottom:4px">Certidão Negativa de Débitos</div>
   <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:20px">Status atual das certidões — não filtrado por competência</div>
 
-  <!-- Pills Estadual / Federal -->
+  <!-- Pills CND -->
   <div style="display:flex;gap:6px;margin:0 0 18px;background:#F1F5F9;border-radius:10px;padding:4px;width:fit-content">
     <button id="cnd-tab-pill-estadual" onclick="switchCNDTabPane('estadual')"
       style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12);transition:all .15s">
       📊 Estadual
     </button>
-    <button id="cnd-tab-pill-federal" onclick="switchCNDTabPane('federal')"
-      style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
-      🇧🇷 Federal
-    </button>
+
     <button id="cnd-tab-pill-quadrimestral" onclick="switchCNDTabPane('quadrimestral')"
       style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
       📋 Quadrimestral
@@ -860,81 +821,7 @@
 
   </div><!-- /cnd-tab-pane-estadual -->
 
-  <!-- Pane Federal -->
-  <div id="cnd-tab-pane-federal" style="display:none">
-      <div id="tce-pane-federal" style="display:none;padding-top:16px">
 
-        <!-- Resumo Federal -->
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px" id="federal-resumo-cards">
-          <div style="flex:1;min-width:120px;background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 16px">
-            <div style="font-size:1.6rem;font-weight:700;color:#276749" id="fed-card-ok">—</div>
-            <div style="font-size:.75rem;color:#276749;margin-top:2px">✅ Regular</div>
-          </div>
-          <div style="flex:1;min-width:120px;background:#FFFFF0;border:1px solid #F6E05E;border-radius:10px;padding:14px 16px">
-            <div style="font-size:1.6rem;font-weight:700;color:#7B6F00" id="fed-card-atencao">—</div>
-            <div style="font-size:.75rem;color:#7B6F00;margin-top:2px">⚠️ Atenção</div>
-          </div>
-          <div style="flex:1;min-width:120px;background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 16px">
-            <div style="font-size:1.6rem;font-weight:700;color:#9B2335" id="fed-card-irregular">—</div>
-            <div style="font-size:.75rem;color:#9B2335;margin-top:2px">❌ Irregular</div>
-          </div>
-          <div style="flex:1;min-width:120px;background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 16px">
-            <div style="font-size:1.6rem;font-weight:700;color:#1A365D" id="fed-card-total">—</div>
-            <div style="font-size:.75rem;color:#1A365D;margin-top:2px">📊 Total municípios</div>
-          </div>
-        </div>
-
-        <!-- Grupo 1: PGFN / Dívida Ativa da União -->
-        <div style="margin-bottom:20px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
-            <span style="background:#FED7D7;color:#9B2335;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">PGFN</span>
-            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Procuradoria-Geral da Fazenda Nacional — Dívida Ativa</span>
-          </div>
-          <div class="fed-table" id="fed-table-pgfn"></div>
-        </div>
-
-        <!-- Grupo 2: FGTS / Caixa -->
-        <div style="margin-bottom:20px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
-            <span style="background:#C6F6D5;color:#276749;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">FGTS</span>
-            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Fundo de Garantia do Tempo de Serviço — Caixa Econômica</span>
-          </div>
-          <div class="fed-table" id="fed-table-fgts"></div>
-        </div>
-
-        <!-- Grupo 3: Transferegov / Convênios -->
-        <div style="margin-bottom:20px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
-            <span style="background:#BEE3F8;color:#1A365D;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">TRANSFEREGOV</span>
-            <span style="font-size:.85rem;font-weight:700;color:var(--text)">Transferegov — Convênios e Instrumentos de Repasse</span>
-          </div>
-          <div class="fed-table" id="fed-table-transferegov"></div>
-        </div>
-
-        <!-- Grupo 4: SICONFI / Transparência -->
-        <div style="margin-bottom:20px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
-            <span style="background:#E9D8FD;color:#44337A;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">SICONFI</span>
-            <span style="font-size:.85rem;font-weight:700;color:var(--text)">SICONFI — Prestação de Contas / LRF</span>
-          </div>
-          <div class="fed-table" id="fed-table-siconfi"></div>
-        </div>
-
-        <!-- Grupo 5: CAUC / Cadastro Único de Convenentes -->
-        <div style="margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E2E8F0">
-            <span style="background:#FEEBC8;color:#7B341E;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">CAUC</span>
-            <span style="font-size:.85rem;font-weight:700;color:var(--text)">CAUC — Cadastro de Regularidade Fiscal e Trabalhista</span>
-          </div>
-          <div class="fed-table" id="fed-table-cauc"></div>
-        </div>
-
-        <div style="font-size:.72rem;color:var(--text-muted);margin-top:12px;text-align:right;padding-top:8px;border-top:1px solid var(--border)">
-          ⚠️ Dados ilustrativos — integração com APIs federais em desenvolvimento
-        </div>
-
-      </div><!-- /tce-pane-federal -->
-  </div><!-- /cnd-tab-pane-federal -->
 
   <!-- Pane Quadrimestral CND -->
   <div id="cnd-tab-pane-quadrimestral" style="display:none">
@@ -964,11 +851,7 @@
       <div class="kpi-value" id="kpi-cnd-est">—</div>
       <div class="kpi-sub" id="kpi-cnd-est-sub">Carregando…</div>
     </div>
-    <div class="kpi-card green" id="kpi-cnd-fed-card" style="display:none">
-      <div class="kpi-label">CND Federal</div>
-      <div class="kpi-value" id="kpi-cnd-fed">—</div>
-      <div class="kpi-sub" id="kpi-cnd-fed-sub">Carregando…</div>
-    </div>
+
     <div class="kpi-card red" style="display:none">
       <div class="kpi-label">Clientes em Risco</div>
       <div class="kpi-value" id="kpi-risco">—</div>
@@ -1106,14 +989,7 @@
       <div class="view-title">Prestação de Contas</div>
       <div class="view-subtitle">Certidões e Obrigações por Município • Fonte: TCE-SC / e-Sfinge / CAUC</div>
 
-      <!-- Toggle Estadual / Federal -->
-      <div id="tce-pill-wrapper" style="display:flex;gap:6px;margin:14px 0 0;background:#F1F5F9;border-radius:10px;padding:4px;width:fit-content">
-        <button id="tce-pill-estadual" onclick="switchTCETab('estadual')"
-          style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .15s;background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12)">
-          🏛️ Estadual
-        </button>
 
-      </div>
 
       <!-- Painel: Estadual -->
       <div id="tce-pane-estadual" style="padding-top:16px">
@@ -1253,11 +1129,6 @@
 
       </div><!-- /tce-pane-estadual -->
 
-      <!-- Painel: Federal (placeholder — integração futura) -->
-
-
-
-
     </div>
 
     <!-- View: Colaboradores (pos 5) -->
@@ -1377,9 +1248,9 @@ const CONFIG = {
 // ============================================================
 // ESTADO
 // ============================================================
-const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndFederal: [], cndQuadrimestral: [], cndSubTab: 'estadual', selectedMunicipio: '', selectedRegiao: '', estadualSub: 'envio', selectedTipoConta: '', selectedEquipe: '', selectedPortfolio: '', selectedAssociacao: '', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
+const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndQuadrimestral: [], cndSubTab: 'estadual', selectedMunicipio: '', selectedRegiao: '', estadualSub: 'envio', selectedTipoConta: '', selectedEquipe: '', selectedPortfolio: '', selectedAssociacao: '', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
 // Abas que possuem versão histórica no servidor
-const HIST_SHEETS = ['Jira_Chamados', 'Jira_Chamados_Suporte', 'Jira_Implantacoes', 'NPS_Calculado', 'CND_Municipios', 'CND_Federal', 'CND_Estadual', 'Risco de Exclusão', 'Colaboradores'];
+const HIST_SHEETS = ['Jira_Chamados', 'Jira_Chamados_Suporte', 'Jira_Implantacoes', 'NPS_Calculado', 'CND_Municipios', 'CND_Estadual', 'Risco de Exclusão', 'Colaboradores'];
 
 // Municípios do portfólio (61 — Médias Contas)
 const PORTFOLIO_MUNICIPIOS = [
@@ -1601,17 +1472,6 @@ function fetchCNDEstadual() {
   });
 }
 
-// CND Federal (SICONFI): status mensal Enviado/Com problema/Não Enviado por município
-function fetchCNDFederal() {
-  const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-  return fetchSheet('CND_Federal').then(rows => {
-    return rows.filter(r => r.municipio).map(r => {
-      const out = { municipio: titleCaseMun(r.municipio), tipo: r.tipo || '', status_fonte: r.status_fonte || '' };
-      MESES.forEach(m => { out[m] = (r[m] || '').toString().trim(); });
-      return out;
-    });
-  });
-}
 
 function fetchCNDQuadrimestral() {
   // Lê da coleção Firestore cnd_quadrimestral (alimentada pela extensão Chrome)
@@ -1652,14 +1512,13 @@ async function loadAllData() {
   showLoading(true);
   if (btn) btn.disabled = true;
 
-  // Carrega apenas o essencial: Colaboradores + CND (Estadual/Federal) + NPS + Risco.
+  // Carrega apenas o essencial: Colaboradores + CND (Estadual) + NPS + Risco.
   // jira_chamados pausado temporariamente (state.jira e state.suporte ficam []).
   // Colaboradores e chamadosIssues são carregados sob demanda ao trocar de aba.
-  const [riscoRes, npsRes, cndEstRes, cndFedRes] = await Promise.allSettled([
+  const [riscoRes, npsRes, cndEstRes] = await Promise.allSettled([
     fetchSheet('Risco de Exclusão'),
     fetchSheet('NPS_Calculado'),
     fetchCNDEstadual(),
-    fetchCNDFederal(),
   ]);
 
   // Chamados pausados — ficam vazios para exibir "Dados indisponíveis"
@@ -1676,8 +1535,6 @@ async function loadAllData() {
   if (cndEstRes.status === 'fulfilled') state.cndEstadual = cndEstRes.value;
   else { console.warn('CND Estadual:', cndEstRes.reason?.message); state.cndEstadual = []; }
 
-  if (cndFedRes.status === 'fulfilled') state.cndFederal = cndFedRes.value;
-  else { console.warn('CND Federal:', cndFedRes.reason?.message); state.cndFederal = []; }
 
   // Compatibilidade com KPIs legados (usa Estadual como referência geral)
   state.cnd = state.cndEstadual;
@@ -1695,7 +1552,7 @@ async function loadAllData() {
   const jiraTS = state.jira.find(r => r.atualizado_em)?.atualizado_em;
   document.getElementById('sync-jira').textContent = jiraTS
     ? new Date(jiraTS).toLocaleString('pt-BR') : (state.jira.length ? now : 'Indisponível');
-  document.getElementById('sync-cnd').textContent = (state.cndEstadual.length || state.cndFederal.length) ? now : 'Indisponível';
+  document.getElementById('sync-cnd').textContent = state.cndEstadual.length ? now : 'Indisponível';
   const implTS = state.implantacoes.find(r => r.atualizado_em)?.atualizado_em;
   document.getElementById('sync-impl').textContent = implTS
     ? new Date(implTS).toLocaleString('pt-BR') : (state.implantacoes.length ? now : 'Indisponível');
@@ -1703,7 +1560,6 @@ async function loadAllData() {
   try {
     updateKPIs();
     renderActiveView();
-    renderFederal();
     populateMainFilters();
     setTimeout(updateEsferaCards, 100);
   } catch(e) {
@@ -1783,30 +1639,7 @@ function updateKPIs() {
     document.getElementById('kpi-cnd-est-sub').textContent = 'Dados indisponíveis';
   }
 
-  // CND Federal — conta por MUNICÍPIO no mês atual
-  if (_fMun(state.cndFederal).length) {
-    const MESES_K = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-    const fedMesKey = MESES_K[new Date().getMonth()];
-    const classifyFed = (v) => {
-      const s = (v || '').toString().trim().toLowerCase();
-      if (!s) return 'nd';
-      const isNao = s.includes('não') || s.includes('nao');
-      if (s.includes('enviado') && !isNao) return 'com';
-      if (isNao && s.includes('enviado') && !s.includes('-') && !s.includes('problema') && !s.includes('atraso')) return 'sem';
-      return 'atraso';
-    };
-    const _cndFed = _fMun(state.cndFederal);
-    const fedGrp = {};
-    _cndFed.forEach(r => { if (!fedGrp[r.municipio]) fedGrp[r.municipio] = []; fedGrp[r.municipio].push(r); });
-    const fedMuns = Object.values(fedGrp);
-    const fedCom = fedMuns.filter(items => {
-      const vals = items.map(r => classifyFed(r[fedMesKey]));
-      return vals.every(v => v === 'com' || v === 'nd') && vals.some(v => v === 'com');
-    }).length;
-    const fedTotalMuns = Object.keys(fedGrp).length;
-    document.getElementById('kpi-cnd-fed').textContent = fedCom;
-    document.getElementById('kpi-cnd-fed-sub').textContent = `de ${fedTotalMuns} municípios`;
-  } else {
+ else {
     document.getElementById('kpi-cnd-fed').textContent = '—';
     document.getElementById('kpi-cnd-fed-sub').textContent = 'Dados indisponíveis';
   }
@@ -2738,7 +2571,7 @@ function renderChamadosServico() {
 }
 
 // ============================================================
-// VIEW 3 — CND (sub-abas Estadual + Federal)
+// VIEW 3 — CND (sub-abas Estadual + Quadrimestral)
 // ============================================================
 
 // Helper genérico: donut "Com/Sem CND" com % centralizado
@@ -2848,24 +2681,7 @@ function renderCNDStatusFonte(containerId, dataFonte, nomeFonte) {
     </div>`;
 }
 
-// Alterna sub-aba CND (Estadual/Federal)
-function switchCNDSubTab(tab) {
-  state.cndSubTab = tab;
-  const paneE = document.getElementById('cnd-pane-estadual');
-  const paneF = document.getElementById('cnd-pane-federal');
-  const btnE  = document.getElementById('cnd-sub-estadual');
-  const btnF  = document.getElementById('cnd-sub-federal');
-  if (tab === 'federal') {
-    paneE.style.display = 'none'; paneF.style.display = '';
-    btnF.style.color = 'var(--accent)';  btnF.style.borderBottomColor = 'var(--accent)';
-    btnE.style.color = 'var(--text-muted)'; btnE.style.borderBottomColor = 'transparent';
-  } else {
-    paneE.style.display = ''; paneF.style.display = 'none';
-    btnE.style.color = 'var(--accent)';  btnE.style.borderBottomColor = 'var(--accent)';
-    btnF.style.color = 'var(--text-muted)'; btnF.style.borderBottomColor = 'transparent';
-  }
-  renderCND();
-}
+// Alterna sub-aba CND (Estadual/Quadrimestral)
 
 function renderCND() {
   destroyChart('cnd-est-atual');
@@ -2977,144 +2793,7 @@ function renderCNDEstadual() {
     </div>`;
 }
 
-// ─── Federal (SICONFI): somente mês atual ────────────────────────────
-function renderCNDFederal() {
-  const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-  const MESES_LBL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  const donutsDiv = document.getElementById('cnd-federal-donuts');
-  const tableDiv  = document.getElementById('cnd-federal-table');
-  const _vm = _getFilteredMunNames();
-  const cndFedData = _vm.size > 0 ? state.cndFederal.filter(r => _vm.has((r.municipio||'').toLowerCase().trim())) : state.cndFederal;
 
-  if (!cndFedData.length) {
-    donutsDiv.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--text-muted)">Dados CND Federal indisponíveis.</div>';
-    tableDiv.innerHTML = '';
-    renderCNDStatusFonte('cnd-federal-status', '', '');
-    return;
-  }
-
-  renderCNDStatusFonte('cnd-federal-status', cndFedData[0].status_fonte || '', 'SICONFI');
-
-  // Classifica status
-  const classify = (v) => {
-    const s = (v || '').toString().trim().toLowerCase();
-    if (!s) return 'nd';
-    const isNao = s.includes('não') || s.includes('nao');
-    if (s.includes('enviado') && !isNao) return 'com';
-    if (isNao && s.includes('enviado') && !s.includes('-') && !s.includes('problema') && !s.includes('atraso')) return 'sem';
-    return 'atraso';
-  };
-
-  // Mês atual
-  const mesAtual = new Date().getMonth(); // 0..11
-  const mesKey   = MESES[mesAtual];
-  const mesLabel = MESES_LBL[mesAtual];
-  const anoAtual = new Date().getFullYear();
-
-  // Agrupar por município (dados reais)
-  const ordenados = [...cndFedData].sort((a, b) => {
-    const mdiff = a.municipio.localeCompare(b.municipio, 'pt-BR');
-    if (mdiff !== 0) return mdiff;
-    return (a.tipo || '').localeCompare(b.tipo || '', 'pt-BR');
-  });
-  const grupos = {};
-  ordenados.forEach(r => {
-    const key = normMun(r.municipio);
-    if (!grupos[key]) grupos[key] = { nome: r.municipio, items: [] };
-    grupos[key].items.push(r);
-  });
-  const munKeys = Object.keys(grupos).sort((a, b) => grupos[a].nome.localeCompare(grupos[b].nome, 'pt-BR'));
-  const totalMuns = munKeys.length;
-
-  // Donut — apenas municípios presentes nos dados
-  const comMun = munKeys.filter(k => {
-    const vals = grupos[k].items.map(r => classify(r[mesKey]));
-    return vals.every(v => v === 'com' || v === 'nd') && vals.some(v => v === 'com');
-  }).length;
-  const semMun = totalMuns - comMun;
-
-  donutsDiv.innerHTML = `
-    <div style="max-width:220px;margin:0 auto">
-      <div style="text-align:center;font-size:.82rem;font-weight:700;color:var(--accent);margin-bottom:2px">Mês Atual</div>
-      <div style="text-align:center;font-size:.72rem;color:var(--text-muted);margin-bottom:8px">${mesLabel} ${anoAtual}</div>
-      <div class="chart-wrap short"><canvas id="cnd-fed-atual"></canvas></div>
-    </div>`;
-  makeCNDDonutGeneric('cnd-fed-atual', comMun, semMun, { highlight: true, subText: 'com CND' });
-
-  // Badges — município
-  const badgeMun = (worst) => {
-    if (worst === 'com') return `<span style="background:#C6F6D5;color:#276749;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;white-space:nowrap">✓ Com CND</span>`;
-    if (worst === 'sem' || worst === 'atraso') return `<span style="background:#FED7D7;color:#C53030;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;white-space:nowrap">✗ Sem CND</span>`;
-    return `<span style="color:#A0AEC0;font-size:.78rem">—</span>`;
-  };
-
-  // Badges — entidade (detalhe da pendência)
-  const badgeEnt = (v) => {
-    const k = classify(v);
-    if (k === 'com')    return `<span style="background:#C6F6D5;color:#276749;padding:2px 10px;border-radius:10px;font-size:.74rem;font-weight:600;white-space:nowrap">✓ Sem Pendência</span>`;
-    if (k === 'atraso') return `<span style="background:#FEEBC8;color:#9C4221;padding:2px 10px;border-radius:10px;font-size:.74rem;font-weight:600;white-space:nowrap">⚠ Com Problema</span>`;
-    if (k === 'sem')    return `<span style="background:#FED7D7;color:#C53030;padding:2px 10px;border-radius:10px;font-size:.74rem;font-weight:600;white-space:nowrap">✗ Não Enviado</span>`;
-    return `<span style="color:#A0AEC0;font-size:.74rem">—</span>`;
-  };
-
-  const munStatusVal = (items) => {
-    const vals = items.map(r => classify(r[mesKey]));
-    if (vals.includes('atraso')) return 'atraso';
-    if (vals.includes('sem'))    return 'sem';
-    if (vals.includes('com'))    return 'com';
-    return 'nd';
-  };
-
-  const rows = munKeys.map((k, gi) => {
-    const { nome: mun, items } = grupos[k];
-    const bg = gi % 2 === 0 ? '#fff' : '#F8FAFC';
-    const hasMultiple = items.length > 1;
-    const grpId = 'fed-grp-' + gi;
-
-    const arrow = hasMultiple ? `<span class="cnd-expand-arrow" id="arrow-${grpId}" style="display:inline-block;transition:transform .2s;margin-right:6px;font-size:.7rem;color:var(--text-muted)">▶</span>` : `<span style="display:inline-block;width:16px"></span>`;
-    const cursor = hasMultiple ? 'cursor:pointer' : '';
-    const onclick = hasMultiple ? `onclick="toggleCndGroup('${grpId}')"` : '';
-
-    let mainRow;
-    if (hasMultiple) {
-      const countLabel = `<span style="font-size:.7rem;color:var(--text-muted);font-weight:400;margin-left:6px">(${items.length} entidades)</span>`;
-      mainRow = `<tr style="background:${bg};${cursor}" ${onclick}>
-        <td style="padding:8px 12px;font-size:.82rem;font-weight:600;white-space:nowrap">${arrow}${mun}${countLabel}</td>
-        <td style="padding:8px 12px;text-align:center">${badgeMun(munStatusVal(items))}</td>
-      </tr>`;
-    } else {
-      mainRow = `<tr style="background:${bg}">
-        <td style="padding:8px 12px;font-size:.82rem;font-weight:600;white-space:nowrap">${arrow}${mun}</td>
-        <td style="padding:8px 12px;text-align:center">${badgeMun(classify(items[0][mesKey]))}</td>
-      </tr>`;
-    }
-
-    const subRows = hasMultiple ? items.map(r => {
-      return `<tr class="${grpId}" style="display:none;background:${gi % 2 === 0 ? '#F7FAFC' : '#EDF2F7'}">
-        <td style="padding:4px 12px 4px 34px;font-size:.76rem;color:var(--text-muted);white-space:nowrap;border-left:3px solid #CBD5E0">↳ ${formatTipoEntidade(r.tipo)}</td>
-        <td style="padding:4px 12px;text-align:center">${badgeEnt(r[mesKey])}</td>
-      </tr>`;
-    }).join('') : '';
-
-    return mainRow + subRows;
-  }).join('');
-
-  tableDiv.innerHTML = `
-    <h4 style="font-size:.85rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">
-      Situação CND Federal — ${mesLabel} ${anoAtual}
-    </h4>
-    <div style="overflow-x:auto;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
-    <table style="width:100%;border-collapse:collapse;font-family:inherit">
-      <thead>
-        <tr style="background:var(--header-bg);color:#fff;text-align:center">
-          <th style="padding:10px 12px;text-align:left;font-size:.76rem">Município</th>
-          <th style="padding:10px 12px;font-size:.76rem">Situação</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-    </div>`;
-}
 
 // ─── CND Quadrimestral ────────────────────────────────────────────────────────
 function renderCNDQuadrimestral() {
@@ -4933,8 +4612,6 @@ async function adminColabProcessCSV(input) {
 
 // ── TCE SC / eSfinge funções ──────────────────────────────────────────
 function switchTCETab(tab) {
-  // Federal foi movido para a aba CND
-  if (tab === 'federal') { switchPCTab('cnd'); switchCNDTabPane('federal'); return; }
   const estadualPane = document.getElementById('tce-pane-estadual');
   const pillEst      = document.getElementById('tce-pill-estadual');
   if (!estadualPane) return;
@@ -5063,7 +4740,7 @@ function onFilterChange(type, value) {
     _populateMunicipioFilter2();
   } else if (type === 'municipio') {
     state.selectedMunicipio = value;
-    renderCNDEstadual(); renderEnvioView(); renderFederal(); renderSummaryChart(); renderRatifView();
+    renderCNDEstadual(); renderEnvioView(); renderSummaryChart(); renderRatifView();
     if (state.pcTab === 'diario') renderDiarioView();
   } else if (type === 'regiao') {
     // Legado — ignorar
@@ -5092,7 +4769,6 @@ async function onBuscarGlobal() {
   try {
     await buscarEnvio();
     renderCNDEstadual();
-    renderFederal();
     if (_RATIF.loaded) { _RATIF._ratifKey = _ENVIO.currentKey; renderRatifView(); }
     if (state.pcTab === 'diario') renderDiarioView();
   } finally {
@@ -5136,8 +4812,6 @@ function onMunicipioChange(val) {
   renderCNDEstadual();
   renderEnvioView();
   renderRatifView();
-  // Atualiza federal se visível
-  renderFederal();
 }
 
 // ─── FILTROS DE REGIÃO ────────────────────────────────────────────────────────
@@ -5268,7 +4942,6 @@ function _populateMunicipioFilter2() {
   renderSummaryChart();
   renderCNDEstadual();
   renderEnvioView();
-  renderFederal();
   if (typeof renderActiveView === 'function') renderActiveView();
   updateKPIs();
 }
@@ -5539,94 +5212,6 @@ async function populateMunicipioFilter() {
 
 // ─── FEDERAL (DADOS FICTÍCIOS) ────────────────────────────────────────────────
 
-const FEDERAL_DATA = [
-  // { grupo, municipio, item, validade, status }
-  // PGFN
-  { grupo:'pgfn', municipio:'Florianópolis', item:'CND — Tributos Federais e DÍVIDA ATIVA', validade:'2025-12-31', status:'regular' },
-  { grupo:'pgfn', municipio:'Joinville',      item:'CND — Tributos Federais e DÍVIDA ATIVA', validade:'2025-11-30', status:'regular' },
-  { grupo:'pgfn', municipio:'Blumenau',       item:'CND — Tributos Federais e DÍVIDA ATIVA', validade:'2025-09-30', status:'atencao' },
-  { grupo:'pgfn', municipio:'Chapecó',        item:'CND — Tributos Federais e DÍVIDA ATIVA', validade:'—',          status:'irregular' },
-  { grupo:'pgfn', municipio:'Lages',          item:'CND — Tributos Federais e DÍVIDA ATIVA', validade:'2025-10-31', status:'regular' },
-  { grupo:'pgfn', municipio:'Criciúma',       item:'CND — Tributos Federais e DÍVIDA ATIVA', validade:'2025-08-31', status:'atencao' },
-  // FGTS
-  { grupo:'fgts', municipio:'Florianópolis', item:'CRF — Regularidade FGTS', validade:'2025-12-15', status:'regular' },
-  { grupo:'fgts', municipio:'Joinville',     item:'CRF — Regularidade FGTS', validade:'2025-11-15', status:'regular' },
-  { grupo:'fgts', municipio:'Blumenau',      item:'CRF — Regularidade FGTS', validade:'2025-10-15', status:'regular' },
-  { grupo:'fgts', municipio:'Chapecó',       item:'CRF — Regularidade FGTS', validade:'2025-09-15', status:'atencao' },
-  { grupo:'fgts', municipio:'Lages',         item:'CRF — Regularidade FGTS', validade:'—',          status:'irregular' },
-  { grupo:'fgts', municipio:'Criciúma',      item:'CRF — Regularidade FGTS', validade:'2025-12-15', status:'regular' },
-  // Transferegov
-  { grupo:'transferegov', municipio:'Florianópolis', item:'Adimplência Convênios',    validade:'—', status:'regular' },
-  { grupo:'transferegov', municipio:'Joinville',     item:'Adimplência Convênios',    validade:'—', status:'regular' },
-  { grupo:'transferegov', municipio:'Blumenau',      item:'Adimplência Convênios',    validade:'—', status:'irregular' },
-  { grupo:'transferegov', municipio:'Chapecó',       item:'Adimplência Convênios',    validade:'—', status:'regular' },
-  { grupo:'transferegov', municipio:'Lages',         item:'Adimplência Convênios',    validade:'—', status:'atencao' },
-  { grupo:'transferegov', municipio:'Criciúma',      item:'Adimplência Convênios',    validade:'—', status:'regular' },
-  // SICONFI
-  { grupo:'siconfi', municipio:'Florianópolis', item:'RREO — Bimestre 3/2025',  validade:'—', status:'regular' },
-  { grupo:'siconfi', municipio:'Joinville',     item:'RREO — Bimestre 3/2025',  validade:'—', status:'regular' },
-  { grupo:'siconfi', municipio:'Blumenau',      item:'RREO — Bimestre 3/2025',  validade:'—', status:'pendente' },
-  { grupo:'siconfi', municipio:'Chapecó',       item:'RGF — Quadrimestre 1/2025',validade:'—', status:'regular' },
-  { grupo:'siconfi', municipio:'Lages',         item:'RGF — Quadrimestre 1/2025',validade:'—', status:'atencao' },
-  { grupo:'siconfi', municipio:'Criciúma',      item:'RGF — Quadrimestre 1/2025',validade:'—', status:'regular' },
-  // CAUC
-  { grupo:'cauc', municipio:'Florianópolis', item:'Situação CAUC Global', validade:'—', status:'regular' },
-  { grupo:'cauc', municipio:'Joinville',     item:'Situação CAUC Global', validade:'—', status:'regular' },
-  { grupo:'cauc', municipio:'Blumenau',      item:'Situação CAUC Global', validade:'—', status:'atencao' },
-  { grupo:'cauc', municipio:'Chapecó',       item:'Situação CAUC Global', validade:'—', status:'irregular' },
-  { grupo:'cauc', municipio:'Lages',         item:'Situação CAUC Global', validade:'—', status:'regular' },
-  { grupo:'cauc', municipio:'Criciúma',      item:'Situação CAUC Global', validade:'—', status:'regular' },
-];
-
-const STATUS_LABEL = {
-  regular:   { badge:'regular',   text:'✅ Regular' },
-  atencao:   { badge:'atencao',   text:'⚠️ Atenção' },
-  irregular: { badge:'irregular', text:'❌ Irregular' },
-  pendente:  { badge:'pendente',  text:'— Pendente' },
-};
-
-function renderFedTable(containerId, rows) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  if (!rows.length) {
-    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:.82rem">Nenhum dado para exibir.</div>';
-    return;
-  }
-  let html = '<div class="fed-row fed-row-header"><span>Município</span><span>Item</span><span>Validade</span><span>Status</span></div>';
-  rows.forEach(r => {
-    const s = STATUS_LABEL[r.status] || STATUS_LABEL.pendente;
-    html += `<div class="fed-row">
-      <span style="font-weight:600">${r.municipio}</span>
-      <span style="color:var(--text-muted)">${r.item}</span>
-      <span style="color:var(--text-muted)">${r.validade}</span>
-      <span><span class="fed-badge ${s.badge}">${s.text}</span></span>
-    </div>`;
-  });
-  el.innerHTML = html;
-}
-
-function renderFederal() {
-  const _vm = _getFilteredMunNames();
-  const fedFiltered = _vm.size > 0
-    ? FEDERAL_DATA.filter(r => _vm.has((r.municipio||'').toLowerCase().trim()))
-    : FEDERAL_DATA;
-
-  const grupos = ['pgfn','fgts','transferegov','siconfi','cauc'];
-  grupos.forEach(g => {
-    renderFedTable('fed-table-' + g, fedFiltered.filter(r => r.grupo === g));
-  });
-
-  // Atualizar cards resumo
-  const all = fedFiltered;
-  const total = new Set(all.map(r => r.municipio)).size;
-  const countStatus = (s) => new Set(all.filter(r => r.status === s).map(r => r.municipio)).size;
-  const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
-  setEl('fed-card-total', total);
-  setEl('fed-card-ok',       countStatus('regular'));
-  setEl('fed-card-atencao',  countStatus('atencao'));
-  setEl('fed-card-irregular',countStatus('irregular'));
-  updateEsferaCards();
-}
 
 
 // ─── SUB-TABS ESTADUAL (Envio | CND) ─────────────────────────────────────────
@@ -6741,7 +6326,6 @@ async function initCNDTab() {
     } catch(e) { state.competenciasCND = DEFAULT_COMPETENCIAS_CND; }
   }
   renderCNDEstadual();
-  renderFederal();
   renderCompetenciasCNDTable();
   renderCNDAlertaEnvio();
   // Carregar quadrimestral
@@ -6758,20 +6342,17 @@ async function initCNDTab() {
 
 function switchCNDTabPane(pane) {
   const estPane  = document.getElementById('cnd-tab-pane-estadual');
-  const fedPane  = document.getElementById('cnd-tab-pane-federal');
   const quadPane = document.getElementById('cnd-tab-pane-quadrimestral');
   const pillEst  = document.getElementById('cnd-tab-pill-estadual');
-  const pillFed  = document.getElementById('cnd-tab-pill-federal');
   const pillQuad = document.getElementById('cnd-tab-pill-quadrimestral');
 
-  if (estPane)  estPane.style.display  = pane === 'estadual'       ? 'block' : 'none';
-  if (fedPane)  fedPane.style.display  = pane === 'federal'        ? 'block' : 'none';
-  if (quadPane) quadPane.style.display = pane === 'quadrimestral'  ? 'block' : 'none';
+  if (estPane)  estPane.style.display  = pane === 'estadual'      ? 'block' : 'none';
+  if (quadPane) quadPane.style.display = pane === 'quadrimestral' ? 'block' : 'none';
 
-  [pillEst, pillFed, pillQuad].forEach(p => {
+  [pillEst, pillQuad].forEach(p => {
     if (p) { p.style.background = 'transparent'; p.style.color = '#64748B'; p.style.boxShadow = 'none'; }
   });
-  const active = pane === 'estadual' ? pillEst : pane === 'federal' ? pillFed : pillQuad;
+  const active = pane === 'estadual' ? pillEst : pillQuad;
   if (active) { active.style.background = 'var(--accent)'; active.style.color = '#fff'; active.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
 }
 
