@@ -823,6 +823,10 @@
       style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
       🇧🇷 Federal
     </button>
+    <button id="cnd-tab-pill-quadrimestral" onclick="switchCNDTabPane('quadrimestral')"
+      style="padding:7px 22px;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;background:transparent;color:#64748B;transition:all .15s">
+      📋 Quadrimestral
+    </button>
   </div>
 
   <!-- Pane Estadual CND -->
@@ -931,6 +935,12 @@
 
       </div><!-- /tce-pane-federal -->
   </div><!-- /cnd-tab-pane-federal -->
+
+  <!-- Pane Quadrimestral CND -->
+  <div id="cnd-tab-pane-quadrimestral" style="display:none">
+    <div id="cnd-quadrimestral-status" style="margin-bottom:12px"></div>
+    <div id="cnd-quadrimestral-table" style="margin-top:8px"></div>
+  </div><!-- /cnd-tab-pane-quadrimestral -->
 
 </div>
 <!-- ═══════════════ /CND FULLSCREEN ═══════════════ -->
@@ -1367,7 +1377,7 @@ const CONFIG = {
 // ============================================================
 // ESTADO
 // ============================================================
-const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndFederal: [], cndSubTab: 'estadual', selectedMunicipio: '', selectedRegiao: '', estadualSub: 'envio', selectedTipoConta: '', selectedEquipe: '', selectedPortfolio: '', selectedAssociacao: '', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
+const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndFederal: [], cndQuadrimestral: [], cndSubTab: 'estadual', selectedMunicipio: '', selectedRegiao: '', estadualSub: 'envio', selectedTipoConta: '', selectedEquipe: '', selectedPortfolio: '', selectedAssociacao: '', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
 // Abas que possuem versão histórica no servidor
 const HIST_SHEETS = ['Jira_Chamados', 'Jira_Chamados_Suporte', 'Jira_Implantacoes', 'NPS_Calculado', 'CND_Municipios', 'CND_Federal', 'CND_Estadual', 'Risco de Exclusão', 'Colaboradores'];
 
@@ -1600,6 +1610,23 @@ function fetchCNDFederal() {
       MESES.forEach(m => { out[m] = (r[m] || '').toString().trim(); });
       return out;
     });
+  });
+}
+
+function fetchCNDQuadrimestral() {
+  // Lê da coleção Firestore cnd_quadrimestral (alimentada pela extensão Chrome)
+  return fetchFirestore('cnd_quadrimestral').then(docs => {
+    return docs.map(d => ({
+      municipio:    d.municipio    || d.id || '',
+      nomeEnte:     d.nomeEnte     || '',
+      status_atual: d.status_atual || 'ausente',
+      periodo_atual:d.periodo_atual|| '',
+      lrf_ok:       !!d.lrf_ok,
+      sef_ok:       !!d.sef_ok,
+      oci_ok:       !!d.oci_ok,
+      periodos:     d.periodos     || [],
+      atualizado_em:d.atualizado_em|| ''
+    }));
   });
 }
 
@@ -3089,6 +3116,102 @@ function renderCNDFederal() {
     </div>`;
 }
 
+// ─── CND Quadrimestral ────────────────────────────────────────────────────────
+function renderCNDQuadrimestral() {
+  const statusEl = document.getElementById('cnd-quadrimestral-status');
+  const tableEl  = document.getElementById('cnd-quadrimestral-table');
+  if (!statusEl || !tableEl) return;
+
+  const docs = state.cndQuadrimestral || [];
+  if (!docs.length) {
+    statusEl.innerHTML = '<div style="text-align:center;color:#94A3B8;padding:32px 0;font-size:.9rem">📋 Nenhum dado quadrimestral coletado ainda.<br><span style="font-size:.78rem">Execute a extensão com CND ativado para coletar.</span></div>';
+    tableEl.innerHTML = '';
+    return;
+  }
+
+  // Filtrar por município selecionado
+  const munKey = (state.selectedMunicipio || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+  const filtered = munKey ? docs.filter(d => (d.municipio||'').includes(munKey)) : docs;
+
+  // Status cards
+  const total    = filtered.length;
+  const completo = filtered.filter(d => d.status_atual === 'completo').length;
+  const falta    = filtered.filter(d => d.status_atual === 'falta_dados').length;
+  const ausente  = filtered.filter(d => d.status_atual === 'ausente').length;
+  const parcial  = filtered.filter(d => d.status_atual === 'parcial').length;
+
+  statusEl.innerHTML = `
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="flex:1;min-width:100px;background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:12px 14px">
+        <div style="font-size:1.5rem;font-weight:700;color:#276749">${completo}</div>
+        <div style="font-size:.72rem;color:#276749;margin-top:2px">✅ Completo (LRF+SEF+OCI)</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:#FFFFF0;border:1px solid #F6E05E;border-radius:10px;padding:12px 14px">
+        <div style="font-size:1.5rem;font-weight:700;color:#7B6F00">${parcial}</div>
+        <div style="font-size:.72rem;color:#7B6F00;margin-top:2px">⚠️ Parcial</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:#FFF8F0;border:1px solid #F6AD55;border-radius:10px;padding:12px 14px">
+        <div style="font-size:1.5rem;font-weight:700;color:#C05621">${falta}</div>
+        <div style="font-size:.72rem;color:#C05621;margin-top:2px">⚡ Falta de Dados</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:12px 14px">
+        <div style="font-size:1.5rem;font-weight:700;color:#9B2335">${ausente}</div>
+        <div style="font-size:.72rem;color:#9B2335;margin-top:2px">❌ Ausente</div>
+      </div>
+    </div>`;
+
+  // Descobrir labels de período dos docs (até 3)
+  let periodLabels = [];
+  if (docs.length && docs[0].periodos && docs[0].periodos.length) {
+    periodLabels = docs[0].periodos.map(p => p.label || '—');
+  }
+  const p1 = periodLabels[0] || 'Período 1';
+  const p2 = periodLabels[1] || 'Período 2';
+  const p3 = periodLabels[2] || 'Período 3';
+
+  function statusBadge(p) {
+    if (!p) return '<span style="color:#94A3B8">—</span>';
+    const lrf = p.lrf ? '✅LRF' : '❌LRF';
+    const sef = p.sef ? '✅SEF' : '❌SEF';
+    const oci = p.oci ? '✅OCI' : '❌OCI';
+    if (p.status === 'ausente')    return '<span style="color:#9B2335;font-size:.75rem">Ausente</span>';
+    if (p.status === 'falta_dados') return '<span style="color:#C05621;font-size:.75rem">Falta Dados</span>';
+    return `<span style="font-size:.72rem;line-height:1.6">${lrf} ${sef} ${oci}</span>`;
+  }
+
+  const rows = filtered.map(d => {
+    const ps = d.periodos || [];
+    const bg = d.status_atual === 'completo' ? '#F0FFF4' :
+               d.status_atual === 'parcial'  ? '#FFFFF0' :
+               d.status_atual === 'falta_dados' ? '#FFF8F0' : '#FFF5F5';
+    return `<tr style="background:${bg}">
+      <td style="padding:8px 10px;font-size:.8rem;font-weight:600;color:var(--text)">${d.nomeEnte || d.municipio}</td>
+      <td style="padding:8px 10px;text-align:center">${statusBadge(ps[0])}</td>
+      <td style="padding:8px 10px;text-align:center">${statusBadge(ps[1])}</td>
+      <td style="padding:8px 10px;text-align:center">${statusBadge(ps[2])}</td>
+    </tr>`;
+  }).join('');
+
+  const theadStyle = 'padding:8px 10px;font-size:.72rem;font-weight:700;color:#fff;background:#1a3a5c;text-align:center';
+  tableEl.innerHTML = `
+    <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border)">
+      <table style="width:100%;border-collapse:collapse;min-width:600px">
+        <thead>
+          <tr>
+            <th style="${theadStyle};text-align:left;width:30%">Município</th>
+            <th style="${theadStyle}">${p1}</th>
+            <th style="${theadStyle}">${p2}</th>
+            <th style="${theadStyle}">${p3}</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div style="font-size:.71rem;color:var(--text-muted);margin-top:8px;text-align:right">
+      ${filtered.length} de ${total} municípios · atualizado: ${docs[0] && docs[0].atualizado_em ? new Date(docs[0].atualizado_em).toLocaleString('pt-BR') : '—'}
+    </div>`;
+}
+
 // ============================================================
 // VIEW 4 — Risco de Churn
 // ============================================================
@@ -4170,7 +4293,7 @@ function adminSignOut() {
 }
 
 async function _adminLoadCounts() {
-  for (const col of ['jira_chamados','jira_chamados_issues','tipos_cliente','equipes_atendimento','municipios','status_envio','ratificacoes','cnd_estadual','_meta','colaboradores','competencias_cnd']) {
+  for (const col of ['jira_chamados','jira_chamados_issues','tipos_cliente','equipes_atendimento','municipios','status_envio','ratificacoes','cnd_estadual','cnd_quadrimestral','_meta','colaboradores','competencias_cnd']) {
     try {
       const snap = await _db.collection(col).get();
       const el = document.getElementById('card-count-' + col);
@@ -6621,22 +6744,34 @@ async function initCNDTab() {
   renderFederal();
   renderCompetenciasCNDTable();
   renderCNDAlertaEnvio();
+  // Carregar quadrimestral
+  if (!state.cndQuadrimestral.length) {
+    fetchCNDQuadrimestral().then(function(docs) {
+      state.cndQuadrimestral = docs || [];
+      renderCNDQuadrimestral();
+    }).catch(function(e) { console.warn('CND Quadrimestral:', e.message); });
+  } else {
+    renderCNDQuadrimestral();
+  }
   _CND_TAB.loaded = true;
 }
 
 function switchCNDTabPane(pane) {
   const estPane  = document.getElementById('cnd-tab-pane-estadual');
   const fedPane  = document.getElementById('cnd-tab-pane-federal');
+  const quadPane = document.getElementById('cnd-tab-pane-quadrimestral');
   const pillEst  = document.getElementById('cnd-tab-pill-estadual');
   const pillFed  = document.getElementById('cnd-tab-pill-federal');
+  const pillQuad = document.getElementById('cnd-tab-pill-quadrimestral');
 
-  if (estPane) estPane.style.display = pane === 'estadual' ? 'block' : 'none';
-  if (fedPane) fedPane.style.display = pane === 'federal'  ? 'block' : 'none';
+  if (estPane)  estPane.style.display  = pane === 'estadual'       ? 'block' : 'none';
+  if (fedPane)  fedPane.style.display  = pane === 'federal'        ? 'block' : 'none';
+  if (quadPane) quadPane.style.display = pane === 'quadrimestral'  ? 'block' : 'none';
 
-  [pillEst, pillFed].forEach(p => {
+  [pillEst, pillFed, pillQuad].forEach(p => {
     if (p) { p.style.background = 'transparent'; p.style.color = '#64748B'; p.style.boxShadow = 'none'; }
   });
-  const active = pane === 'estadual' ? pillEst : pillFed;
+  const active = pane === 'estadual' ? pillEst : pane === 'federal' ? pillFed : pillQuad;
   if (active) { active.style.background = 'var(--accent)'; active.style.color = '#fff'; active.style.boxShadow = '0 1px 4px rgba(0,0,0,.12)'; }
 }
 
@@ -7087,7 +7222,7 @@ function renderRatifTable() {
 <div onclick="adminLoadCollection('colaboradores')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#38A169'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">👥</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Colaboradores</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">colaboradores</div></div><div id="card-count-colaboradores" style="color:#38A169;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
 <div onclick="adminLoadCollection('ratificacoes')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#805AD5'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">✅</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ratificações</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">ratificacoes</div></div><div id="card-count-ratificacoes" style="color:#805AD5;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
 <div onclick="adminLoadCollection('competencias_cnd')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#D69E2E'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">📅</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Competências CND</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">competencias_cnd</div></div><div id="card-count-competencias_cnd" style="color:#D69E2E;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
-<div onclick="adminLoadCollection('cnd_estadual')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#0EA5E9'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">📄</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CND Estadual</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">cnd_estadual</div></div><div id="card-count-cnd_estadual" style="color:#0EA5E9;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
+<div onclick="adminLoadCollection('cnd_estadual')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#0EA5E9'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">📄</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CND Estadual</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">cnd_estadual</div></div><div id="card-count-cnd_estadual" style="color:#0EA5E9;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>onclick="adminLoadCollection('cnd_quadrimestral')" style="background:#1C1A23;border:1px solid #2D3748;border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:8px" onmouseover="this.style.borderColor='#0EA5E9'" onmouseout="this.style.borderColor='#2D3748'"><span style="font-size:.85rem;flex-shrink:0">📋</span><div style="min-width:0;flex:1"><div style="color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CND Quadrimestral</div><div style="color:rgba(255,255,255,.35);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">cnd_quadrimestral</div></div><div id="card-count-cnd_quadrimestral" style="color:#0EA5E9;font-size:.82rem;font-weight:700;flex-shrink:0">—</div></div>
     </div>
 
     <!-- Área da tabela --><!-- Área da tabela -->
