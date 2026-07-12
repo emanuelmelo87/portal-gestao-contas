@@ -1639,10 +1639,6 @@ function updateKPIs() {
     document.getElementById('kpi-cnd-est-sub').textContent = 'Dados indisponíveis';
   }
 
- else {
-    document.getElementById('kpi-cnd-fed').textContent = '—';
-    document.getElementById('kpi-cnd-fed-sub').textContent = 'Dados indisponíveis';
-  }
 
   // Risco
   const emRisco = _fMun(state.risco).filter(r => r.risco === 'Alto' || r.risco === 'Médio').length;
