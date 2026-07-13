@@ -1249,6 +1249,11 @@ const CONFIG = {
 // ============================================================
 // ESTADO
 // ============================================================
+// Percentual formatado para cards comparativos: _pct(30, 60) → '50%'
+function _pct(n, total) {
+  if (!total || total <= 0) return '';
+  return Math.round((n / total) * 100) + '%';
+}
 const state = { jira: [], risco: [], nps: [], cnd: [], cndEstadual: [], cndQuadrimestral: [], cndSubTab: 'estadual', selectedMunicipio: '', selectedRegiao: '', estadualSub: 'envio', selectedTipoConta: '', selectedEquipe: '', selectedPortfolio: '', selectedAssociacao: '', colaboradores: [], implantacoes: [], implantacoesIssues: [], chamadosIssues: [], suporte: [], suporteIssues: [], selectedDate: null };
 // Abas que possuem versão histórica no servidor
 const HIST_SHEETS = ['Jira_Chamados', 'Jira_Chamados_Suporte', 'Jira_Implantacoes', 'NPS_Calculado', 'CND_Municipios', 'CND_Estadual', 'Risco de Exclusão', 'Colaboradores'];
@@ -2495,16 +2500,16 @@ function _renderChamadosTab(source, container) {
   const filaCount    = cfg.pie2.issues.length;
   const filaSlo      = cfg.pie2.issues.filter(r => (r.slo_horas || '').startsWith('-')).length;
 
-  const kpi = (val, label, bg, bd, fg, lc) => `
+  const kpi = (val, label, bg, bd, fg, lc, totalRef) => `
     <div style="background:${bg};border:1px solid ${bd};border-radius:8px;padding:12px 20px;text-align:center;min-width:90px">
-      <div style="font-size:2rem;font-weight:700;color:${fg};line-height:1">${val}</div>
+      <div style="font-size:2rem;font-weight:700;color:${fg};line-height:1">${val}${_pct(val, totalRef) ? `<span style="font-size:.9rem;font-weight:600;opacity:.75"> (${_pct(val, totalRef)})</span>` : ''}</div>
       <div style="font-size:.68rem;font-weight:600;color:${lc};text-transform:uppercase;margin-top:4px">${label}</div>
     </div>`;
   const kpiHtml = `<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
     ${kpi(totalAbertos, 'Total em Aberto', '#EFF6FF', '#BFDBFE', '#2563EB', '#3B82F6')}
-    ${kpi(sloEstour, 'SLO Estourado', sloEstour > 0 ? '#FEF2F2' : '#F0FDF4', sloEstour > 0 ? '#FECACA' : '#86EFAC', sloEstour > 0 ? '#DC2626' : '#15803D', sloEstour > 0 ? '#EF4444' : '#16A34A')}
-    ${kpi(filaCount, cfg.filaLabel, '#FFFBEB', '#FDE68A', '#B45309', '#D97706')}
-    ${kpi(filaSlo, cfg.filaSloLabel, filaSlo > 0 ? '#FEF2F2' : '#F8FAFC', filaSlo > 0 ? '#FECACA' : '#E2E8F0', filaSlo > 0 ? '#DC2626' : '#64748B', filaSlo > 0 ? '#EF4444' : '#94A3B8')}
+    ${kpi(sloEstour, 'SLO Estourado', sloEstour > 0 ? '#FEF2F2' : '#F0FDF4', sloEstour > 0 ? '#FECACA' : '#86EFAC', sloEstour > 0 ? '#DC2626' : '#15803D', sloEstour > 0 ? '#EF4444' : '#16A34A', totalAbertos)}
+    ${kpi(filaCount, cfg.filaLabel, '#FFFBEB', '#FDE68A', '#B45309', '#D97706', totalAbertos)}
+    ${kpi(filaSlo, cfg.filaSloLabel, filaSlo > 0 ? '#FEF2F2' : '#F8FAFC', filaSlo > 0 ? '#FECACA' : '#E2E8F0', filaSlo > 0 ? '#DC2626' : '#64748B', filaSlo > 0 ? '#EF4444' : '#94A3B8', filaCount)}
   </div>`;
 
   const c1 = source + '-pie-depende', c2 = source + '-pie-fila', c3 = source + '-pie-cliente';
@@ -2871,9 +2876,10 @@ function renderCNDQuadrimestral() {
 
   const _quadCard = (key, n, label, bg, border, color) => {
     const active = state.quadFiltroStatus === key;
+    const pct = _pct(n, total);
     return `<div onclick="toggleQuadFiltroStatus('${key}')" title="Clique para filtrar"
       style="flex:1;min-width:100px;background:${bg};border:2px solid ${active ? color : border};border-radius:10px;padding:12px 14px;cursor:pointer;${active ? 'box-shadow:0 0 0 2px ' + color + '33;' : ''}">
-      <div style="font-size:1.5rem;font-weight:700;color:${color}">${n}</div>
+      <div style="font-size:1.5rem;font-weight:700;color:${color}">${n}${pct ? ` <span style="font-size:.85rem;font-weight:600;opacity:.75">(${pct})</span>` : ''}</div>
       <div style="font-size:.72rem;color:${color};margin-top:2px">${label}${active ? ' ✕' : ''}</div>
     </div>`;
   };
@@ -2966,21 +2972,23 @@ function renderRisco() {
   const emRisco  = [...alto, ...medio, ...baixo];
 
   // ── KPI cards ──────────────────────────────────────────────
+  const _riscoTotal = riscoData.length;
+  const _rkPct = (n) => _pct(n, _riscoTotal) ? `<span style="font-size:.8rem;font-weight:600;opacity:.75"> (${_pct(n, _riscoTotal)})</span>` : '';
   const kpiHtml = `<div class="risk-kpis">
     <div class="risk-kpi-card" style="background:#fef2f2;border-color:#fca5a5">
-      <div class="risk-kpi-num" style="color:#dc2626">${alto.length}</div>
+      <div class="risk-kpi-num" style="color:#dc2626">${alto.length}${_rkPct(alto.length)}</div>
       <div class="risk-kpi-label" style="color:#b91c1c">Alto Risco</div>
     </div>
     <div class="risk-kpi-card" style="background:#fff7ed;border-color:#fdba74">
-      <div class="risk-kpi-num" style="color:#ea580c">${medio.length}</div>
+      <div class="risk-kpi-num" style="color:#ea580c">${medio.length}${_rkPct(medio.length)}</div>
       <div class="risk-kpi-label" style="color:#c2410c">Médio Risco</div>
     </div>
     ${baixo.length ? `<div class="risk-kpi-card" style="background:#fefce8;border-color:#fde047">
-      <div class="risk-kpi-num" style="color:#d97706">${baixo.length}</div>
+      <div class="risk-kpi-num" style="color:#d97706">${baixo.length}${_rkPct(baixo.length)}</div>
       <div class="risk-kpi-label" style="color:#b45309">Baixo Risco</div>
     </div>` : ''}
     <div class="risk-kpi-card" style="background:#f0fdf4;border-color:#86efac">
-      <div class="risk-kpi-num" style="color:#16a34a">${semRisco.length}</div>
+      <div class="risk-kpi-num" style="color:#16a34a">${semRisco.length}${_rkPct(semRisco.length)}</div>
       <div class="risk-kpi-label" style="color:#15803d">Sem Risco</div>
     </div>
   </div>`;
@@ -3588,19 +3596,19 @@ function renderImplantacoes() {
         <div style="font-size:.7rem;font-weight:600;color:#3B82F6;text-transform:uppercase;margin-top:4px">Total Issues</div>
       </div>
       <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
-        <div style="font-size:1.7rem;font-weight:700;color:#DC2626;line-height:1">${totalAtrasado}</div>
+        <div style="font-size:1.7rem;font-weight:700;color:#DC2626;line-height:1">${totalAtrasado}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(totalAtrasado, totalGeral) || '0%'})</span></div>
         <div style="font-size:.7rem;font-weight:600;color:#EF4444;text-transform:uppercase;margin-top:4px">Atrasadas</div>
       </div>
       <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
-        <div style="font-size:1.7rem;font-weight:700;color:#15803D;line-height:1">${totalNoPrazo}</div>
+        <div style="font-size:1.7rem;font-weight:700;color:#15803D;line-height:1">${totalNoPrazo}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(totalNoPrazo, totalGeral) || '0%'})</span></div>
         <div style="font-size:.7rem;font-weight:600;color:#16A34A;text-transform:uppercase;margin-top:4px">No Prazo</div>
       </div>
       <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
-        <div style="font-size:1.7rem;font-weight:700;color:#64748B;line-height:1">${totalSemPrazo}</div>
+        <div style="font-size:1.7rem;font-weight:700;color:#64748B;line-height:1">${totalSemPrazo}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(totalSemPrazo, totalGeral) || '0%'})</span></div>
         <div style="font-size:.7rem;font-weight:600;color:#94A3B8;text-transform:uppercase;margin-top:4px">Sem Prazo</div>
       </div>
       <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
-        <div style="font-size:1.7rem;font-weight:700;color:#DC2626;line-height:1">${munComAtraso.length}</div>
+        <div style="font-size:1.7rem;font-weight:700;color:#DC2626;line-height:1">${munComAtraso.length}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(munComAtraso.length, municipios.length) || '0%'})</span></div>
         <div style="font-size:.7rem;font-weight:600;color:#EF4444;text-transform:uppercase;margin-top:4px">Mun. c/ Atraso</div>
       </div>
       <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
@@ -5099,9 +5107,10 @@ function _setChartVisible() {
   if (wrapEl)  wrapEl.style.display = 'block';
 }
 
-function _cardHtml(count, label, bg, border, textColor) {
+function _cardHtml(count, label, bg, border, textColor, total) {
+  const pct = _pct(count, total);
   return `<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 16px;min-width:90px;text-align:center">
-    <div style="font-size:1.5rem;font-weight:700;color:${textColor}">${count}</div>
+    <div style="font-size:1.5rem;font-weight:700;color:${textColor}">${count}${pct ? ` <span style="font-size:.85rem;font-weight:600;opacity:.75">(${pct})</span>` : ''}</div>
     <div style="font-size:.71rem;color:${textColor};margin-top:2px">${label}</div>
   </div>`;
 }
@@ -5133,9 +5142,9 @@ function _renderCNDChart(filteredMuns, munMetaMap, filteredMunNames, groupBy) {
   const total    = filteredMuns.length;
 
   _setSummaryCards(
-    _cardHtml(comCND,   '✅ Com CND',    '#F0FFF4', '#9AE6B4', '#276749') +
-    _cardHtml(semCND,   '❌ Sem CND',    '#FFF5F5', '#FEB2B2', '#9B2335') +
-    _cardHtml(semDados, '⚪ Sem dados',  '#F7FAFC', '#CBD5E0', '#718096') +
+    _cardHtml(comCND,   '✅ Com CND',    '#F0FFF4', '#9AE6B4', '#276749', total) +
+    _cardHtml(semCND,   '❌ Sem CND',    '#FFF5F5', '#FEB2B2', '#9B2335', total) +
+    _cardHtml(semDados, '⚪ Sem dados',  '#F7FAFC', '#CBD5E0', '#718096', total) +
     _cardHtml(total,    '🏙️ Total',      '#EBF8FF', '#90CDF4', '#2B6CB0') +
     (period.label ? `<div style="font-size:.72rem;color:#64748B;align-self:center;padding:4px 10px;background:#F1F5F9;border-radius:6px">📅 ${period.label}</div>` : '')
   );
@@ -5203,9 +5212,9 @@ function _renderEnvioChart(filteredMuns, munMetaMap, filteredMunNames, groupBy) 
   const mesLabel = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(mes)-1] || mes;
 
   _setSummaryCards(
-    _cardHtml(nCompleto, '✅ Completo',    '#F0FFF4', '#9AE6B4', '#276749') +
-    _cardHtml(nParcial,  '⚠️ Parcial',     '#FFFFF0', '#F6E05E', '#7B6F00') +
-    _cardHtml(nNenhum,   '❌ Não enviou',  '#FFF5F5', '#FEB2B2', '#9B2335') +
+    _cardHtml(nCompleto, '✅ Completo',    '#F0FFF4', '#9AE6B4', '#276749', total) +
+    _cardHtml(nParcial,  '⚠️ Parcial',     '#FFFFF0', '#F6E05E', '#7B6F00', total) +
+    _cardHtml(nNenhum,   '❌ Não enviou',  '#FFF5F5', '#FEB2B2', '#9B2335', total) +
     _cardHtml(total,     '🏙️ Total',       '#EBF8FF', '#90CDF4', '#2B6CB0') +
     `<div style="font-size:.72rem;color:#64748B;align-self:center;padding:4px 10px;background:#F1F5F9;border-radius:6px">📅 ${mesLabel}/${ano}</div>`
   );
@@ -5414,8 +5423,9 @@ function renderRatifView() {
   // Cards
   document.getElementById('ratif-loading').style.display = 'none';
   document.getElementById('ratif-cards').style.display   = 'grid';
-  document.getElementById('ratif-card-sim').textContent   = totalSim;
-  document.getElementById('ratif-card-nao').textContent   = totalNao;
+  const _rp = (n) => _pct(n, total) ? ` <span style="font-size:.85rem;font-weight:600;opacity:.75">(${_pct(n, total)})</span>` : '';
+  document.getElementById('ratif-card-sim').innerHTML   = totalSim + _rp(totalSim);
+  document.getElementById('ratif-card-nao').innerHTML   = totalNao + _rp(totalNao);
   document.getElementById('ratif-card-total').textContent = total;
 
   const mesLabel = MESES_LABEL_FULL[mes - 1] || mes;
@@ -5919,10 +5929,11 @@ function renderEnvioView() {
   const nOk      = municipios.filter(m => calcStatus(m) === 'completo').length;
   const nParcial = municipios.filter(m => calcStatus(m) === 'parcial').length;
   const nNenhum  = municipios.filter(m => calcStatus(m) === 'nenhum').length;
+  const _ep = (n) => _pct(n, total) ? ` <span style="font-size:.8rem;font-weight:600;opacity:.75">(${_pct(n, total)})</span>` : '';
   document.getElementById('envio-card-total').textContent   = total;
-  document.getElementById('envio-card-ok').textContent      = nOk;
-  document.getElementById('envio-card-parcial').textContent = nParcial;
-  document.getElementById('envio-card-err').textContent     = nNenhum;
+  document.getElementById('envio-card-ok').innerHTML      = nOk      + _ep(nOk);
+  document.getElementById('envio-card-parcial').innerHTML = nParcial + _ep(nParcial);
+  document.getElementById('envio-card-err').innerHTML     = nNenhum  + _ep(nNenhum);
   document.getElementById('envio-cards').style.display = 'grid';
 
   if (statusFil) municipios = municipios.filter(m => calcStatus(m) === statusFil);
