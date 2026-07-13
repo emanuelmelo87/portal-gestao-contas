@@ -825,6 +825,7 @@
 
   <!-- Pane Quadrimestral CND -->
   <div id="cnd-tab-pane-quadrimestral" style="display:none">
+    <div id="cnd-quadrimestral-filtros" style="margin-bottom:10px"></div>
     <div id="cnd-quadrimestral-status" style="margin-bottom:12px"></div>
     <div id="cnd-quadrimestral-table" style="margin-top:8px"></div>
   </div><!-- /cnd-tab-pane-quadrimestral -->
@@ -2792,6 +2793,34 @@ function renderCNDEstadual() {
 
 
 // ─── CND Quadrimestral ────────────────────────────────────────────────────────
+state.quadFiltroTexto  = '';
+state.quadFiltroStatus = '';
+
+function setQuadFiltroTexto(v) {
+  state.quadFiltroTexto = v || '';
+  renderCNDQuadrimestral();
+}
+function setQuadFiltroStatus(v) {
+  state.quadFiltroStatus = v || '';
+  const sel = document.getElementById('quad-filtro-status');
+  if (sel && sel.value !== state.quadFiltroStatus) sel.value = state.quadFiltroStatus;
+  renderCNDQuadrimestral();
+}
+function toggleQuadFiltroStatus(v) {
+  setQuadFiltroStatus(state.quadFiltroStatus === v ? '' : v);
+}
+function limparQuadFiltros() {
+  state.quadFiltroTexto = '';
+  state.quadFiltroStatus = '';
+  const inp = document.getElementById('quad-filtro-texto');
+  const sel = document.getElementById('quad-filtro-status');
+  if (inp) inp.value = '';
+  if (sel) sel.value = '';
+  renderCNDQuadrimestral();
+}
+const _quadNorm = v => (v || '').toString().toLowerCase()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
 function renderCNDQuadrimestral() {
   const statusEl = document.getElementById('cnd-quadrimestral-status');
   const tableEl  = document.getElementById('cnd-quadrimestral-table');
@@ -2804,36 +2833,63 @@ function renderCNDQuadrimestral() {
     return;
   }
 
-  // Filtrar por município selecionado
-  const munKey = (state.selectedMunicipio || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
-  const filtered = munKey ? docs.filter(d => (d.municipio||'').includes(munKey)) : docs;
+  // Barra de filtros — renderizada uma única vez para preservar foco e valores
+  const filtrosEl = document.getElementById('cnd-quadrimestral-filtros');
+  if (filtrosEl && !filtrosEl.innerHTML) {
+    filtrosEl.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--card,#fff);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+        <input id="quad-filtro-texto" type="text" placeholder="🔍 Filtrar município..."
+          oninput="setQuadFiltroTexto(this.value)"
+          style="flex:1;min-width:180px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:.82rem;font-family:inherit">
+        <select id="quad-filtro-status" onchange="setQuadFiltroStatus(this.value)"
+          style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:.82rem;font-family:inherit;background:#fff">
+          <option value="">Todos os status</option>
+          <option value="completo">✅ Completo</option>
+          <option value="parcial">⚠️ Parcial</option>
+          <option value="falta_dados">⚡ Falta de Dados</option>
+          <option value="ausente">❌ Ausente</option>
+        </select>
+        <button onclick="limparQuadFiltros()"
+          style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:.8rem;background:#fff;cursor:pointer;color:var(--text-muted)">Limpar</button>
+      </div>`;
+  }
 
-  // Status cards
+  // Filtrar por município selecionado (filtro global do portal)
+  const munKey = (state.selectedMunicipio || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+  let filtered = munKey ? docs.filter(d => (d.municipio||'').includes(munKey)) : docs;
+
+  // Filtro de texto local (nome do município)
+  const txt = _quadNorm(state.quadFiltroTexto).trim();
+  if (txt) filtered = filtered.filter(d => _quadNorm(d.nomeEnte || d.municipio).includes(txt));
+
+  // Status cards (contagens do conjunto filtrado por texto; clique filtra a tabela)
   const total    = filtered.length;
   const completo = filtered.filter(d => d.status_atual === 'completo').length;
   const falta    = filtered.filter(d => d.status_atual === 'falta_dados').length;
   const ausente  = filtered.filter(d => d.status_atual === 'ausente').length;
   const parcial  = filtered.filter(d => d.status_atual === 'parcial').length;
 
+  const _quadCard = (key, n, label, bg, border, color) => {
+    const active = state.quadFiltroStatus === key;
+    return `<div onclick="toggleQuadFiltroStatus('${key}')" title="Clique para filtrar"
+      style="flex:1;min-width:100px;background:${bg};border:2px solid ${active ? color : border};border-radius:10px;padding:12px 14px;cursor:pointer;${active ? 'box-shadow:0 0 0 2px ' + color + '33;' : ''}">
+      <div style="font-size:1.5rem;font-weight:700;color:${color}">${n}</div>
+      <div style="font-size:.72rem;color:${color};margin-top:2px">${label}${active ? ' ✕' : ''}</div>
+    </div>`;
+  };
+
   statusEl.innerHTML = `
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-      <div style="flex:1;min-width:100px;background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:12px 14px">
-        <div style="font-size:1.5rem;font-weight:700;color:#276749">${completo}</div>
-        <div style="font-size:.72rem;color:#276749;margin-top:2px">✅ Completo (LRF+SEF+OCI)</div>
-      </div>
-      <div style="flex:1;min-width:100px;background:#FFFFF0;border:1px solid #F6E05E;border-radius:10px;padding:12px 14px">
-        <div style="font-size:1.5rem;font-weight:700;color:#7B6F00">${parcial}</div>
-        <div style="font-size:.72rem;color:#7B6F00;margin-top:2px">⚠️ Parcial</div>
-      </div>
-      <div style="flex:1;min-width:100px;background:#FFF8F0;border:1px solid #F6AD55;border-radius:10px;padding:12px 14px">
-        <div style="font-size:1.5rem;font-weight:700;color:#C05621">${falta}</div>
-        <div style="font-size:.72rem;color:#C05621;margin-top:2px">⚡ Falta de Dados</div>
-      </div>
-      <div style="flex:1;min-width:100px;background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:12px 14px">
-        <div style="font-size:1.5rem;font-weight:700;color:#9B2335">${ausente}</div>
-        <div style="font-size:.72rem;color:#9B2335;margin-top:2px">❌ Ausente</div>
-      </div>
+      ${_quadCard('completo',    completo, '✅ Completo (LRF+SEF+OCI)', '#F0FFF4', '#9AE6B4', '#276749')}
+      ${_quadCard('parcial',     parcial,  '⚠️ Parcial',               '#FFFFF0', '#F6E05E', '#7B6F00')}
+      ${_quadCard('falta_dados', falta,    '⚡ Falta de Dados',         '#FFF8F0', '#F6AD55', '#C05621')}
+      ${_quadCard('ausente',     ausente,  '❌ Ausente',                '#FFF5F5', '#FEB2B2', '#9B2335')}
     </div>`;
+
+  // Filtro de status aplicado à tabela
+  if (state.quadFiltroStatus) {
+    filtered = filtered.filter(d => d.status_atual === state.quadFiltroStatus);
+  }
 
   // Descobrir labels de período dos docs (até 3)
   let periodLabels = [];
@@ -2883,7 +2939,7 @@ function renderCNDQuadrimestral() {
       </table>
     </div>
     <div style="font-size:.71rem;color:var(--text-muted);margin-top:8px;text-align:right">
-      ${filtered.length} de ${total} municípios · atualizado: ${docs[0] && docs[0].atualizado_em ? new Date(docs[0].atualizado_em).toLocaleString('pt-BR') : '—'}
+      ${filtered.length} de ${total} município(s)${state.quadFiltroStatus || state.quadFiltroTexto ? ' (filtrado)' : ''} · atualizado: ${docs[0] && docs[0].atualizado_em ? new Date(docs[0].atualizado_em).toLocaleString('pt-BR') : '—'}
     </div>`;
 }
 
