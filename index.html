@@ -2689,6 +2689,8 @@ function renderCND() {
   destroyChart('cnd-est-atual');
   // Estadual sempre renderizado no painel Estadual
   renderCNDEstadual();
+  // Quadrimestral também obedece os filtros de cabeçalho — re-renderizar junto
+  if (state.cndQuadrimestral && state.cndQuadrimestral.length) renderCNDQuadrimestral();
   // initEnvioPanel chamado pelo switchTCETab ao abrir a aba
 }
 
@@ -2859,9 +2861,17 @@ function renderCNDQuadrimestral() {
       </div>`;
   }
 
-  // Filtrar por município selecionado (filtro global do portal)
-  const munKey = (state.selectedMunicipio || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
-  let filtered = munKey ? docs.filter(d => (d.municipio||'').includes(munKey)) : docs;
+  // Filtros de cabeçalho da página (não-temporais): município, tipo de conta,
+  // equipe, portfólio, associação (via _getFilteredMunNames) + região — mesmo
+  // padrão da CND Estadual.
+  const _quadNome = d => (d.nomeEnte || d.municipio || '').toString().toLowerCase().trim();
+  const _validNames = _getFilteredMunNames();
+  const munRegiaoMap = {};
+  (_MUN_CACHE.docs || []).forEach(d => { if (d.municipio) munRegiaoMap[d.municipio.toLowerCase().trim()] = d.regiao || ''; });
+
+  let filtered = docs;
+  if (_validNames.size > 0)   filtered = filtered.filter(d => _validNames.has(_quadNome(d)));
+  if (state.selectedRegiao)   filtered = filtered.filter(d => munRegiaoMap[_quadNome(d)] === state.selectedRegiao);
 
   // Filtro de texto local (nome do município)
   const txt = _quadNorm(state.quadFiltroTexto).trim();
