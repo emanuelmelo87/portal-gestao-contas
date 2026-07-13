@@ -2251,7 +2251,7 @@ function renderChamadosPorVertical() {
 // Normaliza status p/ comparação robusta (sem acento, minúsculo, espaços colapsados)
 function _normStatus(s) {
   return (s || '').toString().trim().toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ');
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
 }
 
 // Status que aguardam retorno do cliente/solicitante (não dependem do time)
@@ -6250,7 +6250,7 @@ async function renderCNDAlertaEnvio() {
     if (!comp || !comp.meses || !comp.meses.length) continue;
 
     var munKey = (r.municipio || '').toLowerCase()
-      .normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
     var statusPorMes = [];
     for (var j = 0; j < comp.meses.length; j++) {
@@ -6265,7 +6265,7 @@ async function renderCNDAlertaEnvio() {
       }
       var docs = (_ENVIO.cache[key] || []).filter(function(d){
         return (d.municipio || '').toLowerCase()
-          .normalize('NFD').replace(/[̀-ͯ]/g, '').trim() === munKey;
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim() === munKey;
       });
       var st = calcMunEnvioStatus(docs, mes);
       statusPorMes.push({ mes: mes, status: st });

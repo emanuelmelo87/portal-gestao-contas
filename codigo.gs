@@ -225,7 +225,7 @@ function _toFirestoreFields(obj) {
 // Normaliza string para uso como doc ID (sem acentos, só alfanum e _)
 function _normDocId(s) {
   return (s || '').toString().trim()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9_]/g, '_')
     .replace(/_+/g, '_')
@@ -404,7 +404,13 @@ function testarConexaoJira() {
 function testarFirestore() {
   try {
     // Tenta ler a coleção _meta (pode estar vazia)
-    const ids = _listCollectionDocIds(COL_MET
+    const ids = _listCollectionDocIds(COL_META);
+    Logger.log('✅ Conexão Firestore OK! Docs em _meta: ' + ids.length);
+  } catch (e) {
+    Logger.log('❌ ERRO Firestore: ' + e.message);
+  }
+}
+
 // ────────────────────────────────────────────────────────────
 // WEB APP — doPost: recebe dados da extensão eSfinge Updater
 // POST JSON: { action: 'writeStatusEnvio'|'writeRatificacoes', docs: [...] }
