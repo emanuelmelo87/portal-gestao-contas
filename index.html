@@ -1104,15 +1104,15 @@
 
           <!-- Cards resumo -->
           <div id="ratif-cards" style="display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
-            <div style="background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 18px;text-align:center">
+            <div id="ratif-card-box-sim" title="Clique para filtrar" onclick="_toggleSelectFilter('ratif-status-filter','sim',renderRatifView)" style="background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 18px;text-align:center;cursor:pointer">
               <div id="ratif-card-sim" style="font-size:1.6rem;font-weight:800;color:#276749">—</div>
               <div style="font-size:.75rem;color:#276749;font-weight:600;margin-top:2px">✅ Ratificado</div>
             </div>
-            <div style="background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 18px;text-align:center">
+            <div id="ratif-card-box-nao" title="Clique para filtrar" onclick="_toggleSelectFilter('ratif-status-filter','nao',renderRatifView)" style="background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 18px;text-align:center;cursor:pointer">
               <div id="ratif-card-nao" style="font-size:1.6rem;font-weight:800;color:#9B2335">—</div>
               <div style="font-size:.75rem;color:#9B2335;font-weight:600;margin-top:2px">❌ Pendente</div>
             </div>
-            <div style="background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 18px;text-align:center">
+            <div title="Clique para limpar o filtro" onclick="_toggleSelectFilter('ratif-status-filter','',renderRatifView)" style="background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 18px;text-align:center;cursor:pointer">
               <div id="ratif-card-total" style="font-size:1.6rem;font-weight:800;color:#2B6CB0">—</div>
               <div style="font-size:.75rem;color:#2B6CB0;font-weight:600;margin-top:2px">📊 Total</div>
             </div>
@@ -1249,6 +1249,14 @@ const CONFIG = {
 // ============================================================
 // ESTADO
 // ============================================================
+// Alterna o valor de um select de filtro (clique no card): mesmo valor → limpa
+function _toggleSelectFilter(selectId, value, renderFn) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.value = (sel.value === value) ? '' : value;
+  renderFn();
+}
+
 // Percentual formatado para cards comparativos: _pct(30, 60) → '50%'
 function _pct(n, total) {
   if (!total || total <= 0) return '';
@@ -2729,26 +2737,26 @@ function renderCNDEstadual() {
   const _validNames = _getFilteredMunNames();
   if (_validNames.size > 0) src = src.filter(r => _validNames.has((r.municipio||'').toLowerCase().trim()));
   if (regiaoFil)    src = src.filter(r => munRegiaoMap[(r.municipio||'').toLowerCase().trim()] === regiaoFil);
-  if (statusCNDFil) src = src.filter(r => r.periodo1 === statusCNDFil);
-  src = [...src].sort((a,b) => (a.municipio||'').localeCompare(b.municipio||'', 'pt-BR'));
-
-  const total = src.length;
+  // Contagens dos cards calculadas ANTES do filtro de status — comparativo estável
+  const total  = src.length;
   const comCND = src.filter(r => r.periodo1 === 'Com CND').length;
   const semCND = src.filter(r => r.periodo1 === 'Sem CND').length;
+  if (statusCNDFil) src = src.filter(r => r.periodo1 === statusCNDFil);
+  src = [...src].sort((a,b) => (a.municipio||'').localeCompare(b.municipio||'', 'pt-BR'));
 
   // ── KPI summary ──────────────────────────────────────────────────
   const bimLabel = state.cndEstadual[0].p1_label || '';
   donutsDiv.innerHTML = `
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px">
-      <div style="flex:1;min-width:120px;background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 18px;text-align:center">
-        <div style="font-size:1.6rem;font-weight:800;color:#276749">${comCND}</div>
-        <div style="font-size:.75rem;color:#276749;font-weight:600;margin-top:2px">✓ Com CND</div>
+      <div title="Clique para filtrar" onclick="_toggleSelectFilter('cnd-status-filter','Com CND',renderCNDEstadual)" style="flex:1;min-width:120px;background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 18px;text-align:center;cursor:pointer;${statusCNDFil === 'Com CND' ? 'box-shadow:0 0 0 2px #276749;' : ''}">
+        <div style="font-size:1.6rem;font-weight:800;color:#276749">${comCND}${_pct(comCND, total) ? ` <span style=\"font-size:.85rem;font-weight:600;opacity:.75\">(${_pct(comCND, total)})</span>` : ''}</div>
+        <div style="font-size:.75rem;color:#276749;font-weight:600;margin-top:2px">✓ Com CND${statusCNDFil === 'Com CND' ? ' ✕' : ''}</div>
       </div>
-      <div style="flex:1;min-width:120px;background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 18px;text-align:center">
-        <div style="font-size:1.6rem;font-weight:800;color:#C53030">${semCND}</div>
-        <div style="font-size:.75rem;color:#C53030;font-weight:600;margin-top:2px">✗ Sem CND</div>
+      <div title="Clique para filtrar" onclick="_toggleSelectFilter('cnd-status-filter','Sem CND',renderCNDEstadual)" style="flex:1;min-width:120px;background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 18px;text-align:center;cursor:pointer;${statusCNDFil === 'Sem CND' ? 'box-shadow:0 0 0 2px #C53030;' : ''}">
+        <div style="font-size:1.6rem;font-weight:800;color:#C53030">${semCND}${_pct(semCND, total) ? ` <span style=\"font-size:.85rem;font-weight:600;opacity:.75\">(${_pct(semCND, total)})</span>` : ''}</div>
+        <div style="font-size:.75rem;color:#C53030;font-weight:600;margin-top:2px">✗ Sem CND${statusCNDFil === 'Sem CND' ? ' ✕' : ''}</div>
       </div>
-      <div style="flex:1;min-width:120px;background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 18px;text-align:center">
+      <div title="Clique para limpar o filtro" onclick="_toggleSelectFilter('cnd-status-filter','',renderCNDEstadual)" style="flex:1;min-width:120px;background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 18px;text-align:center;cursor:pointer">
         <div style="font-size:1.6rem;font-weight:800;color:#2B6CB0">${total}</div>
         <div style="font-size:.75rem;color:#2B6CB0;font-weight:600;margin-top:2px">Total municípios</div>
       </div>
@@ -2962,6 +2970,11 @@ function renderCNDQuadrimestral() {
 // ============================================================
 // VIEW 4 — Risco de Churn
 // ============================================================
+state.riscoFiltro = '';
+function _setRiscoFiltro(v) {
+  state.riscoFiltro = state.riscoFiltro === v ? '' : v;
+  renderRisco();
+}
 function renderRisco() {
   const container = document.getElementById('risk-container');
   const _vm = _getFilteredMunNames();
@@ -2984,23 +2997,19 @@ function renderRisco() {
   // ── KPI cards ──────────────────────────────────────────────
   const _riscoTotal = riscoData.length;
   const _rkPct = (n) => _pct(n, _riscoTotal) ? `<span style="font-size:.8rem;font-weight:600;opacity:.75"> (${_pct(n, _riscoTotal)})</span>` : '';
+  const _rkCard = (key, n, label, bg, border, color, labelColor) => {
+    const active = state.riscoFiltro === key;
+    return `<div class="risk-kpi-card" title="Clique para filtrar" onclick="_setRiscoFiltro('${key}')"
+      style="background:${bg};border-color:${border};cursor:pointer;${active ? 'box-shadow:0 0 0 2px ' + color + ';' : ''}">
+      <div class="risk-kpi-num" style="color:${color}">${n}${_rkPct(n)}</div>
+      <div class="risk-kpi-label" style="color:${labelColor}">${label}${active ? ' ✕' : ''}</div>
+    </div>`;
+  };
   const kpiHtml = `<div class="risk-kpis">
-    <div class="risk-kpi-card" style="background:#fef2f2;border-color:#fca5a5">
-      <div class="risk-kpi-num" style="color:#dc2626">${alto.length}${_rkPct(alto.length)}</div>
-      <div class="risk-kpi-label" style="color:#b91c1c">Alto Risco</div>
-    </div>
-    <div class="risk-kpi-card" style="background:#fff7ed;border-color:#fdba74">
-      <div class="risk-kpi-num" style="color:#ea580c">${medio.length}${_rkPct(medio.length)}</div>
-      <div class="risk-kpi-label" style="color:#c2410c">Médio Risco</div>
-    </div>
-    ${baixo.length ? `<div class="risk-kpi-card" style="background:#fefce8;border-color:#fde047">
-      <div class="risk-kpi-num" style="color:#d97706">${baixo.length}${_rkPct(baixo.length)}</div>
-      <div class="risk-kpi-label" style="color:#b45309">Baixo Risco</div>
-    </div>` : ''}
-    <div class="risk-kpi-card" style="background:#f0fdf4;border-color:#86efac">
-      <div class="risk-kpi-num" style="color:#16a34a">${semRisco.length}${_rkPct(semRisco.length)}</div>
-      <div class="risk-kpi-label" style="color:#15803d">Sem Risco</div>
-    </div>
+    ${_rkCard('alto',  alto.length,     'Alto Risco',  '#fef2f2', '#fca5a5', '#dc2626', '#b91c1c')}
+    ${_rkCard('medio', medio.length,    'Médio Risco', '#fff7ed', '#fdba74', '#ea580c', '#c2410c')}
+    ${baixo.length ? _rkCard('baixo', baixo.length, 'Baixo Risco', '#fefce8', '#fde047', '#d97706', '#b45309') : ''}
+    ${_rkCard('sem',   semRisco.length, 'Sem Risco',   '#f0fdf4', '#86efac', '#16a34a', '#15803d')}
   </div>`;
 
   // ── Insights: agrupar motivos por tema ────────────────────
@@ -3038,9 +3047,13 @@ function renderRisco() {
       </div>` : '',
   ].join('');
 
-  // ── Tabela de municípios em risco ─────────────────────────
+  // ── Tabela de municípios em risco (obedece o card clicado) ─
+  const _tblData = state.riscoFiltro === 'alto'  ? alto  :
+                   state.riscoFiltro === 'medio' ? medio :
+                   state.riscoFiltro === 'baixo' ? baixo :
+                   state.riscoFiltro === 'sem'   ? semRisco : emRisco;
   const badgeClass = r => 'risk-badge risk-badge-' + normRisco(r.risco);
-  const tableRows = emRisco.map(r => `
+  const tableRows = _tblData.map(r => `
     <tr>
       <td class="risk-table-mun">${r.municipio}</td>
       <td><span class="${badgeClass(r)}">${r.risco || '—'}</span></td>
@@ -3062,7 +3075,7 @@ function renderRisco() {
       </div>
     </div>
     <div style="margin-top:24px">
-      <div class="risk-col-title">Municípios em risco — ${emRisco.length} clientes</div>
+      <div class="risk-col-title">${state.riscoFiltro === 'sem' ? 'Municípios sem risco' : 'Municípios em risco'} — ${_tblData.length} clientes${state.riscoFiltro ? ' (filtrado)' : ''}</div>
       <table class="risk-table">
         <thead><tr>
           <th>Município</th><th>Risco</th><th>Motivo</th><th>Consultor</th>
@@ -3463,7 +3476,21 @@ let _implData = null;
 
 // Seleção ativa nos gráficos de Implantações (a vertical vive no <select> impl-f-vert)
 let _implChartSel = { status: new Set(), munClass: new Set() };
-function _implRefresh() { _renderImplCharts(); _updateImplPivot(); }
+function _implRefresh() { _renderImplCharts(); _updateImplPivot(); _updateImplKpiHighlight(); }
+
+// Realce visual dos KPI cards conforme a seleção ativa
+function _updateImplKpiHighlight() {
+  const map = [
+    ['impl-kpi-atrasados',     'status',   'atrasados', '#DC2626'],
+    ['impl-kpi-no_prazo',      'status',   'no_prazo',  '#15803D'],
+    ['impl-kpi-sem_prazo',     'status',   'sem_prazo', '#64748B'],
+    ['impl-kpi-mun-atrasados', 'munClass', 'atrasados', '#DC2626']
+  ];
+  map.forEach(([id, kind, key, color]) => {
+    const el = document.getElementById(id);
+    if (el) el.style.boxShadow = _implChartSel[kind].has(key) ? '0 0 0 2px ' + color : 'none';
+  });
+}
 
 // (Re)desenha os 3 gráficos com realce conforme a seleção atual
 function _renderImplCharts() {
@@ -3605,19 +3632,19 @@ function renderImplantacoes() {
         <div style="font-size:1.7rem;font-weight:700;color:#2563EB;line-height:1">${totalGeral}</div>
         <div style="font-size:.7rem;font-weight:600;color:#3B82F6;text-transform:uppercase;margin-top:4px">Total Issues</div>
       </div>
-      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
+      <div id="impl-kpi-atrasados" title="Clique para filtrar por implantações atrasadas" onclick="_toggleImplStatus('status','atrasados')" style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px;cursor:pointer">
         <div style="font-size:1.7rem;font-weight:700;color:#DC2626;line-height:1">${totalAtrasado}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(totalAtrasado, totalGeral) || '0%'})</span></div>
         <div style="font-size:.7rem;font-weight:600;color:#EF4444;text-transform:uppercase;margin-top:4px">Atrasadas</div>
       </div>
-      <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
+      <div id="impl-kpi-no_prazo" title="Clique para filtrar por implantações no prazo" onclick="_toggleImplStatus('status','no_prazo')" style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px;cursor:pointer">
         <div style="font-size:1.7rem;font-weight:700;color:#15803D;line-height:1">${totalNoPrazo}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(totalNoPrazo, totalGeral) || '0%'})</span></div>
         <div style="font-size:.7rem;font-weight:600;color:#16A34A;text-transform:uppercase;margin-top:4px">No Prazo</div>
       </div>
-      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
+      <div id="impl-kpi-sem_prazo" title="Clique para filtrar por implantações sem prazo" onclick="_toggleImplStatus('status','sem_prazo')" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px;cursor:pointer">
         <div style="font-size:1.7rem;font-weight:700;color:#64748B;line-height:1">${totalSemPrazo}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(totalSemPrazo, totalGeral) || '0%'})</span></div>
         <div style="font-size:.7rem;font-weight:600;color:#94A3B8;text-transform:uppercase;margin-top:4px">Sem Prazo</div>
       </div>
-      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
+      <div id="impl-kpi-mun-atrasados" title="Clique para filtrar municípios com atraso" onclick="_toggleImplStatus('munClass','atrasados')" style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px;cursor:pointer">
         <div style="font-size:1.7rem;font-weight:700;color:#DC2626;line-height:1">${munComAtraso.length}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(munComAtraso.length, municipios.length) || '0%'})</span></div>
         <div style="font-size:.7rem;font-weight:600;color:#EF4444;text-transform:uppercase;margin-top:4px">Mun. c/ Atraso</div>
       </div>
@@ -5437,6 +5464,10 @@ function renderRatifView() {
   document.getElementById('ratif-card-sim').innerHTML   = totalSim + _rp(totalSim);
   document.getElementById('ratif-card-nao').innerHTML   = totalNao + _rp(totalNao);
   document.getElementById('ratif-card-total').textContent = total;
+  const _rbSim = document.getElementById('ratif-card-box-sim');
+  const _rbNao = document.getElementById('ratif-card-box-nao');
+  if (_rbSim) _rbSim.style.boxShadow = statusFil === 'sim' ? '0 0 0 2px #276749' : 'none';
+  if (_rbNao) _rbNao.style.boxShadow = statusFil === 'nao' ? '0 0 0 2px #9B2335' : 'none';
 
   const mesLabel = MESES_LABEL_FULL[mes - 1] || mes;
   document.getElementById('ratif-info').textContent =
@@ -5944,6 +5975,12 @@ function renderEnvioView() {
   document.getElementById('envio-card-ok').innerHTML      = nOk      + _ep(nOk);
   document.getElementById('envio-card-parcial').innerHTML = nParcial + _ep(nParcial);
   document.getElementById('envio-card-err').innerHTML     = nNenhum  + _ep(nNenhum);
+  // Destaque do card ativo (cards já são clicáveis via onclick no HTML)
+  const _envSel = { 'envio-card-ok': ['completo', '#276749'], 'envio-card-parcial': ['parcial', '#7B6F00'], 'envio-card-err': ['nenhum', '#9B2335'] };
+  Object.keys(_envSel).forEach(id => {
+    const box = document.getElementById(id)?.parentElement;
+    if (box) box.style.boxShadow = statusFil === _envSel[id][0] ? '0 0 0 2px ' + _envSel[id][1] : 'none';
+  });
   document.getElementById('envio-cards').style.display = 'grid';
 
   if (statusFil) municipios = municipios.filter(m => calcStatus(m) === statusFil);
