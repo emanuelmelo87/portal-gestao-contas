@@ -3629,27 +3629,27 @@ function renderImplantacoes() {
   const kpiHtml = `
     <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
       <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
-        <div style="font-size:1.7rem;font-weight:700;color:#2563EB;line-height:1">${totalGeral}</div>
+        <div id="impl-num-total" style="font-size:1.7rem;font-weight:700;color:#2563EB;line-height:1">${totalGeral}</div>
         <div style="font-size:.7rem;font-weight:600;color:#3B82F6;text-transform:uppercase;margin-top:4px">Total Issues</div>
       </div>
       <div id="impl-kpi-atrasados" title="Clique para filtrar por implantações atrasadas" onclick="_toggleImplStatus('status','atrasados')" style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px;cursor:pointer">
-        <div style="font-size:1.7rem;font-weight:700;color:#DC2626;line-height:1">${totalAtrasado}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(totalAtrasado, totalGeral) || '0%'})</span></div>
+        <div id="impl-num-atrasados" style="font-size:1.7rem;font-weight:700;color:#DC2626;line-height:1">${totalAtrasado}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(totalAtrasado, totalGeral) || '0%'})</span></div>
         <div style="font-size:.7rem;font-weight:600;color:#EF4444;text-transform:uppercase;margin-top:4px">Atrasadas</div>
       </div>
       <div id="impl-kpi-no_prazo" title="Clique para filtrar por implantações no prazo" onclick="_toggleImplStatus('status','no_prazo')" style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px;cursor:pointer">
-        <div style="font-size:1.7rem;font-weight:700;color:#15803D;line-height:1">${totalNoPrazo}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(totalNoPrazo, totalGeral) || '0%'})</span></div>
+        <div id="impl-num-no_prazo" style="font-size:1.7rem;font-weight:700;color:#15803D;line-height:1">${totalNoPrazo}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(totalNoPrazo, totalGeral) || '0%'})</span></div>
         <div style="font-size:.7rem;font-weight:600;color:#16A34A;text-transform:uppercase;margin-top:4px">No Prazo</div>
       </div>
       <div id="impl-kpi-sem_prazo" title="Clique para filtrar por implantações sem prazo" onclick="_toggleImplStatus('status','sem_prazo')" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px;cursor:pointer">
-        <div style="font-size:1.7rem;font-weight:700;color:#64748B;line-height:1">${totalSemPrazo}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(totalSemPrazo, totalGeral) || '0%'})</span></div>
+        <div id="impl-num-sem_prazo" style="font-size:1.7rem;font-weight:700;color:#64748B;line-height:1">${totalSemPrazo}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(totalSemPrazo, totalGeral) || '0%'})</span></div>
         <div style="font-size:.7rem;font-weight:600;color:#94A3B8;text-transform:uppercase;margin-top:4px">Sem Prazo</div>
       </div>
       <div id="impl-kpi-mun-atrasados" title="Clique para filtrar municípios com atraso" onclick="_toggleImplStatus('munClass','atrasados')" style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px;cursor:pointer">
-        <div style="font-size:1.7rem;font-weight:700;color:#DC2626;line-height:1">${munComAtraso.length}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(munComAtraso.length, municipios.length) || '0%'})</span></div>
+        <div id="impl-num-mun-atraso" style="font-size:1.7rem;font-weight:700;color:#DC2626;line-height:1">${munComAtraso.length}<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(munComAtraso.length, municipios.length) || '0%'})</span></div>
         <div style="font-size:.7rem;font-weight:600;color:#EF4444;text-transform:uppercase;margin-top:4px">Mun. c/ Atraso</div>
       </div>
       <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:10px 18px;text-align:center;min-width:100px">
-        <div style="font-size:1.7rem;font-weight:700;color:#15803D;line-height:1">${municipios.length}</div>
+        <div id="impl-num-mun-total" style="font-size:1.7rem;font-weight:700;color:#15803D;line-height:1">${municipios.length}</div>
         <div style="font-size:.7rem;font-weight:600;color:#16A34A;text-transform:uppercase;margin-top:4px">Municípios</div>
       </div>
     </div>`;
@@ -3825,6 +3825,29 @@ function _updateImplPivot() {
     : verticais;
   const linhasVis = munFiltrados.filter(m => verticaisVis.some(v => { const c = cellOf(m, v); return c && c.total > 0; }));
   const totalGeral = verticaisVis.reduce((s, v) => s + footTotais[v].total, 0);
+
+  // KPI cards refletem o mesmo universo filtrado da tabela (card = linhas, sempre)
+  (function _syncImplKpis() {
+    let kAtr = 0, kNo = 0, kSem = 0, kMunAtr = 0;
+    linhasVis.forEach(m => {
+      let mAtr = 0;
+      verticaisVis.forEach(v => {
+        const c = cellOf(m, v);
+        if (!c) return;
+        kAtr += c.atrasados; kNo += c.no_prazo; kSem += c.sem_prazo;
+        mAtr += c.atrasados;
+      });
+      if (mAtr > 0) kMunAtr++;
+    });
+    const _sp = (n, t) => _pct(n, t) ? `<span style="font-size:.85rem;font-weight:600;opacity:.75"> (${_pct(n, t)})</span>` : (t > 0 ? '<span style="font-size:.85rem;font-weight:600;opacity:.75"> (0%)</span>' : '');
+    const setNum = (id, n, t) => { const el = document.getElementById(id); if (el) el.innerHTML = n + _sp(n, t); };
+    setNum('impl-num-total',      totalGeral, 0);
+    setNum('impl-num-atrasados',  kAtr, totalGeral);
+    setNum('impl-num-no_prazo',   kNo,  totalGeral);
+    setNum('impl-num-sem_prazo',  kSem, totalGeral);
+    setNum('impl-num-mun-atraso', kMunAtr, linhasVis.length);
+    setNum('impl-num-mun-total',  linhasVis.length, 0);
+  })();
 
   if (!linhasVis.length || !verticaisVis.length) {
     wrapper.innerHTML = `<div style="padding:24px;text-align:center;color:#94A3B8;font-size:.85rem">Nenhum resultado para os filtros aplicados.</div>`;
@@ -5965,11 +5988,12 @@ function renderEnvioView() {
   }
   let municipios = Object.keys(munDocs).sort((a,b) => a.localeCompare(b,'pt-BR'));
 
-  // KPI cards
+  // KPI cards — mesmo cálculo exibido nas linhas (com cascade CND/Ratif),
+  // senão o card conta 75 'parcial' e a tabela mostra 2 (promovidos pela cascade)
   const total    = municipios.length;
-  const nOk      = municipios.filter(m => calcStatus(m) === 'completo').length;
-  const nParcial = municipios.filter(m => calcStatus(m) === 'parcial').length;
-  const nNenhum  = municipios.filter(m => calcStatus(m) === 'nenhum').length;
+  const nOk      = municipios.filter(m => calcStatusCascade(m) === 'completo').length;
+  const nParcial = municipios.filter(m => calcStatusCascade(m) === 'parcial').length;
+  const nNenhum  = municipios.filter(m => calcStatusCascade(m) === 'nenhum').length;
   const _ep = (n) => _pct(n, total) ? ` <span style="font-size:.8rem;font-weight:600;opacity:.75">(${_pct(n, total)})</span>` : '';
   document.getElementById('envio-card-total').textContent   = total;
   document.getElementById('envio-card-ok').innerHTML      = nOk      + _ep(nOk);
@@ -5983,9 +6007,9 @@ function renderEnvioView() {
   });
   document.getElementById('envio-cards').style.display = 'grid';
 
-  if (statusFil) municipios = municipios.filter(m => calcStatus(m) === statusFil);
+  if (statusFil) municipios = municipios.filter(m => calcStatusCascade(m) === statusFil);
   if (ratifFil)  municipios = municipios.filter(m => {
-    const r = ratifByMun[m] || '';
+    const r = ratifCascade(m) || '';
     if (ratifFil === 'nd')  return !r;
     return r === ratifFil;
   });
